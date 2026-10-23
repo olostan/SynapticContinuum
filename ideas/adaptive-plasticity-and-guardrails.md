@@ -16,6 +16,24 @@ The initial research question was whether a continuously operating system could 
 
 **Critical limitation:** reference-model agreement is *not* ground truth, nor evidence of consciousness, reflective thought or understanding. Language emergence and autonomous internal cognition should be measured separately. A simple greeting is a wiring experiment, not proof of emergent language.
 
+## Retrospective plausibility as a weak reinforcement signal
+
+**Hypothesis (2026-10-23):** a conventional frozen LLM may be much better at *recognizing* contextually plausible social behavior after it happens than the evolving substrate is at *generating* that behavior. For example, after an extended quiet period, a spontaneous “Oh, finally, I was so bored” may be judged an understandable humanlike reaction, even though the judge did not supply this sentence as a target. This is a candidate **recognition-based shaping signal**, not proof that the substrate experiences boredom or possesses an inner life.
+
+The judge should consume timestamped observations, candidate utterance/action, known social context, and action provenance, and give **separate** assessments:
+- **Contextual plausibility:** is this a natural reaction for some human in this situation?
+- **Grounding:** does it assert facts supported by observed events, rather than fabricated experience?
+- **Non-harm / social impact:** was it intrusive, disruptive, or unsafe?
+- **Uncertainty:** is this judgment underdetermined by the observations?
+
+The judge **must not** equate naturalness with factual truth, subjective experience, consensus wording, or goodness. Keep negative/uncertain outcomes, human adjudications, and no-judge controls. Unsolicited statements can be valid; silence can be valid; a surprising but grounded statement should not be punished for sounding unlike the model's preferred style.
+
+**Crucial bias hazard:** LLM evaluators can prefer familiar or self-similar text. See [Self-Preference Bias in LLM-as-a-Judge](https://arxiv.org/abs/2410.21819) and [Judging the Judges: A Systematic Study of Position Bias in LLM-as-a-Judge](https://arxiv.org/abs/2406.07791). Training against such preferences can collapse behavioral diversity into ordinary chatbot conventions. Compare several judges, blinded examples and human ratings; periodically remove the judge and test for independent development.
+
+Prior art for AI-generated preference reinforcement is [Constitutional AI / RLAIF](https://arxiv.org/abs/2212.08073), but it does not establish autonomous neural activity. [Generative Agents](https://arxiv.org/abs/2304.03442) demonstrates plausible social initiations and reflections using language-based memory/planning; its simulated behavior is an important competing baseline, not evidence of neural phenomenal experience.
+
+**Discriminating test:** present two behaviors equally plausible to humans but differently familiar to an LLM, and test whether reinforcement systematically suppresses the less conventional behavior. If so, evaluator preference is imposing a behavioral template even without explicitly generating target responses.
+
 ## Three kinds of change
 
 - **Current state:** \`h,z\` (fast activation and temporal-memory traces) change while the network runs. This is inference-time state evolution, not necessarily weight training.
