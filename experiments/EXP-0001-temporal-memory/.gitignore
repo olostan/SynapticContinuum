@@ -1,0 +1,27 @@
+# No generated heavyweight experiment outputs in Git
+*.pt
+*.pth
+*.ckpt
+*.safetensors
+*.onnx
+*.npz
+*.npy
+*.pkl
+*.pickle
+*.parquet
+*.arrow
+*.log
+*.prof
+*.trace
+__pycache__/
+.pytest_cache/
+.venv/
+venv/
+data/
+checkpoints/
+artifacts/
+raw/
+outputs/
+wandb/
+tensorboard/
+.DS_Store
