@@ -1,0 +1,17 @@
+# Local / generated artifacts
+.DS_Store
+__pycache__/
+.pytest_cache/
+.venv/
+venv/
+*.pyc
+.ipynb_checkpoints/
+.env
+.env.*
+*.safetensors
+*.pt
+*.pth
+*.ckpt
+runs/
+artifacts/
+checkpoints/
