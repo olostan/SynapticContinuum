@@ -2,6 +2,16 @@
 
 This repo is a **research commons**, not a software delivery organization. The purpose of agents is to expand the idea space, attack assumptions, and generate *testable* knowledge.
 
+## Research objective and quick orientation for LLM agents (2026-10-23)
+
+**Goal:** investigate whether a persistent neural system can develop **internally initiated, lasting, causally consequential representations or behaviors** between irregular external events. The goal is *not* maximum answer correctness, speed, fluent conversation, or cheap inference. Performance and cost are controls to reject confounding explanations, not a definition of cognition. Neural complexity, spontaneous oscillation, and apparent novelty do **not** establish thought or consciousness.
+
+**Read first:** [FOUNDATIONS.md](FOUNDATIONS.md), then the concise [R01 cross-track summary](https://github.com/olostan/SynapticContinuum/blob/research/r01-literature-novelty/research/findings/R01-literature-novelty/SUMMARY.md) ([full R01 report](https://github.com/olostan/SynapticContinuum/blob/research/r01-literature-novelty/research/findings/R01-literature-novelty/REPORT.md); [open PR](https://github.com/olostan/SynapticContinuum/pull/1)). **Note:** until PR #1 is merged, these links point to its branch, not `main`. R01 findings are provisional and must not dictate conclusions.
+
+For every hypothesis distinguish **(A) prior-art mechanisms** from **(B) the emergent phenomenon under study**. Existing CTM, latent-reasoning, recurrent/continuous-time, memory and plasticity techniques may provide useful mechanisms without having investigated the *same objective*. Do not claim uniqueness merely because a paper optimizes accuracy; equally, do not dismiss a paper's relevant autonomous or self-organizing behavior because it reports accuracy benchmarks.
+
+**Agent discipline:** preserve independent investigation, check original sources, document counterarguments, test simple memory-only/replay/event-driven baselines, use causal interventions on internal state, and report negative findings. For the current ten-track campaign, follow [COMMON.md](research/campaigns/2026-10-parallel/COMMON.md) and [track ownership](research/campaigns/2026-10-parallel/README.md): each track owns its assigned directory and PR; shared foundation changes require a separate coordinated change.
+
 ## Latest priority / orientation (2026-10-22)
 
 Read [FOUNDATIONS.md](FOUNDATIONS.md) and the three newer idea papers before assuming that communication is a periodic whole-state snapshot. The current leading hypothesis treats incoming sensory pulses, internal activations, outgoing communication and feedback as events in **one evolving substrate**, with connections responding to historical activity. The original frozen-Transformer/CA proposals remain legitimate alternatives.
