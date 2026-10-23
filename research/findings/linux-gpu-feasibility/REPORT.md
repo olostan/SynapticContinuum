@@ -39,13 +39,13 @@ We conducted a hardware inspection and empirical benchmark study on the Linux ho
    - Live query test confirmed: `ollama ps` reported `100% GPU` with 1.2 GB VRAM/GTT allocated, achieving **203.8 tokens/sec** prompt processing and **33.1 tokens/sec** token generation.
    - **Key Architectural Distinction**: Ollama succeeds because LLM inference evaluates large dense weight matrices ($d_{model} \ge 1536$), executing billions of FLOPs ($O(10^9)$ FLOPs) per token over 25–35 ms, where the ~0.3 ms Vulkan dispatch overhead is $< 1\%$. Ollama is purely **forward inference on static quantized weights**; it does not train, backpropagate, or schedule micro-events.
 
-3. **CPU Strongly Outperforms Vega 7 GPU for SynapticContinuum Operations**:
+3. **CPU Strongly Outperforms Vega 7 GPU for Tested SynapticContinuum Operations**:
    - In representative EXP-0001 neural dimensions ($N \in \{128, 512, 1024\}$):
-     - **Streaming Recurrent Step ($N=128$)**: CPU PyTorch took **0.0063 ms (6.3 µs)** vs Vulkan GPU **0.4335 ms (433.5 µs)**. **CPU is 68.8x faster**.
+     - **Streaming Recurrent Step ($N=128$)**: CPU PyTorch took **0.0063 ms (6.3 µs)** vs Vulkan GPU **0.4335 ms (433.5 µs)**. **CPU is 68.8x faster** in measured end-to-end round-trip time.
      - **Temporal Trace Decay ($N=128, K=4$)**: CPU PyTorch took **0.0093 ms (9.3 µs)** vs Vulkan GPU **0.3142 ms (314.2 µs)**. **CPU is 33.8x faster**.
      - **Dense Matrix Multiply ($1 \times 128 \times 128$)**: CPU PyTorch took **0.0022 ms (2.2 µs)** vs Vulkan GPU **0.2920 ms (292.0 µs)**. **CPU is 132.7x faster**.
      - **Batched GEMM ($32 \times 1024 \times 1024$)**: CPU PyTorch took **0.3175 ms** vs Vulkan GPU **1.8746 ms**. **CPU is 5.9x faster**.
-   - **Root Cause**: The Vulkan command submission and DRM kernel fence round-trip introduces an inescapable latency floor of **~0.30–0.35 ms (300–350 µs)** per dispatch. The CPU executes small neural state updates entirely within Zen 3 L1/L2 caches in under 10 µs. Furthermore, because this is an APU, both CPU and iGPU share the same 128-bit DDR4 memory bus (theoretical peak ~51.2 GB/s); the iGPU enjoys no high-bandwidth GDDR6/HBM advantage.
+   - **Root Cause & Measurement Scope**: Each benchmark call in this harness creates/maps buffers, uploads inputs, submits command buffers, and performs synchronous output readback to host memory. This measures the complete end-to-end Python/host round-trip latency for this per-call dispatch design (~0.30–0.35 ms), rather than an irreducible hardware execution floor. The CPU executes small neural state updates entirely within Zen 3 L1/L2 caches in under 10 µs. Note that GPU-resident persistent buffers, multi-step fused kernel pipelines, and asynchronous batching were not evaluated here.
 
 4. **Sparse Event-Driven Neural Simulation Strongly Favors CPU**:
    - At biological activity densities ($f \le 10\%$, degree $D=16$):
@@ -53,10 +53,11 @@ We conducted a hardware inspection and empirical benchmark study on the Linux ho
      - At $N=512, f=5\%$ (25 active nodes, 400 edges): CPU event-driven took **0.0740 ms (74.0 µs)**; Vulkan GPU took **0.3320 ms**. **CPU is 4.5x faster**.
      - Optimized CPU tensor scatter (`scatter_add_`) took only **0.0060 ms (6.0 µs)**—**53.8x faster than the Vulkan GPU**.
 
-5. **Neural Network Training on Vega 7 Is Practically Unfeasible**:
+5. **Neural Network Training on Vega 7 Is Practically Unfeasible with Supported Toolchains**:
    - **ROCm / HIP**: AMD officially dropped consumer APUs (`gfx90c`) in ROCm 4.0+. Prebuilt ROCm wheels and `rocblas` fail with `dropping ROCm device — no rocblas support for gfx target gfx90c`.
    - **PyTorch Vulkan**: The official PyTorch Linux wheels have `torch.is_vulkan_available() = False`. PyTorch's experimental Vulkan backend is an unmaintained mobile inference prototype lacking backward autograd operators.
-   - **CPU Autograd**: CPU PyTorch autograd achieves **15,859 training steps/s** at $N=128$, **9,801 steps/s** at $N=512$, and **4,169 steps/s** at $N=1024$.
+   - **Autodiff Feasibility**: While building a custom autodiff engine from scratch in OpenCL/Vulkan is theoretically possible, no standard, production-ready framework provides an autograd path on this hardware.
+   - **CPU Autograd**: In contrast, CPU PyTorch autograd delivers **15,859 training steps/s** at $N=128$, **9,801 steps/s** at $N=512$, and **4,169 steps/s** at $N=1024$.
 
 ### Architectural Recommendation:
 **EXP-0002 must be implemented CPU-first.** The existing Ryzen 5 PRO 5650GE CPU provides higher throughput, lower latency (microseconds vs hundreds of microseconds), zero kernel launch overhead, full PyTorch autograd support, and simpler deterministic event scheduling. No hardware purchases are needed for the next milestones.
@@ -191,8 +192,12 @@ We built an exact, reproducible benchmark suite (`research/findings/linux-gpu-fe
 - **CPU NumPy**: Single-thread / OpenBLAS reference.
 - **GPU Vulkan**: Handcrafted compute shaders written in WGSL, compiled to SPIR-V, dispatched via `wgpu` to `AMD Radeon Graphics (RADV RENOIR)` on queue family 1 (dedicated compute).
 
-### Benchmark Methodology:
-- **Correctness Assurance**: Output tensors of every operation were compared between CPU and GPU. Max absolute error was verified to be $< 10^{-4}$ (and $< 10^{-3}$ for atomic fixed-point scatter).
+### Benchmark Methodology & Qualifications:
+- **Scope of GPU Measurement**: In `VulkanEngine`, each benchmark iteration creates buffers, uploads tensor inputs to the device, encodes compute commands, submits them to the queue, and synchronously reads the resulting buffer back to host NumPy memory. This measures the complete **end-to-end Python-to-host dispatch round-trip** for this standalone call structure. It does **not** represent an irreducible hardware-only kernel execution or DRM fence floor. Persistent GPU-resident tensors, command buffer re-use, asynchronous queue batching, and multi-step fused pipelines were not evaluated.
+- **Shader Implementation vs Peak Hardware**: The WGSL compute shaders used here (e.g. GEMM) are straightforward non-tiled reference implementations where each workgroup thread computes a single output dot product directly from global memory without shared-memory cooperative tiling. Conversely, CPU PyTorch uses highly tuned, multi-threaded AVX2/FMA native BLAS kernels. The resulting comparison directly informs our micro-event neural state evaluation, but does not imply that every conceivable Vulkan shader would be 6–130x slower than CPU, nor does it saturate the theoretical ~1.70 TFLOPs peak hardware capacity of the Vega 7.
+- **Numerical Precision & Sparse Atomic Scatter**:
+  - Elementwise trace decay, GEMM, and recurrent activation updates run in standard IEEE 754 FP32 with verified maximum absolute error $< 10^{-4}$ against CPU references.
+  - Core WebGPU/WGSL specifications lack native FP32 atomic addition. To implement GPU sparse scatter without race conditions across workgroups, our shader employs a fixed-point integer scaling approach ($10000\times$ integer atomic addition followed by fixed-point float recovery). This achieves an empirically verified maximum absolute error of $< 10^{-3}$ on tested configurations. However, this is an approximation: under high fan-in (thousands of incoming edges targeting a single node) or large dynamic ranges, fixed-point quantization errors or integer overflow limits can accumulate. It should not be conflated with native 32-bit floating-point atomic accumulation.
 - **Warmup**: 15 un-timed warmup iterations before timing to eliminate shader compilation and memory allocation artifacts.
 - **Timing**: 200 measured iterations timed using high-resolution monotonic clocks (`time.perf_counter()`).
 - **Metrics Reported**: Median latency, 95th-percentile (p95) latency, standard deviation, throughput, and relative speedup.
@@ -211,7 +216,7 @@ Workload: Matrix multiplication $C = A \times W$, where $W \in \mathbb{R}^{N \ti
 | **$(1 \times 1024) \times (1024 \times 1024)$** | 1.3469 | 1.4048 | **0.0777** | 0.0846 | 0.06x | **CPU (17.3x faster)** |
 | **$(32 \times 1024) \times (1024 \times 1024)$** | 1.8746 | 1.9731 | **0.3175** | 0.4235 | 0.17x | **CPU (5.9x faster)** |
 
-*Observation*: For small and streaming GEMMs, CPU PyTorch executes in 2.2 µs. Vulkan GPU cannot execute under 292 µs due to command queue and fence latency. Even at $(32 \times 1024 \times 1024)$ (over 67 million FLOPs), CPU PyTorch remains **5.9x faster** than the Vega 7 GPU.
+*Observation*: For small and streaming GEMMs, CPU PyTorch executes in 2.2 µs. In this benchmark design, Vulkan GPU end-to-end round-trip latency has an overhead floor of ~290–320 µs due to per-call buffer allocation, command submission, and host synchronization. Even at $(32 \times 1024 \times 1024)$ (over 67 million FLOPs), CPU PyTorch remains **5.9x faster** than the Vega 7 GPU reference pipeline. Dedicated hand-tuned tiled shaders could reduce execution time on the GPU, but the host round-trip latency would continue to penalize small unbatched matrix updates.
 
 ### 4.2 Benchmark 2: Temporal Trace Decay
 Workload: Leaky synaptic trace decay ($K=4$ timescales) from EXP-0001:
@@ -223,7 +228,7 @@ $$z_{t, k} = \alpha_k z_{t-1, k} + (1 - \alpha_k) h_t, \quad z \in \mathbb{R}^{N
 | **$N = 512$** | 0.3290 | 0.4795 | **0.0123** | 0.0135 | 0.04x | **CPU (26.7x faster)** |
 | **$N = 1024$** | 0.3427 | 0.4881 | **0.0152** | 0.0163 | 0.04x | **CPU (22.5x faster)** |
 
-*Observation*: Leaky trace update is a pure memory-bandwidth bound elementwise operation. On CPU, the entire state fits in L1 cache (128 neurons $\times 4 \times 4$ bytes = 2 KiB; 1024 neurons = 16 KiB), taking 9–15 µs. On GPU, buffer synchronization and dispatch overhead dominates at 314–342 µs.
+*Observation*: Leaky trace update is a pure memory-bandwidth bound elementwise operation. On CPU, the entire state fits in L1 cache (128 neurons $\times 4 \times 4$ bytes = 2 KiB; 1024 neurons = 16 KiB), taking 9–15 µs. On GPU, host-to-device buffer dispatch and readback latency dominates at 314–342 µs per call.
 
 ### 4.3 Benchmark 3: Streaming Recurrent State Update
 Workload: Single-step recurrent hidden state transition:
@@ -274,9 +279,9 @@ Workload: Forward step + reverse-mode automatic differentiation ($\nabla_W \math
 
 | Hidden Dimension ($N$) | CPU PyTorch Autograd Latency (ms) | CPU PyTorch Training Throughput (steps/sec) | GPU Vulkan Autograd Status | Reason / Limitations |
 |---|---:|---:|:---:|:---|
-| **$N = 128$** | **0.0615** | **15,859.7 steps/s** | **NOT EXECUTABLE** | Unsupported architecture (`gfx90c` dropped by ROCm); PyTorch Vulkan lacks backward autograd. |
-| **$N = 512$** | **0.1007** | **9,801.1 steps/s** | **NOT EXECUTABLE** | Unsupported architecture (`gfx90c` dropped by ROCm); PyTorch Vulkan lacks backward autograd. |
-| **$N = 1024$** | **0.2388** | **4,169.1 steps/s** | **NOT EXECUTABLE** | Unsupported architecture (`gfx90c` dropped by ROCm); PyTorch Vulkan lacks backward autograd. |
+| **$N = 128$** | **0.0615** | **15,859.7 steps/s** | **NOT PRACTICALLY SUPPORTED** | Unsupported architecture in ROCm (`gfx90c` dropped); standard PyTorch wheels lack Vulkan autograd. |
+| **$N = 512$** | **0.1007** | **9,801.1 steps/s** | **NOT PRACTICALLY SUPPORTED** | Unsupported architecture in ROCm (`gfx90c` dropped); standard PyTorch wheels lack Vulkan autograd. |
+| **$N = 1024$** | **0.2388** | **4,169.1 steps/s** | **NOT PRACTICALLY SUPPORTED** | Unsupported architecture in ROCm (`gfx90c` dropped); standard PyTorch wheels lack Vulkan autograd. |
 
 ---
 
@@ -312,14 +317,16 @@ Our empirical data demonstrates that a GPU becomes preferable only when **both**
 
 Applying the project's foundational evaluation criteria:
 
-1. **Mathematical Correctness**:
-   - Both CPU and Vulkan GPU implementations produced numerically identical results within FP32 machine precision ($\max |\Delta| < 10^{-4}$).
-2. **Reproducibility**:
+1. **Mathematical Correctness & Numerical Limits**:
+   - Elementwise trace decay, GEMM, and recurrent step implementations matched CPU reference outputs within FP32 machine precision ($\max |\Delta| < 10^{-4}$).
+   - Sparse scatter graph propagation used a fixed-point integer atomic scaling ($10000\times$) to bypass lack of native FP32 atomic addition in core WebGPU/WGSL. On the tested random graphs (degrees up to 16), maximum absolute error was bounded below $10^{-3}$. Note that on larger graphs with high fan-in (e.g. hundreds or thousands of concurrent incoming connections to a single post-synaptic node), fixed-point truncation error or 32-bit integer overflow bounds must be carefully audited. It is an approximation, not equivalent to native FP32 atomic addition.
+2. **Reproducibility & Practical Constraints**:
    - CPU execution is fully deterministic across seeds and runs without special runtime flags.
-   - Vulkan compute required managing OS group credentials (`sg render`) and atomic fixed-point scaling for scatter operations to prevent non-deterministic floating-point summation order across GPU workgroups.
+   - Vulkan execution requires verifying GPU device selection (e.g. ensuring `RADV RENOIR` rather than silent fallback to `llvmpipe`) and managing session group credentials (`sg render` or terminal `newgrp render`).
+   - Workload boundaries tested: $N \in \{128, 512, 1024\}$, active densities from 5% to 100%, and per-call dispatch. GPU-resident state evolution (retaining states on the GPU across multi-step dynamics without round-trip host transfers) remains an untested architecture.
 3. **Compatibility with Future Training**:
-   - **CPU**: 100% compatible with PyTorch autograd, AdamW, BPTT, and local plasticity algorithms.
-   - **Vega 7 GPU**: 0% compatible with modern ML training frameworks. No autograd runtime exists for Vulkan or ROCm on `gfx90c`.
+   - **CPU**: 100% compatible with standard PyTorch autograd, AdamW, BPTT, and local plasticity algorithms out of the box.
+   - **Vega 7 GPU**: No practical supported training path exists in mainstream ML frameworks (PyTorch, JAX, or ROCm for `gfx90c`). While building a custom reverse-mode automatic differentiation engine from scratch in OpenCL or Vulkan SPIR-V is theoretically possible, it represents immense engineering overhead and is completely unnecessary given measured CPU autograd performance.
 4. **Continuous Operation (Artificial Mind Core)**:
    - An event-driven CPU simulation can run as a background service using negligible power ($\sim 2–5\text{W}$ at low event rates), waking up instantaneously on arrival of internal or sensory events.
    - Continuously spinning Vulkan compute queues burns power, contends for DDR4 memory bandwidth with background host tasks, and increases thermal load.
@@ -401,14 +408,15 @@ cat research/findings/linux-gpu-feasibility/benchmarks/results.json | head -n 35
 **YES.** Ollama's bundled `llama-server` utilizes `libggml-vulkan.so`, offloads 100% of model layers (29/29) to `Vulkan0` (`AMD Radeon Graphics (RADV RENOIR)`), consumes ~1.2 GB of shared GTT memory, and delivers 33.1 tokens/sec generation on Qwen 1.5B.
 
 ### Question 3: Can we train neural networks using this GPU with a practical supported backend?
-**NO.** Neither PyTorch nor JAX supports Vulkan training with autograd. AMD ROCm officially drops support for `gfx90c` Cezanne APUs. Custom shader development for backpropagation is impractical, error-prone, and economically unjustified.
+**NO.** Standard ML frameworks (PyTorch, JAX, TensorFlow) provide no practical autograd training path for Vulkan or ROCm on `gfx90c` Cezanne APUs. While authoring a custom autodiff engine from scratch in C++/SPIR-V or OpenCL is theoretically possible, it is economically and scientifically unjustified given the speed and convenience of CPU PyTorch autograd.
 
 ### Question 4: Does GPU acceleration outperform CPU for representative EXP-0001 operations?
-**NO.** CPU PyTorch strongly outperforms the Vega 7 GPU across all representative EXP-0001 operations:
+**NO.** In our end-to-end per-call dispatch benchmarks, CPU PyTorch strongly outperforms the Vega 7 GPU across all representative EXP-0001 operations:
 - Dense GEMM ($1 \times 128$): CPU is **132.7x faster** (2.2 µs vs 292.0 µs).
 - Recurrent step ($N=128$): CPU is **68.8x faster** (6.3 µs vs 433.5 µs).
 - Trace decay ($N=128$): CPU is **33.8x faster** (9.3 µs vs 314.2 µs).
 - Batched GEMM ($32 \times 1024$): CPU is **5.9x faster** (317.5 µs vs 1874.6 µs).
+These figures reflect the measured end-to-end round-trip latency of the host-driven design. Persistent GPU-resident tensors and asynchronous batching were not evaluated, but for small streaming updates, CPU cache locality delivers massive advantages.
 
 ### Question 5: Is the GPU useful for sparse event-driven neural dynamics?
 **NO.** In an event-driven regime with sparse firing ($f \le 10\%$), CPU event-driven graph traversal processes only active connections in **16.9 µs**, whereas GPU Vulkan dispatch incurs an overhead floor of **~320 µs** (CPU is **19.1x faster**). Vectorized CPU tensor scatter takes only **6.0 µs** (**53.8x faster** than GPU).
