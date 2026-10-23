@@ -1,0 +1,47 @@
+schema_version: 1
+id: EXP-0002
+name: event-driven-dynamics
+status: planned
+design_date: 2026-10-23
+science_goal: causal-persistent-endogenous-neural-dynamics
+references:
+  protocol: EXPERIMENTATION.md
+  predecessor: experiments/EXP-0001-temporal-memory/REPORT.md
+  gpu_feasibility: research/findings/linux-gpu-feasibility/REPORT.md
+hardware:
+  preferred: linux-x86_64-16gb-shared-igpu
+  backend: cpu
+  optional: [macos-apple-silicon, validated-gpu-future]
+  max_process_rss_gib: 10
+execution:
+  seeds_primary: [11, 23, 37, 41, 53]
+  seeds_screening: [11, 23, 37]
+  smoke_test_first: true
+  max_campaign_wall_minutes: 360
+  max_cell_wall_minutes: 10
+  max_events_per_cell: 1000000
+  network_sizes: [128, 512, 2048, 8192]
+  out_degrees: [4, 16, 64]
+  externally_seeded_active_fractions: [0.001, 0.01, 0.05, 0.10, 0.25, 0.50, 1.0]
+  history_entries_per_node: [0, 1, 4, 16, 64, 256]
+  exponential_trace_bases: [0, 1, 4, 8]
+  silence_gaps: [1, 10, 50]
+  synchronous_dt_candidates: [0.2, 0.1, 0.05]
+  stage1_initial:
+    sizes: [128, 512, 2048]
+    degrees: [16]
+    active_fractions: [0.01, 0.05, 0.25, 1.0]
+  stage2_initial:
+    sizes: [128, 512]
+    degree: 16
+  stage3_initial:
+    sizes: [128, 512]
+    histories: [0, 16, 64]
+    trace_bases: [0, 4, 8]
+  no_test_tuning: true
+outputs:
+  git: [source, tests, config, report, compact_json_metrics, amendments_if_any]
+  external_only: [model_weights, raw_event_logs, profiler_traces, generated_datasets, compiled_binaries]
+review:
+  independent_scientific_review_required: true
+  no_automatic_merge: true
