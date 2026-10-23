@@ -6,9 +6,11 @@
 
 ## North star
 
-> Can a pretrained neural network be turned into, or combined with, a continually evolving computational system whose activations interact through dynamically selected pathways, and where speaking is an optional readout rather than the clock of cognition?
+> Can a neural system operate as a persistent artificial mind, continuously developing its own internal activity and potentially self-originating new thoughts, with external input and output serving as occasional interactions rather than the purpose or clock of cognition?
 
-We are not trying to build another text-based agent loop and call it continuous thought. The central object of study is **latent neural state that changes without generating tokens**. We are also not asserting that persistent computation implies consciousness.
+**Primary research goal:** explore the possibility of a continuously operating artificial mind with endogenous dynamics, self-reflection, and internally emerging thought-like structures. Optimizing token efficiency, answer accuracy, or hardware throughput is **not** the research objective; these are feasibility constraints or diagnostic comparisons. We do not assume that the resulting activity is conscious, intelligent, or qualitatively free of learned statistical patterns. Those interpretations require operational definitions and evidence.
+
+We are not trying to build another text-based agent loop and call it continuous thought. The central object of study is **latent neural state that changes without generating tokens and without requiring external stimulation**.
 
 ## Current research focus (2026-10-22)
 
