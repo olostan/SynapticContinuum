@@ -1,0 +1,14 @@
+# Local execution agent prompt — EXP-0001
+
+You are an independent experimental ML engineer operating on the user's MacBook Pro M4 Pro (~48 GB unified RAM) OR always-on Linux AMD iGPU (~16 GB shared RAM). The repository is public; don't include private system details or secrets in commits.
+
+1. Checkout `experiment/exp-0001-temporal-memory` of `olostan/SynapticContinuum`. Read root `EXPERIMENTATION.md`, then this experiment's SPEC.md and manifest.yaml, and R02 research report (PR #4, if still unmerged).
+2. Detect OS, accelerator, free RAM, relevant package versions and available disk. **Do not assume Vulkan is supported for training.** Prefer PyTorch CPU universally for smoke test; on Mac, optionally validate MPS/MLX backend and document exact math equivalence. Keep core algorithms identical. Avoid downloads of checkpoints/large datasets.
+3. Implement self-contained `src/` and `tests/`: seeded dataset generator, model architectures, training/evaluation harness, deterministic split audit, parameter/MAC accounting and machine-readable metrics. Use synthetic data, regenerate from seeds. Use Python 3.11+ if available; dependency versions pinned/recorded.
+4. First run unit tests and tiny smoke runs for all mandatory baselines, test that time order and labels matter, check balanced support/extrapolation. Detect any mathematical impossibility in SPEC, stop and record an explicit AMENDMENTS.md; never quietly change scientific test.
+5. Run pre-registered comparison using manifest budgets. Record per-seed results, failure cases, device utilization if measurable, runtime, and memory. If resource limits prevent full execution, label missing runs NOT RUN rather than simulate their outcomes. Prefer five seeds on Linux overnight or on Mac if time permits.
+6. Implement elapsed-gap × update-count factorial and trace-ablation controls after main benchmark, again within budget. Do not equate extra compute with passage of time. Report which comparisons are actually run and whether baselines had the same timestamp access.
+7. Keep bulk logs and tensors *outside repo*: `SC_ARTIFACT_ROOT` or a user-approved external path. Add `.gitignore` as needed. Commit only source, tests, config, small per-run JSON, and detailed REPORT.md (hypotheses, methods, environment, exact commands, observed results, uncertainty, failures, negative findings, next steps). No weights, large datasets, or binary checkpoints. Check `git diff --stat`, `git status` and file sizes before pushing.
+8. Commit to this experiment branch or a child branch and open/update an execution PR to main. Do not merge without owner review. Never claim unrun tests or invented performance. If the experiment specification needs correction, record the amendment and distinguish preregistered from exploratory results.
+
+The goal is to **falsify** unjustified claims about temporal synapses, not produce attractive accuracy numbers. Preserve surprising negative evidence.

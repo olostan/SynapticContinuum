@@ -1,0 +1,40 @@
+schema_version: 1
+id: EXP-0001
+name: temporal-memory
+status: executed
+latest_confirmatory_run_id: 20261023T180806Z-linux-amd-x86_64-confirmatory
+superseded_exploratory_run_id: 20261023T171033Z-linux-amd-x86_64
+reference:
+  original_proposal: experiments/E005-temporal-memory-ablation.md
+  research_report: research/findings/R02-temporal-connections/REPORT.md
+hardware:
+  targets: [macos-apple-silicon-48gb, linux-x86_64-16gb-shared-igpu]
+  portable_fallback: pytorch-cpu
+  optional_backends: [pytorch-mps, mlx, validated-vulkan]
+  max_expected_host_ram_gb: 12
+execution:
+  seeds: [11, 23, 37, 41, 53]
+  smoke_test_first: true
+  max_wall_minutes_per_machine: 240
+  train_size: 10000
+  validation_size: 2000
+  test_size_per_regime: 4000
+  hidden_units: 128
+  trace_bases: 8
+  fir_taps: 8
+  sparse_max_degree: 8
+  batch_size: 64
+  no_test_tuning: true
+outputs:
+  git:
+    - source
+    - tests
+    - config
+    - report
+    - compact_json_metrics
+  local_only:
+    - weights
+    - checkpoints
+    - raw_logs
+    - data_cache
+    - tensor_dumps

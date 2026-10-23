@@ -1,0 +1,37 @@
+experiment_id: EXP-0001
+name: temporal-memory
+seeds: [11, 23, 37, 41, 53]
+
+data:
+  train_size: 10000
+  validation_size: 2000
+  test_size_per_regime: 4000
+  epsilon: 0.05
+  train_d1_min: 1.0
+  train_d1_max: 10.0
+  train_d1_excluded: [4.0, 5.0]
+  train_d2_min: 1.0
+  train_d2_max: 15.0
+  interp_d1_min: 4.0
+  interp_d1_max: 5.0
+  interp_d2_min: 1.0
+  interp_d2_max: 15.0
+  extrap_d1_min: 12.0
+  extrap_d1_max: 16.0
+  extrap_d2_min: 10.0
+  extrap_d2_max: 30.0
+
+models:
+  hidden_units: 128
+  trace_bases: 8
+  fir_taps: 8
+  sparse_max_degree: 8
+  batch_size: 64
+  learning_rate: 0.001
+  max_epochs: 25
+  early_stopping_patience: 5
+  device: cpu
+
+factorial:
+  gaps: [1.0, 10.0]
+  update_counts: [0, 1, 8, 64]
