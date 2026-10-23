@@ -22,6 +22,18 @@ Efficiency, FLOPs, matched compute and sleeping baselines remain crucial *contro
 - Can unexpected internal trajectories causally alter later learning, anticipation or action on withheld probes?
 - What keeps long-lived dynamics neither trivial nor destructive, without forcing them toward task completion?
 
+## Pretrained weights as a seed, not an inference engine
+
+**Design intent (2026-10-23):** existing pretrained models are candidates for initializing rich representations, associations, and world knowledge. They are **not** intended to remain the governing autoregressive text-generation mechanism. A pretrained model's learned structure may provide initial weights or a source of representation transfer; whether that structure survives a fundamentally different recurrence and learning regime is unknown and must be tested.
+
+The proposed *operating system* is a persistent, temporally structured neural dynamical process: activations influence later activations through histories, delays, state-dependent couplings and possibly local plasticity. There may be autonomous activity with no external input and no commitment to producing output. Communication is an optional consequence of internal state, not an objective enforced at each step.
+
+**Learning and selection are open research questions rather than supervised response correctness.** A candidate substrate might adapt through endogenous prediction, consistency, self-modeling, environmental feedback, local homeostasis, or longer-term selection, with competing mechanisms tested separately. Do not silently replace the research goal with RLHF, next-token accuracy, conversational helpfulness, fast responses, or agreement with a frozen language model. Slow, irregular, incomplete or less structured outward behavior is compatible with the research intent; it is not itself evidence of mental activity.
+
+**Necessary distinction:** pretrained weights cannot be assumed to encode portable, accessible knowledge independent of their original architecture, normalization, tokenization and training objective. Simply running an LLM's weights recurrently may produce collapse or meaningless dynamics. Research should compare (a) native pretrained weights with altered recurrence; (b) pretrained features transferred through learned interfaces into a separately trained dynamical substrate; and (c) dynamical systems trained from scratch. Avoid presenting a technical method as settled prematurely.
+
+**Evaluation should be epistemic, not conversational:** look for causal continuity of endogenous state, durable internally initiated representations, reproducible effects of self-revisitation, adaptation after environmental change, and robust distinctions between internal conjecture and observed reality. Use controls for replay, random recurrence, trivial attractors and externally authored prompts. No measurement can automatically certify a subjective mind.
+
 ## Founding propositions
 
 1. **Continuous core:** a mutable neural state persists while external observations arrive at irregular times and while nothing arrives. Digital implementations have discrete update steps; 'continuous' here means that updates aren't necessarily driven by vocabulary tokens.
