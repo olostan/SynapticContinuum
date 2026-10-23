@@ -6,6 +6,22 @@
 
 This is a research question, **not** a claim about achieved intelligence or consciousness. It is possible that simpler recurrent/state-space architectures or ordinary stream processing outperform it.
 
+## Research intent — artificial mind, not faster inference
+
+The primary objective is to investigate the *possibility* of a constantly operating artificial mind: an endogenous neural process that may sustain internal activity, self-monitor or revisit its own internal states, form associations, and potentially produce novel thought-like trajectories in the absence of new external prompts. Input and output are peripheral interactions, not the system's principal purpose, update clock, or primary reward source. External communication is useful for observing and probing the system, but conversational fluency is not the definition of success.
+
+This is an exploration, **not a claim that such a mind, genuine self-reflection, consciousness, or thinking beyond statistical learning has been achieved**. The phrase “not pattern matching like normal inference” should be treated as a challenge to investigate: learned neural models inherently use learned statistical structure; a researchable distinction is whether internally generated state trajectories yield new, causally consequential, persistent representations or hypotheses without being directly prompted, rather than simply replaying learned associations.
+
+Efficiency, FLOPs, matched compute and sleeping baselines remain crucial *controls* for causal attribution and practical feasibility, **not optimization goals or go/no-go requirements**. Even an inefficient prototype is scientifically interesting if its endogenous dynamics reveal a genuinely new measurable phenomenon.
+
+### Specific questions arising from that goal
+
+- What maintains endogenous activity when no new sensory event or reward is supplied?
+- Can the system create and revisit internal candidate representations without a prompt, while separating self-generated content from observations?
+- What operational tests distinguish self-reflection from recurrent noise, attractor cycles, replay and an externally programmed self-prompt loop?
+- Can unexpected internal trajectories causally alter later learning, anticipation or action on withheld probes?
+- What keeps long-lived dynamics neither trivial nor destructive, without forcing them toward task completion?
+
 ## Founding propositions
 
 1. **Continuous core:** a mutable neural state persists while external observations arrive at irregular times and while nothing arrives. Digital implementations have discrete update steps; 'continuous' here means that updates aren't necessarily driven by vocabulary tokens.
