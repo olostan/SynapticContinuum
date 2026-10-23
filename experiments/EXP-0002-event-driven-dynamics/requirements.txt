@@ -1,0 +1,5 @@
+# Pinned dependencies for EXP-0002 on Linux x86_64 / CPU
+torch==2.14.1
+numpy==2.5.4
+pyyaml==6.0.3
+pytest==9.1.1

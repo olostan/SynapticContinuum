@@ -1,0 +1,41 @@
+# Default configuration for EXP-0002 Event-Driven Dynamics
+experiment_id: EXP-0002
+name: event-driven-dynamics
+
+hardware:
+  preferred_backend: cpu
+  max_rss_gib: 10
+
+execution:
+  seeds_primary: [11, 23, 37, 41, 53]
+  seeds_screening: [11, 23, 37]
+  t_max_stage1: 15.0
+  max_events_per_cell: 500000
+
+stage1:
+  sizes: [128, 512, 2048]
+  degrees: [16]
+  active_fractions: [0.01, 0.05, 0.25, 1.0]
+  dt_candidates: [0.2, 0.1, 0.05]
+
+stage2:
+  sizes: [128, 512]
+  degree: 16
+  history_entries: [0, 1, 4, 16, 64, 256]
+  trace_bases: [0, 1, 4, 8]
+  num_task_b_samples: 300
+
+stage3:
+  sizes: [128, 512]
+  silence_gaps: [1.0, 10.0, 50.0]
+  history_capacity_L: 16
+  trace_bases_B: 4
+  interventions:
+    - sham
+    - freeze
+    - passive_decay
+    - event_deletion
+    - event_delay
+    - amplitude_perturbation
+    - randomized_events
+    - matched_compute
