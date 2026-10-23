@@ -14,7 +14,7 @@ We are not trying to build another text-based agent loop and call it continuous 
 
 The latest discussion extends the original latent-recurrence thesis into a **shared, temporally expressive neural substrate**. Inputs, internal activity, communication output and feedback are interacting neural events; connections may remember earlier activations. Faster plasticity, slower LoRA-style consolidation, evolutionary selection, and an optional conventional-LLM **guardrail** remain separate hypotheses rather than prescribed mechanisms.
 
-**Read [Living Foundations](FOUNDATIONS.md) first** for the current working principles. The original atlas remains a broad hypothesis map, not a frozen architecture. Recent independent papers: [temporal connection memory](ideas/temporal-connection-memory.md), [communication as activation](ideas/communication-as-activation.md), [adaptive plasticity and guardrails](ideas/adaptive-plasticity-and-guardrails.md). Initial experimental entry point: [timed HI → HELLO](experiments/E004-timed-greeting.md).
+**Read [Living Foundations](FOUNDATIONS.md) first** for the current working principles. The original atlas remains a broad hypothesis map, not a frozen architecture. Recent independent papers: [temporal connection memory](ideas/temporal-connection-memory.md), [communication as activation](ideas/communication-as-activation.md), [adaptive plasticity and guardrails](ideas/adaptive-plasticity-and-guardrails.md). Initial experimental entry point: [timed HI → HELLO](experiments/E004-timed-greeting.md). A [runnable supervised toy prototype](prototypes/continuous-greeting/README.md) is available as a baseline, not as validation of the full architecture.
 
 ## How to navigate
 

@@ -1,6 +1,6 @@
 # E004 — Timed greeting as an activation event
 
-**State:** proposed controlled reproduction. An earlier toy demonstration was discussed outside this repository; it is **not** treated as a verified result here until code, environment and rerun logs are committed.
+**State:** controlled extension proposed; an initial **single-seed supervised toy baseline** is runnable in [prototypes/continuous-greeting/](../prototypes/continuous-greeting/README.md). The baseline was reproduced once on CPU (PyTorch 2.10.0, seed 13) with HI → HELLO, BYE → GOODBYE and negative silence probes. This is **not** evidence of held-out generalization, continuous cross-episode state, per-edge temporal kernels, or reinforcement/evolution. The tests below remain proposed.
 
 ## Minimal claim
 
