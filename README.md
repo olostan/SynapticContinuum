@@ -21,7 +21,8 @@ The latest discussion extends the original latent-recurrence thesis into a **sha
 - **[FOUNDATIONS.md](FOUNDATIONS.md)** — concise current hypotheses and invariants; start here for the newest conceptual synthesis.
 - **[ATLAS.md](ATLAS.md)** — the main evolving research map: hypotheses, alternatives, technical constraints, discriminating tests, open tensions, and possible trajectories. Start here for understanding.
 - **[AGENTS.md](AGENTS.md)** — short operating guidance and ready-to-use prompts for parallel research agents. Start here when delegating.
-- **[SOURCES.md](SOURCES.md)** — research map and verified reading list, with relevance and caveats.
+- **[SOURCES.md](SOURCES.md)** — annotated research bibliography, with relevance and caveats.
+- **[RESEARCH_LANDSCAPE.md](RESEARCH_LANDSCAPE.md)** — independent prior-art comparison, novelty boundaries, competing explanations, citation audit, and discriminating research priorities.
 - **[ideas/](ideas/)** — competing architectures; agents can propose contradictory ideas.
 - **[experiments/](experiments/)** — executable proposals; no obligation to implement them in order.
 - **[notes/](notes/)** — independent agent notes, negative results, rebuttals, surprising observations.
