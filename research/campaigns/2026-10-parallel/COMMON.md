@@ -15,6 +15,12 @@ Before research, open the public repository https://github.com/olostan/SynapticC
 - RESEARCH_LANDSCAPE.md; SOURCES.md; AGENTS.md
 - This campaign's README.md, all track summaries, and your assigned Rxx-PROMPT.md
 - The topic-specific files and original papers linked in your own prompt
+- **Start with the concise [R01 cross-track briefing](../../findings/R01-literature-novelty/SUMMARY.md)**; use its [full report](../../findings/R01-literature-novelty/REPORT.md) and [reference ledger](../../findings/R01-literature-novelty/REFERENCES.md) for details. Distinguish **existing mechanisms** from the project's goal of **emergent, persistent, causally meaningful internal development**; correctness and speed are diagnostic controls, not the primary objective.
+- Inspect **research already performed** under [research/findings/](../../findings/) and any other existing results, notes, ideas and experiment documents; review [merged PRs and open PRs](https://github.com/olostan/SynapticContinuum/pulls?q=is%3Apr) for new or in-progress work. Distinguish reviewed/merged findings, provisional drafts, untested proposals and observed results; do not assume that an absent report means a track is complete.
+- Follow relevant **external research projects**, their original papers, source code, experimental reports and credible contradictory work using [SOURCES.md](../../../SOURCES.md) and [RESEARCH_LANDSCAPE.md](../../../RESEARCH_LANDSCAPE.md) as starting maps. Independently verify citations, code availability, dates and claims; identify closely overlapping efforts before proposing novelty.
+
+
+**Orientation rule for all parallel agents:** Understand *where this project currently stands* before designing a new investigation: its founding vision, already explored directions, negative findings, adjacent ongoing work and external precedents. Then ask both **(A)** what mechanism is known or novel and **(B)** what causal phenomenon it might reveal about endogenous cognition. Avoid duplicate effort, but do not require agreement with other agents or let prior reports foreclose contradictory evidence. Keep this scan targeted—brief summaries and references first; deep-read only work relevant to your hypothesis.
 
 Treat older references as leads requiring source verification rather than established facts. Read other assignments to understand overlapping questions without presuming the answers those researchers will produce.
 
