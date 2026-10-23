@@ -12,6 +12,10 @@
 
 We are not trying to build another text-based agent loop and call it continuous thought. The central object of study is **latent neural state that changes without generating tokens and without requiring external stimulation**.
 
+## Non-negotiable research orientation
+
+We seek **emerging traits, internally initiated activity, and potential self-observation**, not faster or more correct answers. Imperfect utterances, silence, spontaneous initiation and unexpected developmental paths are valid research observations. A conventional LLM can offer fallible retrospective reinforcement of contextual plausibility, but should not prescribe target sentences, become the permanent behavior policy, or turn the project into response imitation. The decisive evidence is causal development over a persistent individual trajectory, with controls against replay, noise and judge-pleasing. No behavioral result alone proves consciousness.
+
 ## Current research focus (2026-10-22)
 
 The latest discussion extends the original latent-recurrence thesis into a **shared, temporally expressive neural substrate**. Inputs, internal activity, communication output and feedback are interacting neural events; connections may remember earlier activations. Faster plasticity, slower LoRA-style consolidation, evolutionary selection, and an optional conventional-LLM **guardrail** remain separate hypotheses rather than prescribed mechanisms.
@@ -25,6 +29,8 @@ The latest discussion extends the original latent-recurrence thesis into a **sha
 - **[AGENTS.md](AGENTS.md)** — short operating guidance and ready-to-use prompts for parallel research agents. Start here when delegating.
 - **[SOURCES.md](SOURCES.md)** — annotated research bibliography, with relevance and caveats.
 - **[RESEARCH_LANDSCAPE.md](RESEARCH_LANDSCAPE.md)** — independent prior-art comparison, novelty boundaries, competing explanations, citation audit, and discriminating research priorities.
+- **[ideas/developmental-communication.md](ideas/developmental-communication.md)** — imperfect attempts, reinforcement and emergent communication across continuous experience.
+- **[ideas/spontaneous-social-behavior.md](ideas/spontaneous-social-behavior.md)** — self-initiated communication and social behavior without prompt-response scheduling.
 - **[ideas/](ideas/)** — competing architectures; agents can propose contradictory ideas.
 - **[experiments/](experiments/)** — executable proposals; no obligation to implement them in order.
 - **[notes/](notes/)** — independent agent notes, negative results, rebuttals, surprising observations.
