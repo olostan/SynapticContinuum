@@ -112,6 +112,38 @@ class TraceBankModel(nn.Module):
 
         return h_new, z_new
 
+    def silent_step(
+        self,
+        h_prev: torch.Tensor,
+        z_prev: torch.Tensor,
+        dt: torch.Tensor,
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        """Evolve trace bank and hidden state during silence (no external event drive).
+        
+        Preserves model's learned synaptic coupling and continuous decay.
+        """
+        batch_size = h_prev.shape[0]
+        taus = self.get_taus()
+        decay = torch.exp(-dt.unsqueeze(-1) / taus.unsqueeze(0).unsqueeze(0))
+        z_new = decay * z_prev + (1.0 - decay) * h_prev.unsqueeze(-1)
+
+        z_edges = z_new[:, self.sources, :]
+        edge_current = (z_edges * self.coupling.unsqueeze(0)).sum(dim=-1)
+
+        u = torch.zeros(batch_size, self.hidden_dim, device=h_prev.device)
+        u.scatter_add_(
+            1,
+            self.targets.unsqueeze(0).expand(batch_size, -1),
+            edge_current,
+        )
+
+        tau_s = torch.exp(torch.clamp(self.log_tau_state, min=-2.0, max=3.0))
+        gamma = 1.0 - torch.exp(-dt / tau_s)
+        # In silence, input drive is zero
+        target = torch.tanh(u)
+        h_new = h_prev + gamma * (target - h_prev)
+        return h_new, z_new
+
     def forward(
         self,
         batch: Dict[str, torch.Tensor],

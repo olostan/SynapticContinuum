@@ -179,3 +179,44 @@ class SparseFIRModel(nn.Module):
         if return_hidden:
             return logits, torch.stack(all_h, dim=1)
         return logits
+
+    def step(
+        self,
+        history_h: List[torch.Tensor],
+        history_t: List[torch.Tensor],
+        sym: torch.Tensor,
+        dt: torch.Tensor,
+        t_curr: torch.Tensor,
+    ) -> torch.Tensor:
+        batch_size = t_curr.shape[0]
+        delays = self.get_delays()
+        h_taps = self.interpolate_history(history_h, history_t, t_curr, delays)
+        h_edges = h_taps[:, self.sources, :]
+        edge_current = (h_edges * self.tap_weights.unsqueeze(0)).sum(dim=-1)
+
+        u = torch.zeros(batch_size, self.hidden_dim, device=t_curr.device)
+        u.scatter_add_(1, self.targets.unsqueeze(0).expand(batch_size, -1), edge_current)
+
+        dt_feat = torch.cat([dt, torch.log1p(dt)], dim=-1)
+        x_emb = self.embed(sym)
+        x_in = torch.cat([x_emb, dt_feat], dim=-1)
+        in_drive = self.in_proj(x_in)
+        return torch.tanh(u + in_drive)
+
+    def silent_step(
+        self,
+        history_h: List[torch.Tensor],
+        history_t: List[torch.Tensor],
+        dt: torch.Tensor,
+        t_curr: torch.Tensor,
+    ) -> torch.Tensor:
+        batch_size = t_curr.shape[0]
+        delays = self.get_delays()
+        h_taps = self.interpolate_history(history_h, history_t, t_curr, delays)
+        h_edges = h_taps[:, self.sources, :]
+        edge_current = (h_edges * self.tap_weights.unsqueeze(0)).sum(dim=-1)
+
+        u = torch.zeros(batch_size, self.hidden_dim, device=t_curr.device)
+        u.scatter_add_(1, self.targets.unsqueeze(0).expand(batch_size, -1), edge_current)
+        # In silence, input drive is zero
+        return torch.tanh(u)

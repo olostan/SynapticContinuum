@@ -56,6 +56,19 @@ class DiagonalDecaySSM(nn.Module):
         h_new = decay * h_prev + (1.0 - decay) * target
         return h_new
 
+    def silent_step(
+        self,
+        h_prev: torch.Tensor,
+        dt: torch.Tensor,
+    ) -> torch.Tensor:
+        """Evolve SSM state during silence (no external event drive)."""
+        rates = self.get_decay_rates()
+        decay = torch.exp(-dt * rates.unsqueeze(0))
+        rec_drive = self.recurrent_proj(h_prev)
+        target = torch.tanh(rec_drive)
+        h_new = decay * h_prev + (1.0 - decay) * target
+        return h_new
+
     def forward(
         self,
         batch: Dict[str, torch.Tensor],

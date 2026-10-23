@@ -1,179 +1,211 @@
 # EXP-0001 Execution Report — Temporal Synaptic Memory
 
 **Date:** 2026-10-23  
-**Status:** EXECUTED — COMPLETE (5 Preregistered Seeds)  
-**Run ID:** `20261023T171033Z-linux-amd-x86_64`  
+**Status:** CONFIRMATORY RERUN EXECUTED (Addressing Scientific Review on PR #6)  
+**Latest Confirmatory Run ID:** `20261023T180806Z-linux-amd-x86_64-confirmatory`  
+**Superseded Exploratory Run ID:** `20261023T171033Z-linux-amd-x86_64`  
+**Protocol Amendments:** [AMENDMENTS.md](AMENDMENTS.md)  
+**Design Spec:** [SPEC.md](SPEC.md) (preregistered, unchanged)  
 **PR:** #6 (`experiment/exp-0001-temporal-memory`)  
-**Design Spec:** [SPEC.md](SPEC.md)  
-**Research Reference:** R02 Report (PR #4), E005  
 
 ---
 
-## 1. Executive Summary & Scientific Findings
+## 1. Executive Summary & Core Scientific Findings
 
-We executed the preregistered **EXP-0001** benchmark comparing learned edge-specific temporal connections against time-aware recurrent and state-space baselines on irregular event sequences ($y = \mathbf{1}[d_2 > 1.5 d_1]$).
+We implemented protocol corrections requested during independent review of PR #6 and re-executed the full 5-seed benchmark on the Linux AMD Ryzen machine.
 
-### Key Empirical Discoveries
-1. **Source-Shared Exponential Trace Banks are Pareto-Optimal**: The $B=8$ source-shared exponential trace bank (`TraceBank`) achieves parity with `TimeAwareGRU` on in-distribution (99.88% vs 99.86%) and interpolation (100.00% vs 99.91%), and slightly outperforms it on extrapolation (87.22% vs 84.83%), while requiring **5.2× fewer trainable parameters** (10,826 vs 57,025) and **4.8× fewer MACs per step** (11,648 vs 56,064).
-2. **Explicit Delay-Tap FIR Underperforms**: The fixed random sparse FIR model with 8 delay taps and continuous-time causal interpolation (`SparseFIR`, 10,825 params) underperformed both `TraceBank` and `DiagonalDecaySSM` on extrapolation (81.07% vs 87.22% and 83.59%), and showed higher degradation in interpolation (98.60% vs 100.00%). Continuous interpolation across discrete past events introduces non-smooth piecewise gradients during training.
-3. **Internal Oscillation during Silence Degrades Representations (Negative Result)**: In the factorial silence vs. computation experiment ($J \in \{0, 1, 8, 64\}$ internal steps during the inter-event gap), free-running recurrent dynamics without external grounding caused accuracy to collapse from **99.7% ($J=0$) to 41.9% ($J=64$)**. Autonomous state evolution without feedback drives activations toward fixed-point saturation or decay, actively erasing stored delay ratios.
-4. **Timing Representations Couple into Hidden State Vector**: Causal trace ablation ($z \leftarrow 0$) at matched current hidden state $h$ right before readout caused minimal output perturbation ($\|\Delta h\|_2 = 0.0$), demonstrating that during training, the network transfers timing memory into the recurrent state vector $h$ rather than leaving it isolated in transient synaptic filters.
+### Key Empirical Findings
+
+1. **Explicit Timestamp Features Dominate Synaptic Traces (Diagnostic Ablation)**:
+   - When explicit $[\Delta t, \log(1+\Delta t)]$ input features were ablated to zero at inference time, accuracy across **all** recurrent architectures (`TraceBank`, `DiagonalDecaySSM`, `TimeAwareGRU`, `SparseFIR`) collapsed from ~100% to **51.0% (chance)**, with large mean absolute logit shifts of **19.0 to 26.1**.
+   - Conversely, boundary and interval trace ablations ($z \leftarrow 0$) at matched $h$ caused **zero perturbation** ($\|\Delta h\|_2 = 0.0, \Delta \text{logit} = 0.0$).
+   - **Crucial Inference**: When explicit $\Delta t$ features are injected at each event, standard gradient optimization routes timing information through the direct input projection rather than relying on continuous synaptic trace filters. The model learns to read the explicit clock features.
+
+2. **Negative Controls Confirm Timing Independence**:
+   - When independent instances were trained specifically on the negative control tasks (`control_symbol`: final token identity; `control_order`: initial token order), **all** recurrent models (`Reservoir`, `TimeAwareGRU`, `DiagonalDecaySSM`, `TraceBank`, `SparseFIR`) achieved **100.00% ± 0.00%** accuracy.
+   - Non-temporal tabular oracles (`ArithmeticOracle`, `MLPOracle`), which only observe $(d_1, d_2)$, remained at chance (~50%).
+   - **Conclusion**: Temporal models easily learn standard sequence identity and order tasks, but temporal connection kernels confer **no advantage** over simpler recurrent models when the target semantics are timing-independent.
+
+3. **Qualified Model Comparison (Inductive Bias, Not Cognition)**:
+   - On the temporal ratio task ($y = \mathbf{1}[d_2 > 1.5 d_1]$), `TraceBank` achieved 99.88% in-distribution, 100.00% interpolation ($d_1 \in [4, 5]$), and 87.22% extrapolation ($d_1 \in [12, 16], d_2 \in [10, 30]$), slightly ahead of `TimeAwareGRU` (84.83%) and `DiagonalDecaySSM` (83.59%).
+   - However, training `TraceBank` on CPU required **30.1s** per seed compared with **6.8s** for `TimeAwareGRU`, due to tensor scatter operations across the sparse graph. Parameter efficiency (10,826 vs 57,025) does not translate directly into training wall-clock speed.
+   - Tabular oracles (`MLPOracle`) reached 99.14% extrapolation without any streaming recurrence. This synthetic benchmark isolates inductive bias for ratio arithmetic, not emergent cognitive thought.
+
+4. **Symmetrical Silence $\times$ Computation Factorial (Negative Finding)**:
+   - Under exact time conservation ($\sum \delta t = \Delta$ with $\Delta t_{\text{final}} = 0$), scheduling free-running internal evolution ($J \in \{1, 8, 64\}$) during long inter-event gaps ($\Delta = 10.0$) degraded accuracy across all continuous models:
+     - `TraceBank`: 99.7% ($J=0$) $\to$ 41.9% ($J=8$) $\to$ 52.7% ($J=64$)
+     - `DiagonalDecaySSM`: 99.1% ($J=0$) $\to$ 38.1% ($J=8$) $\to$ 41.9% ($J=64$)
+     - `SparseFIR`: 99.7% ($J=0$) $\to$ 41.9% ($J=8$) $\to$ 41.9% ($J=64$)
+     - `TimeAwareGRU`: 99.8% ($J=0$) $\to$ 41.9% ($J=8, 64$)
+   - Uncalibrated internal state propagation during long silence drifts toward asymptotic attractors, eroding relative timing representations.
 
 ---
 
 ## 2. Environment & Machine Discovery
 
-Execution was conducted on the designated Linux mini PC. Hardware capabilities were discovered dynamically prior to execution:
-
 - **Host & Architecture**: `lenobox` (Linux 7.0.0-31-generic #31-Ubuntu x86_64)
-- **CPU**: AMD Ryzen 5 PRO 5650GE with Radeon Graphics (6 physical cores, 12 logical threads)
-- **Host RAM**: 14.50 GB total (3.61 GB available at startup)
-- **Disk Space**: 934.82 GB total, 807.54 GB free
-- **Python Runtime**: CPython 3.12.14 (Clang 22.1.3) via isolated virtual environment (`.venv`)
-- **PyTorch Backend**: PyTorch 2.14.1+cpu with **AVX2** capability
-- **Accelerator Audit**:
-  - CUDA: Not available (`torch.cuda.is_available() = False`)
-  - MPS: Not available (macOS only)
-  - Vulkan: Audited via `vulkaninfo` and PyTorch runtime. `/dev/dri/renderD128` permission denied; Vulkan fallback is `llvmpipe` (CPU software rasterizer). `torch.is_vulkan_available() = False`. In accordance with `EXPERIMENTATION.md` and `PROMPT.md`, PyTorch CPU with AVX2 was selected as the verified, deterministic backend.
+- **CPU**: AMD Ryzen 5 PRO 5650GE with Radeon Graphics (6 cores, 12 logical threads)
+- **Host RAM**: 14.50 GB total (3.61 GB free at startup)
+- **Python**: CPython 3.12.14 via `.venv`
+- **Framework**: PyTorch 2.14.1+cpu with AVX2 instruction set (`torch.is_vulkan_available() = False`)
+- **Execution Resource Footprint**:
+  - Confirmatory run total wall time: 850.93 seconds (~14.2 minutes)
+  - Peak RSS: 547.63 MB (well within 12 GB host limit)
 
 ---
 
-## 3. Data Generation & Disjointness Audit
+## 3. Dataset Generation & Auditing
 
-Data generation adhered strictly to `SPEC.md`. For each of the 5 preregistered seeds (`[11, 23, 37, 41, 53]`), datasets were synthesized using independent deterministic `np.random.SeedSequence` substreams:
+Datasets were generated across 5 preregistered seeds (`[11, 23, 37, 41, 53]`) using independent `np.random.SeedSequence` streams:
 
-- **Sequence Structure**: Tokens $t = (0, d_1, d_1 + d_2)$ with symbols $(A, B, C)$.
-- **Labeling Rule**: $y = \mathbf{1}[d_2 > 1.5 d_1]$, boundary margin $|d_2 - 1.5 d_1| \ge 0.05$.
-- **Split Sizes**:
-  - `train`: 10,000 samples ($d_1 \in [1, 10] \setminus [4, 5], d_2 \in [1, 15]$)
-  - `val`: 2,000 samples (same distribution as train)
-  - `test_id`: 4,000 samples (fresh in-distribution)
-  - `test_interpolation`: 4,000 samples ($d_1 \in [4, 5], d_2 \in [1, 15]$)
-  - `test_extrapolation`: 4,000 samples ($d_1 \in [12, 16], d_2 \in [10, 30]$)
-  - `control_symbol`: 4,000 samples (final symbol randomly $C$ or $D$; label depends strictly on symbol identity, independent of delays)
-  - `control_order`: 4,000 samples (first two symbols randomly $(A, B)$ or $(B, A)$; label depends strictly on order, independent of delays)
-- **Rejection Sampling**: Exact 50.0% positive / 50.0% negative balance across every split.
-- **Leakage Audit**: Verified SHA-256 tuple hashes for $(d_1, d_2, \text{symbols})$ across all splits. **0 overlapping tuples** were detected across all train/val/test/control pairs (see `metrics.json`).
+1. **Task 1 (Main Temporal Ratio)**:
+   - $y = \mathbf{1}[d_2 > 1.5 d_1]$, margin $|d_2 - 1.5 d_1| \ge 0.05$.
+   - Splits: Train (10,000), Val (2,000), Test In-Distribution (4,000), Test Interpolation ($d_1 \in [4, 5]$, 4,000), Test Extrapolation ($d_1 \in [12, 16], d_2 \in [10, 30]$, 4,000).
+   - Rejection sampled for exact 50.0% positive / 50.0% negative balance.
+2. **Task 2 (Control: Symbol Identity)**:
+   - $y = \mathbf{1}[\text{event}_2 == D]$, independent of delays $(d_1, d_2)$.
+   - Independent Train (10,000), Val (2,000), Test (4,000) splits.
+3. **Task 3 (Control: Event Order)**:
+   - $y = \mathbf{1}[\text{event}_0 == A]$, independent of delays $(d_1, d_2)$.
+   - Independent Train (10,000), Val (2,000), Test (4,000) splits.
+4. **Leakage Verification**: SHA-256 tuple hash audits confirmed **0 shared tuples** between any train, val, or test split across all tasks.
 
 ---
 
 ## 4. Model Architectures & Resource Accounting
 
-All models used hidden dimension $N=128$, matching `manifest.yaml`.
+| Model | Total Params | Trainable Params | Fixed Params | Weight (MiB) | MACs / Step | Train Time / Seed (s) | Eval Latency (ms/sample) |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| **Majority** | 1 | 0 | 1 | 0.000 | 0 | 0.0 | 0.006 |
+| **ArithmeticOracle** | 1 | 0 | 1 | 0.000 | 1 | 0.0 | 0.007 |
+| **MLPOracle** (tabular ceiling) | 17,281 | 17,281 | 0 | 0.066 | 17,024 | 4.0 ± 0.6 | 0.007 |
+| **Reservoir** ($N=128, \rho=0.95$) | 19,137 | 129 | 19,008 | 0.073 | 18,688 | 3.9 ± 0.3 | 0.010 |
+| **TimeAwareGRU** | 57,025 | 57,025 | 0 | 0.218 | 56,064 | 6.8 ± 0.7 | 0.012 |
+| **DiagonalDecaySSM** | 19,137 | 19,137 | 0 | 0.073 | 18,816 | 7.3 ± 0.8 | 0.012 |
+| **TraceBank** ($B=8$, degree $\le 8$) | 10,826 | 10,826 | 0 | 0.041 | 11,648 | 30.1 ± 1.6 | 0.038 |
+| **SparseFIR** ($K=8$, degree $\le 8$) | 10,825 | 10,825 | 0 | 0.041 | 14,592 | 26.0 ± 2.1 | 0.041 |
 
-| Model | Total Params | Trainable Params | Fixed Params | Weight (MiB) | Adam State (MiB) | MACs / Step |
-|---|---:|---:|---:|---:|---:|---:|
-| **Majority** | 1 | 0 | 1 | 0.000 | 0.000 | 0 |
-| **ArithmeticOracle** | 1 | 0 | 1 | 0.000 | 0.000 | 1 |
-| **MLPOracle** (tabular ceiling) | 17,281 | 17,281 | 0 | 0.066 | 0.264 | 17,024 |
-| **Reservoir** ($N=128, \rho=0.95$) | 19,137 | 129 | 19,008 | 0.073 | 0.075 | 18,688 |
-| **TimeAwareGRU** | 57,025 | 57,025 | 0 | 0.218 | 0.870 | 56,064 |
-| **DiagonalDecaySSM** | 19,137 | 19,137 | 0 | 0.073 | 0.292 | 18,816 |
-| **TraceBank** ($B=8$, degree $\le 8$) | 10,826 | 10,826 | 0 | 0.041 | 0.165 | 11,648 |
-| **SparseFIR** ($K=8$, degree $\le 8$) | 10,825 | 10,825 | 0 | 0.041 | 0.165 | 14,592 |
+*Note on Pareto Trade-offs*: While `TraceBank` has 5.2× fewer parameters and 4.8× fewer analytical MACs than `TimeAwareGRU`, its training time is ~4.4× higher on CPU due to Python/PyTorch tensor gather and scatter operations across sparse edge indices.
 
 ---
 
-## 5. Preregistered Benchmark Results
+## 5. Preregistered Benchmark Results (5 Seeds)
 
-Evaluated across all 5 seeds (`11, 23, 37, 41, 53`). Reported as **Mean ± Std [Min, Max]** on 4,000 held-out sequences per regime.
+Reported as **Mean ± Std** on 4,000 held-out samples per regime across seeds `[11, 23, 37, 41, 53]`.
 
-### 5.1 Balanced Accuracy (%)
-
-| Model | In-Distribution (ID) | Interpolation ($d_1 \in [4, 5]$) | Extrapolation ($d_1 \in [12, 16]$) | Control: Symbol (delay-indep.) | Control: Order (delay-indep.) |
-|---|:---:|:---:|:---:|:---:|:---:|
-| **Majority** | 50.00 ± 0.00 | 50.00 ± 0.00 | 50.00 ± 0.00 | 50.00 ± 0.00 | 50.00 ± 0.00 |
-| **ArithmeticOracle** | 100.00 ± 0.00 | 100.00 ± 0.00 | 100.00 ± 0.00 | 50.20 ± 0.98 | 50.46 ± 0.65 |
-| **MLPOracle** | 100.00 ± 0.01 | 100.00 ± 0.00 | 99.14 ± 0.52 | 50.20 ± 0.97 | 50.46 ± 0.65 |
-| **Reservoir** | 98.50 ± 0.48 | 99.41 ± 0.35 | 57.65 ± 2.65 | 49.99 ± 0.88 | 50.44 ± 0.72 |
-| **TimeAwareGRU** | 99.86 ± 0.10 | 99.91 ± 0.20 | 84.83 ± 1.43 | 53.72 ± 2.21 | 58.86 ± 2.20 |
-| **DiagonalDecaySSM** | 99.91 ± 0.08 | 99.93 ± 0.11 | 83.59 ± 1.73 | 57.49 ± 3.55 | 62.97 ± 4.37 |
-| **TraceBank** | **99.88 ± 0.10** | **100.00 ± 0.00** | **87.22 ± 0.87** | 61.16 ± 4.32 | 63.87 ± 6.43 |
-| **SparseFIR** | 99.65 ± 0.14 | 98.60 ± 0.88 | 81.07 ± 1.63 | 58.19 ± 3.05 | 70.63 ± 1.23 |
-
-### 5.2 Cross-Entropy Loss
+### 5.1 Main Temporal Ratio Task Balanced Accuracy (%)
 
 | Model | In-Distribution (ID) | Interpolation ($d_1 \in [4, 5]$) | Extrapolation ($d_1 \in [12, 16]$) |
 |---|:---:|:---:|:---:|
-| **Majority** | 0.6931 ± 0.0000 | 0.6931 ± 0.0000 | 0.6931 ± 0.0000 |
-| **ArithmeticOracle** | 0.0000 ± 0.0000 | 0.0000 ± 0.0000 | 0.0000 ± 0.0000 |
-| **MLPOracle** | 0.0018 ± 0.0003 | 0.0018 ± 0.0003 | 0.0283 ± 0.0239 |
-| **Reservoir** | 0.0538 ± 0.0084 | 0.0408 ± 0.0069 | 2.1937 ± 0.4468 |
-| **TimeAwareGRU** | 0.0102 ± 0.0019 | 0.0094 ± 0.0013 | 1.9239 ± 0.1405 |
-| **DiagonalDecaySSM** | 0.0094 ± 0.0007 | 0.0092 ± 0.0015 | 2.1380 ± 0.4234 |
-| **TraceBank** | **0.0089 ± 0.0018** | **0.0075 ± 0.0016** | **1.1932 ± 0.2727** |
-| **SparseFIR** | 0.0128 ± 0.0033 | 0.0286 ± 0.0123 | 1.8492 ± 0.6132 |
+| **Majority** | 50.00 ± 0.00 | 50.00 ± 0.00 | 50.00 ± 0.00 |
+| **ArithmeticOracle** | 100.00 ± 0.00 | 100.00 ± 0.00 | 100.00 ± 0.00 |
+| **MLPOracle** | 100.00 ± 0.01 | 100.00 ± 0.00 | 99.14 ± 0.52 |
+| **Reservoir** | 98.50 ± 0.48 | 99.11 ± 0.70 | 78.70 ± 1.67 |
+| **TimeAwareGRU** | 99.86 ± 0.10 | 99.91 ± 0.20 | 84.83 ± 1.43 |
+| **DiagonalDecaySSM** | 99.91 ± 0.08 | 99.93 ± 0.11 | 83.59 ± 1.73 |
+| **TraceBank** | **99.88 ± 0.10** | **100.00 ± 0.00** | **87.22 ± 0.87** |
+| **SparseFIR** | 99.65 ± 0.14 | 98.60 ± 0.88 | 81.07 ± 1.63 |
+
+### 5.2 Task-Specific Trained Negative Controls Balanced Accuracy (%)
+
+When independent instances are trained specifically on timing-independent objectives:
+
+| Model | Control: Symbol ($y = \mathbf{1}[\text{sym}_2 == D]$) | Control: Order ($y = \mathbf{1}[\text{sym}_0 == A]$) |
+|---|:---:|:---:|
+| **Majority** | 50.00 ± 0.00 | 50.00 ± 0.00 |
+| **ArithmeticOracle** (tabular $d_1, d_2$) | 50.54 ± 0.87 | 50.49 ± 0.67 |
+| **MLPOracle** (tabular $d_1, d_2$) | 49.69 ± 0.86 | 50.17 ± 0.73 |
+| **Reservoir** | 100.00 ± 0.00 | 100.00 ± 0.00 |
+| **TimeAwareGRU** | 100.00 ± 0.00 | 100.00 ± 0.00 |
+| **DiagonalDecaySSM** | 100.00 ± 0.00 | 100.00 ± 0.00 |
+| **TraceBank** | 100.00 ± 0.00 | 100.00 ± 0.00 |
+| **SparseFIR** | 100.00 ± 0.00 | 100.00 ± 0.00 |
+
+*Scientific Interpretation*: Every recurrent model achieves perfect 100% accuracy on timing-independent sequence tasks. Temporal connection mechanisms do not impair non-temporal learning, but provide zero advantage over simple standard recurrence when timing is non-causal.
 
 ---
 
-## 6. Factorial Silence vs. Computation Analysis
+## 6. Silence $\times$ Computation Factorial Analysis
 
-Following SPEC Section 25, we crossed physical elapsed gap (Short = 1.0 vs. Long = 10.0) with internal update step count $J \in \{0, 1, 8, 64\}$ during the inter-event interval.
-
-### Results on Held-out Sequences
+Evaluated across physical gap ($\Delta \in \{1.0, 10.0\}$) and silent internal steps ($J \in \{0, 1, 8, 64\}$) under exact time conservation ($\delta t = \Delta / J, \Delta t_{\text{final}} = 0$):
 
 ```text
 Condition                TimeAwareGRU   DiagonalDecaySSM   TraceBank   SparseFIR
 --------------------------------------------------------------------------------
-Gap = 1.0, J = 0 (event)     100.0%          100.0%         100.0%      100.0%
-Gap = 1.0, J = 1             100.0%          100.0%         100.0%      100.0%
-Gap = 1.0, J = 8             100.0%          100.0%          48.2%      100.0%
-Gap = 1.0, J = 64            100.0%          100.0%          24.8%      100.0%
+Gap = 1.0:
+  J = 0 (direct event)      100.0%          100.0%         100.0%      100.0%
+  J = 1 (scheduled)         100.0%           91.6%          86.5%      100.0%
+  J = 8 (scheduled)          99.2%          100.0%          87.4%      100.0%
+  J = 64 (scheduled)        100.0%          100.0%          88.3%      100.0%
+  Condition (a) Decay-only  100.0%           36.8%          24.3%      100.0%
+  Condition (c) Clumped      89.0%          100.0%         100.0%      100.0%
 --------------------------------------------------------------------------------
-Gap = 10.0, J = 0 (event)     99.8%           99.1%          99.7%       99.7%
-Gap = 10.0, J = 1             99.8%           99.1%          99.7%       99.7%
-Gap = 10.0, J = 8             99.8%           99.1%          41.9%       99.7%
-Gap = 10.0, J = 64            99.8%           99.1%          41.9%       99.7%
+Gap = 10.0:
+  J = 0 (direct event)       99.8%           99.1%          99.7%       99.7%
+  J = 1 (scheduled)          41.9%           54.8%          70.0%       58.3%
+  J = 8 (scheduled)          41.9%           38.1%          41.9%       41.9%
+  J = 64 (scheduled)         41.9%           41.9%          52.7%       41.9%
+  Condition (a) Decay-only   41.9%           41.9%          41.9%       58.3%
+  Condition (c) Clumped      64.2%           99.1%          99.7%       58.1%
 ```
 
-### Interpretation of Negative Finding
-When `TraceBank` undergoes free autonomous evolution ($J=8, 64$) without recurrent input injection, its internal state transitions drift toward asymptotic fixed points. The elapsed-time exponential decay factors $\exp(-dt / \tau_b)$ and continuous state updates accumulate numerical drift, attenuating the delicate relative timing representation. **Adding internal computation cycles without stabilizing feedback or sensory grounding actively destroys temporal memory rather than enhancing it.**
+### Analysis of the Negative Result
+1. At short gaps ($\Delta = 1.0$), recurrent models largely preserve their representations across substeps.
+2. At long gaps ($\Delta = 10.0$), partitioning the interval into free silent steps ($J=8, 64$) degrades performance to near-chance (~42%) across **all** recurrent architectures.
+3. This degradation occurs because ungrounded recurrent state evolution without external drive accumulates drift away from the trained manifold. The hypothesis that autonomous internal recurrent cycles generically enhance memory is **falsified** in this setting.
 
 ---
 
-## 7. Trace Ablation & State Perturbation Analysis
+## 7. Multi-Point Diagnostic Ablation Analysis
 
-To test whether the temporal memory resides strictly in the synaptic trace bank $z$ or within the recurrent state vector $h$, we applied causal ablation at matched hidden state $h_2$ immediately before the final event:
+| Ablation Condition | Model | Post-Ablation Acc (%) | Mean $|\Delta \text{logit}|$ | Prediction Flip Rate (%) |
+|---|---|:---:|:---:|:---:|
+| **Explicit $\Delta t$ Feature Zeroing** | TimeAwareGRU | 51.0% | 19.07 | 49.0% |
+| **Explicit $\Delta t$ Feature Zeroing** | DiagonalDecaySSM | 51.0% | 22.67 | 49.1% |
+| **Explicit $\Delta t$ Feature Zeroing** | TraceBank | 51.0% | 26.10 | 49.1% |
+| **Explicit $\Delta t$ Feature Zeroing** | SparseFIR | 52.6% | 21.11 | 47.4% |
+| **Boundary Trace Ablation ($z_2 \leftarrow 0$)** | TraceBank | 99.9% | 0.00 | 0.0% |
+| **Interval Trace Ablation ($z_1 \leftarrow 0$)** | TraceBank | 99.9% | 0.00 | 0.0% |
 
-- **State Perturbation**: $\|\Delta h\|_2 = \|h_{\text{normal}} - h_{\text{ablated}}\|_2 = 0.0000$
-- **Prediction Flip Rate**: $0.0000$ (0 / 1000 labels flipped)
-- **Pre-Ablation Accuracy**: 99.9%
-- **Post-Ablation Accuracy**: 99.9%
-
-**Conclusion**: The trained `TraceBank` model utilizes the trace bank dynamically during the interval transition to shape the state vector $h$. By the time the final event occurs, the necessary causal timing representation has already been consolidated into $h$. Instantaneous trace zeroing at the boundary step does not corrupt the already-updated recurrent state.
-
----
-
-## 8. Falsification & Critical Objections
-
-1. **Did edge-specific delay kernels prove superior to state-space memory?**  
-   **No.** `SparseFIR` with learned delay taps and fixed random connectivity performed worse on extrapolation (81.07%) and interpolation (98.60%) than the diagonal decay SSM (83.59% / 99.93%) and the source-shared trace bank (87.22% / 100.00%). The hypothesis that edge-specific delay lines confer unique advantages over low-dimensional state-space traces on irregular timing tasks is **falsified** in this parameter regime.
-2. **Does spontaneous internal recurrence produce thought-like representations?**  
-   **No.** Uncalibrated internal cycles during silence produced severe catastrophic forgetting (accuracy dropping to 24.8% - 41.9%). Time-varying internal complexity is not evidence of cognitive capability.
-3. **Are negative controls satisfied?**  
-   **Yes.** On the non-temporal symbol and order controls, timing models collapsed toward chance (~50-60%), proving that the networks were indeed responding to causal time intervals rather than memorizing sequence tokens.
+### Key Diagnostic Discovery
+The network relies overwhelmingly on the explicit $[\Delta t, \log(1+\Delta t)]$ input features injected into `in_proj(x)`. Because explicit timestamp features provide an uncorrupted scalar clock signal, the optimizer drives the weights to read this clock directly, bypassing causal reliance on continuous-time synaptic trace decay $z$.
 
 ---
 
-## 9. Artifact Manifest & Reproducibility
+## 8. Epistemic Status: Observed vs. Inferred vs. Open
 
-- **Committed to Git**:
-  - `src/` (hardware detection, dataset generator, model definitions, training, evaluation, factorial)
-  - `tests/` (13 passed unit/smoke tests)
-  - `configs/default.yaml` (preregistered hyperparameters)
-  - `requirements.txt` (pinned dependency versions)
-  - `runs/20261023T171033Z-linux-amd-x86_64/metrics.json` (128 KiB machine-readable results)
-- **Bulky Artifacts (Local Only, Not in Git)**:
-  - `.venv/` (local Python virtual environment, excluded via `.gitignore`)
-  - Intermediate batch activations and training weights: kept in transient memory, discarded after evaluation.
-- **Exact Reproduction Command**:
-  ```bash
-  cd experiments/EXP-0001-temporal-memory
-  PYTHONPATH=. .venv/bin/python src/run_all.py
-  ```
+- **Directly Observed**:
+  - `TraceBank` achieves superior extrapolation (87.22% vs 84.83% GRU) with 5.2× fewer parameters, but requires 4.4× more CPU training time.
+  - Tabular MLP oracle reaches 99.14% extrapolation without any recurrence or temporal synapses.
+  - Zeroing explicit $\Delta t$ input features collapses accuracy to 51.0% across all models.
+  - Symmetrical free-running silent updates degrade long-interval accuracy from 99.7% to ~42%.
+- **Inferred**:
+  - The performance advantage of `TraceBank` on extrapolation is an **inductive bias** for smooth exponential decay functions over large intervals, rather than dynamic edge-specific computation.
+  - Standard gradient training on discrete-event sequences with explicit delta times disincentivizes the use of continuous synaptic trace state.
+- **Not Established / Open**:
+  - Whether a strictly continuous-time loss (e.g. Neural ODE/CDE training without explicit $\Delta t$ input features) would force the model to rely exclusively on synaptic traces.
+  - Whether edge-specific delays outperform traces in large-scale, densely recurrent spiking substrates.
+
+---
+
+## 9. Artifact Manifest
+
+- **Committed in Git**:
+  - `src/` (hardware detection, data generators, models, training, evaluation, factorial suite)
+  - `tests/` (17 passed unit, smoke, and property tests)
+  - `configs/default.yaml`
+  - `requirements.txt`
+  - `runs/20261023T171033Z-linux-amd-x86_64/metrics.json` (128 KiB exploratory run)
+  - `runs/20261023T180806Z-linux-amd-x86_64-confirmatory/metrics.json` (161 KiB confirmatory run)
+  - `AMENDMENTS.md` (preregistered protocol adjustments)
+- **Local Only (Excluded via .gitignore)**:
+  - Virtual environment (`.venv/`)
+  - Intermediate checkpoints and activations (discarded post-evaluation)
 
 ---
 
 ## 10. Conclusion and Next Steps
 
-EXP-0001 demonstrates that source-shared continuous-time trace banks provide a highly parameter-efficient inductive bias for irregular-event timing, matching or slightly exceeding GRU capacity with 80% fewer parameters. However, edge-specific delay taps offer no empirical advantage over state-space traces, and autonomous ungrounded internal evolution degrades stored memory. Future investigations in SynapticContinuum should focus on **stabilized continuous-time attractors and bounded homeostatic plasticity** rather than unconstrained recurrent delay lines.
+EXP-0001 confirmatory results refute the hypothesis that sparse edge-specific delay lines confer an inherent advantage over continuous state-space models on irregular timing tasks, and demonstrate that free internal recurrence during silence degrades stored representations without stabilizing feedback.
+
+Future research (e.g., potential EXP-0002) should investigate **continuous-time training without explicit input clock injection** to test whether persistent synaptic traces can support autonomous temporal computation when explicit timestamp bypass is impossible.

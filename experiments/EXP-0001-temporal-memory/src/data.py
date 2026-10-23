@@ -241,82 +241,86 @@ def generate_all_datasets(
     val_size: int = 2000,
     test_size: int = 4000,
     epsilon: float = 0.05,
-) -> Tuple[Dict[str, SequenceDataset], Dict[str, Any]]:
-    """Generate all datasets for a given seed with deterministic substreams."""
-    # Use SeedSequence to derive independent, deterministic RNGs for each split
+) -> Tuple[Dict[str, Dict[str, SequenceDataset]], Dict[str, Any]]:
+    """Generate all datasets for a given seed with deterministic substreams.
+    
+    Generates three independent task suites:
+      1. 'temporal': main ratio comparison task (train, val, test_id, test_interpolation, test_extrapolation)
+      2. 'control_symbol': negative control trained specifically on symbol identity (train, val, test)
+      3. 'control_order': negative control trained specifically on sequence order (train, val, test)
+    """
     ss = np.random.SeedSequence(seed)
-    rng_train, rng_val, rng_test_id, rng_test_interp, rng_test_extrap, rng_ctrl_sym, rng_ctrl_ord = (
-        np.random.default_rng(s) for s in ss.spawn(7)
-    )
+    # Spawn 11 distinct RNGs for full suite isolation
+    rngs = [np.random.default_rng(s) for s in ss.spawn(11)]
+    (
+        rng_ratio_tr,
+        rng_ratio_va,
+        rng_ratio_id,
+        rng_ratio_in,
+        rng_ratio_ex,
+        rng_sym_tr,
+        rng_sym_va,
+        rng_sym_te,
+        rng_ord_tr,
+        rng_ord_va,
+        rng_ord_te,
+    ) = rngs
 
-    train_samples = generate_balanced_split(
-        rng_train,
-        train_size,
-        d1_range=(1.0, 10.0),
-        d2_range=(1.0, 15.0),
-        d1_excluded=(4.0, 5.0),
-        epsilon=epsilon,
-    )
-    val_samples = generate_balanced_split(
-        rng_val,
-        val_size,
-        d1_range=(1.0, 10.0),
-        d2_range=(1.0, 15.0),
-        d1_excluded=(4.0, 5.0),
-        epsilon=epsilon,
-    )
-    test_id_samples = generate_balanced_split(
-        rng_test_id,
-        test_size,
-        d1_range=(1.0, 10.0),
-        d2_range=(1.0, 15.0),
-        d1_excluded=(4.0, 5.0),
-        epsilon=epsilon,
-    )
-    test_interp_samples = generate_balanced_split(
-        rng_test_interp,
-        test_size,
-        d1_range=(4.0, 5.0),
-        d2_range=(1.0, 15.0),
-        d1_excluded=None,  # Specifically in [4, 5]
-        epsilon=epsilon,
-    )
-    test_extrap_samples = generate_balanced_split(
-        rng_test_extrap,
-        test_size,
-        d1_range=(12.0, 16.0),
-        d2_range=(10.0, 30.0),
-        d1_excluded=None,
-        epsilon=epsilon,
-    )
-    ctrl_sym_samples = generate_negative_control_symbol(
-        rng_ctrl_sym,
-        test_size,
-        d1_range=(1.0, 10.0),
-        d2_range=(1.0, 15.0),
-        d1_excluded=(4.0, 5.0),
-        epsilon=epsilon,
-    )
-    ctrl_ord_samples = generate_negative_control_order(
-        rng_ctrl_ord,
-        test_size,
-        d1_range=(1.0, 10.0),
-        d2_range=(1.0, 15.0),
-        d1_excluded=(4.0, 5.0),
-        epsilon=epsilon,
-    )
-
-    raw_splits = {
-        "train": train_samples,
-        "val": val_samples,
-        "test_id": test_id_samples,
-        "test_interpolation": test_interp_samples,
-        "test_extrapolation": test_extrap_samples,
-        "control_symbol": ctrl_sym_samples,
-        "control_order": ctrl_ord_samples,
+    # 1. Main Temporal Ratio Task
+    temporal_splits = {
+        "train": generate_balanced_split(
+            rng_ratio_tr, train_size, d1_range=(1.0, 10.0), d2_range=(1.0, 15.0), d1_excluded=(4.0, 5.0), epsilon=epsilon
+        ),
+        "val": generate_balanced_split(
+            rng_ratio_va, val_size, d1_range=(1.0, 10.0), d2_range=(1.0, 15.0), d1_excluded=(4.0, 5.0), epsilon=epsilon
+        ),
+        "test_id": generate_balanced_split(
+            rng_ratio_id, test_size, d1_range=(1.0, 10.0), d2_range=(1.0, 15.0), d1_excluded=(4.0, 5.0), epsilon=epsilon
+        ),
+        "test_interpolation": generate_balanced_split(
+            rng_ratio_in, test_size, d1_range=(4.0, 5.0), d2_range=(1.0, 15.0), d1_excluded=None, epsilon=epsilon
+        ),
+        "test_extrapolation": generate_balanced_split(
+            rng_ratio_ex, test_size, d1_range=(12.0, 16.0), d2_range=(10.0, 30.0), d1_excluded=None, epsilon=epsilon
+        ),
     }
 
-    audit = audit_splits(raw_splits)
+    # 2. Control Symbol Task (Trained on final symbol C vs D)
+    sym_splits = {
+        "train": generate_negative_control_symbol(
+            rng_sym_tr, train_size, d1_range=(1.0, 10.0), d2_range=(1.0, 15.0), d1_excluded=(4.0, 5.0), epsilon=epsilon
+        ),
+        "val": generate_negative_control_symbol(
+            rng_sym_va, val_size, d1_range=(1.0, 10.0), d2_range=(1.0, 15.0), d1_excluded=(4.0, 5.0), epsilon=epsilon
+        ),
+        "test": generate_negative_control_symbol(
+            rng_sym_te, test_size, d1_range=(1.0, 10.0), d2_range=(1.0, 15.0), d1_excluded=(4.0, 5.0), epsilon=epsilon
+        ),
+    }
 
-    datasets = {name: SequenceDataset(samples) for name, samples in raw_splits.items()}
-    return datasets, audit
+    # 3. Control Order Task (Trained on initial order AB vs BA)
+    ord_splits = {
+        "train": generate_negative_control_order(
+            rng_ord_tr, train_size, d1_range=(1.0, 10.0), d2_range=(1.0, 15.0), d1_excluded=(4.0, 5.0), epsilon=epsilon
+        ),
+        "val": generate_negative_control_order(
+            rng_ord_va, val_size, d1_range=(1.0, 10.0), d2_range=(1.0, 15.0), d1_excluded=(4.0, 5.0), epsilon=epsilon
+        ),
+        "test": generate_negative_control_order(
+            rng_ord_te, test_size, d1_range=(1.0, 10.0), d2_range=(1.0, 15.0), d1_excluded=(4.0, 5.0), epsilon=epsilon
+        ),
+    }
+
+    suites = {
+        "temporal": {k: SequenceDataset(v) for k, v in temporal_splits.items()},
+        "control_symbol": {k: SequenceDataset(v) for k, v in sym_splits.items()},
+        "control_order": {k: SequenceDataset(v) for k, v in ord_splits.items()},
+    }
+
+    audits = {
+        "temporal": audit_splits(temporal_splits),
+        "control_symbol": audit_splits(sym_splits),
+        "control_order": audit_splits(ord_splits),
+    }
+
+    return suites, audits

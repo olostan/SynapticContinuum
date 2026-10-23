@@ -6,8 +6,8 @@ from src.factorial import run_factorial_and_ablation
 
 
 def test_factorial_and_ablation():
-    datasets, _ = generate_all_datasets(seed=42, train_size=50, val_size=20, test_size=20)
-    test_ds = datasets["test_id"]
+    suites, _ = generate_all_datasets(seed=42, train_size=50, val_size=20, test_size=20)
+    test_ds = suites["temporal"]["test_id"]
 
     # Test with TraceBankModel
     trace_model = TraceBankModel(hidden_dim=32, trace_bases=4, max_degree=4)
@@ -19,11 +19,13 @@ def test_factorial_and_ablation():
         update_counts=[0, 2],
         max_eval_samples=20,
     )
-    assert "conditions" in res_trace
-    assert "gap_1.0" in res_trace["conditions"]
-    assert "J_0" in res_trace["conditions"]["gap_1.0"]
-    assert "trace_ablation" in res_trace
-    assert "state_perturbation_l2" in res_trace["trace_ablation"]
+    assert "factorial_conditions" in res_trace
+    assert "gap_1.0" in res_trace["factorial_conditions"]
+    assert "J_0" in res_trace["factorial_conditions"]["gap_1.0"]
+    assert "diagnostic_ablations" in res_trace
+    assert "boundary_trace_ablation" in res_trace["diagnostic_ablations"]
+    assert "interval_trace_ablation" in res_trace["diagnostic_ablations"]
+    assert "explicit_dt_feature_ablation" in res_trace["diagnostic_ablations"]
 
     # Test with GRU
     gru_model = TimeAwareGRU(hidden_dim=32)
@@ -35,4 +37,4 @@ def test_factorial_and_ablation():
         update_counts=[0, 2],
         max_eval_samples=20,
     )
-    assert "conditions" in res_gru
+    assert "factorial_conditions" in res_gru

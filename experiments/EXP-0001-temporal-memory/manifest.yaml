@@ -2,7 +2,8 @@ schema_version: 1
 id: EXP-0001
 name: temporal-memory
 status: executed
-latest_run_id: 20261023T171033Z-linux-amd-x86_64
+latest_confirmatory_run_id: 20261023T180806Z-linux-amd-x86_64-confirmatory
+superseded_exploratory_run_id: 20261023T171033Z-linux-amd-x86_64
 reference:
   original_proposal: experiments/E005-temporal-memory-ablation.md
   research_report: research/findings/R02-temporal-connections/REPORT.md

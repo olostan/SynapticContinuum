@@ -1,0 +1,5971 @@
+{
+  "metadata": {
+    "experiment_id": "EXP-0001",
+    "run_id": "20261023T180806Z-linux-amd-x86_64-confirmatory",
+    "timestamp_utc": "2026-10-23T18:22:16.954164+00:00",
+    "status": "confirmatory",
+    "smoke_test": false,
+    "seeds": [
+      11,
+      23,
+      37,
+      41,
+      53
+    ],
+    "total_wall_time_sec": 850.93,
+    "peak_rss_mb": 547.63
+  },
+  "environment": {
+    "os": {
+      "system": "Linux",
+      "release": "7.0.0-31-generic",
+      "version": "#31-Ubuntu SMP PREEMPT_DYNAMIC Sat Aug  1 04:26:38 UTC 2026",
+      "machine": "x86_64",
+      "processor": ""
+    },
+    "python": {
+      "version": "3.12.14",
+      "compiler": "Clang 22.1.3 ",
+      "executable": "/home/olostan/code/SynapticContinuum/experiments/EXP-0001-temporal-memory/.venv/bin/python"
+    },
+    "ram": {
+      "total_gb": 14.5,
+      "available_gb": 4.72
+    },
+    "cpu": {
+      "logical_cores": 12,
+      "model_name": "AMD Ryzen 5 PRO 5650GE with Radeon Graphics"
+    },
+    "disk": {
+      "total_gb": 934.82,
+      "free_gb": 806.8
+    },
+    "torch": {
+      "version": "2.14.1+cpu",
+      "cuda_available": false,
+      "mps_available": false,
+      "vulkan_available": false,
+      "cpu_capability": "AVX2"
+    },
+    "numpy": {
+      "version": "2.5.2"
+    }
+  },
+  "config": {
+    "experiment_id": "EXP-0001",
+    "name": "temporal-memory",
+    "seeds": [
+      11,
+      23,
+      37,
+      41,
+      53
+    ],
+    "data": {
+      "train_size": 10000,
+      "validation_size": 2000,
+      "test_size_per_regime": 4000,
+      "epsilon": 0.05,
+      "train_d1_min": 1.0,
+      "train_d1_max": 10.0,
+      "train_d1_excluded": [
+        4.0,
+        5.0
+      ],
+      "train_d2_min": 1.0,
+      "train_d2_max": 15.0,
+      "interp_d1_min": 4.0,
+      "interp_d1_max": 5.0,
+      "interp_d2_min": 1.0,
+      "interp_d2_max": 15.0,
+      "extrap_d1_min": 12.0,
+      "extrap_d1_max": 16.0,
+      "extrap_d2_min": 10.0,
+      "extrap_d2_max": 30.0
+    },
+    "models": {
+      "hidden_units": 128,
+      "trace_bases": 8,
+      "fir_taps": 8,
+      "sparse_max_degree": 8,
+      "batch_size": 64,
+      "learning_rate": 0.001,
+      "max_epochs": 25,
+      "early_stopping_patience": 5,
+      "device": "cpu"
+    },
+    "factorial": {
+      "gaps": [
+        1.0,
+        10.0
+      ],
+      "update_counts": [
+        0,
+        1,
+        8,
+        64
+      ]
+    }
+  },
+  "model_accounting": {
+    "Majority": {
+      "total_parameters": 1,
+      "trainable_parameters": 0,
+      "fixed_parameters": 1,
+      "weight_mib": 0.0,
+      "adam_mib": 0.0,
+      "macs_per_step": 0
+    },
+    "ArithmeticOracle": {
+      "total_parameters": 1,
+      "trainable_parameters": 0,
+      "fixed_parameters": 1,
+      "weight_mib": 0.0,
+      "adam_mib": 0.0,
+      "macs_per_step": 1
+    },
+    "MLPOracle": {
+      "total_parameters": 17281,
+      "trainable_parameters": 17281,
+      "fixed_parameters": 0,
+      "weight_mib": 0.0659,
+      "adam_mib": 0.2637,
+      "macs_per_step": 17024
+    },
+    "Reservoir": {
+      "total_parameters": 19137,
+      "trainable_parameters": 129,
+      "fixed_parameters": 19008,
+      "weight_mib": 0.073,
+      "adam_mib": 0.0745,
+      "macs_per_step": 18688
+    },
+    "TimeAwareGRU": {
+      "total_parameters": 57025,
+      "trainable_parameters": 57025,
+      "fixed_parameters": 0,
+      "weight_mib": 0.2175,
+      "adam_mib": 0.8701,
+      "macs_per_step": 56064
+    },
+    "DiagonalDecaySSM": {
+      "total_parameters": 19137,
+      "trainable_parameters": 19137,
+      "fixed_parameters": 0,
+      "weight_mib": 0.073,
+      "adam_mib": 0.292,
+      "macs_per_step": 18816
+    },
+    "TraceBank": {
+      "total_parameters": 10826,
+      "trainable_parameters": 10826,
+      "fixed_parameters": 0,
+      "weight_mib": 0.0413,
+      "adam_mib": 0.1652,
+      "macs_per_step": 11648
+    },
+    "SparseFIR": {
+      "total_parameters": 10825,
+      "trainable_parameters": 10825,
+      "fixed_parameters": 0,
+      "weight_mib": 0.0413,
+      "adam_mib": 0.1652,
+      "macs_per_step": 14592
+    }
+  },
+  "aggregate_summary": {
+    "Majority": {
+      "temporal_regimes": {
+        "test_id": {
+          "balanced_accuracy": {
+            "mean": 0.5,
+            "std": 0.0,
+            "min": 0.5,
+            "max": 0.5
+          },
+          "loss": {
+            "mean": 0.6931,
+            "std": 0.0,
+            "min": 0.6931,
+            "max": 0.6931
+          }
+        },
+        "test_interpolation": {
+          "balanced_accuracy": {
+            "mean": 0.5,
+            "std": 0.0,
+            "min": 0.5,
+            "max": 0.5
+          },
+          "loss": {
+            "mean": 0.6931,
+            "std": 0.0,
+            "min": 0.6931,
+            "max": 0.6931
+          }
+        },
+        "test_extrapolation": {
+          "balanced_accuracy": {
+            "mean": 0.5,
+            "std": 0.0,
+            "min": 0.5,
+            "max": 0.5
+          },
+          "loss": {
+            "mean": 0.6931,
+            "std": 0.0,
+            "min": 0.6931,
+            "max": 0.6931
+          }
+        },
+        "zero_shot_control_symbol": {
+          "balanced_accuracy": {
+            "mean": 0.5,
+            "std": 0.0,
+            "min": 0.5,
+            "max": 0.5
+          },
+          "loss": {
+            "mean": 0.6931,
+            "std": 0.0,
+            "min": 0.6931,
+            "max": 0.6931
+          }
+        },
+        "zero_shot_control_order": {
+          "balanced_accuracy": {
+            "mean": 0.5,
+            "std": 0.0,
+            "min": 0.5,
+            "max": 0.5
+          },
+          "loss": {
+            "mean": 0.6931,
+            "std": 0.0,
+            "min": 0.6931,
+            "max": 0.6931
+          }
+        }
+      },
+      "trained_controls": {
+        "trained_control_symbol": {
+          "balanced_accuracy": {
+            "mean": 0.5,
+            "std": 0.0,
+            "min": 0.5,
+            "max": 0.5
+          },
+          "loss": {
+            "mean": 0.6931,
+            "std": 0.0,
+            "min": 0.6931,
+            "max": 0.6931
+          }
+        },
+        "trained_control_order": {
+          "balanced_accuracy": {
+            "mean": 0.5,
+            "std": 0.0,
+            "min": 0.5,
+            "max": 0.5
+          },
+          "loss": {
+            "mean": 0.6931,
+            "std": 0.0,
+            "min": 0.6931,
+            "max": 0.6931
+          }
+        }
+      },
+      "resource_profiles": {
+        "train_time_sec": {
+          "mean": 0.0,
+          "std": 0.0,
+          "min": 0.0,
+          "max": 0.0
+        },
+        "inference_latency_ms": {
+          "mean": 0.006,
+          "std": 0.0,
+          "min": 0.006,
+          "max": 0.006
+        }
+      }
+    },
+    "ArithmeticOracle": {
+      "temporal_regimes": {
+        "test_id": {
+          "balanced_accuracy": {
+            "mean": 1.0,
+            "std": 0.0,
+            "min": 1.0,
+            "max": 1.0
+          },
+          "loss": {
+            "mean": 0.0,
+            "std": 0.0,
+            "min": 0.0,
+            "max": 0.0
+          }
+        },
+        "test_interpolation": {
+          "balanced_accuracy": {
+            "mean": 1.0,
+            "std": 0.0,
+            "min": 1.0,
+            "max": 1.0
+          },
+          "loss": {
+            "mean": 0.0,
+            "std": 0.0,
+            "min": 0.0,
+            "max": 0.0
+          }
+        },
+        "test_extrapolation": {
+          "balanced_accuracy": {
+            "mean": 1.0,
+            "std": 0.0,
+            "min": 1.0,
+            "max": 1.0
+          },
+          "loss": {
+            "mean": 0.0,
+            "std": 0.0,
+            "min": 0.0,
+            "max": 0.0
+          }
+        },
+        "zero_shot_control_symbol": {
+          "balanced_accuracy": {
+            "mean": 0.5054,
+            "std": 0.0087,
+            "min": 0.4955,
+            "max": 0.5137
+          },
+          "loss": {
+            "mean": 9.891,
+            "std": 0.1747,
+            "min": 9.725,
+            "max": 10.09
+          }
+        },
+        "zero_shot_control_order": {
+          "balanced_accuracy": {
+            "mean": 0.5049,
+            "std": 0.0067,
+            "min": 0.4985,
+            "max": 0.513
+          },
+          "loss": {
+            "mean": 9.903,
+            "std": 0.1347,
+            "min": 9.74,
+            "max": 10.03
+          }
+        }
+      },
+      "trained_controls": {
+        "trained_control_symbol": {
+          "balanced_accuracy": {
+            "mean": 0.5054,
+            "std": 0.0087,
+            "min": 0.4955,
+            "max": 0.5137
+          },
+          "loss": {
+            "mean": 9.891,
+            "std": 0.1747,
+            "min": 9.725,
+            "max": 10.09
+          }
+        },
+        "trained_control_order": {
+          "balanced_accuracy": {
+            "mean": 0.5049,
+            "std": 0.0067,
+            "min": 0.4985,
+            "max": 0.513
+          },
+          "loss": {
+            "mean": 9.903,
+            "std": 0.1347,
+            "min": 9.74,
+            "max": 10.03
+          }
+        }
+      },
+      "resource_profiles": {
+        "train_time_sec": {
+          "mean": 0.0,
+          "std": 0.0,
+          "min": 0.0,
+          "max": 0.0
+        },
+        "inference_latency_ms": {
+          "mean": 0.0068,
+          "std": 0.0004,
+          "min": 0.006,
+          "max": 0.007
+        }
+      }
+    },
+    "MLPOracle": {
+      "temporal_regimes": {
+        "test_id": {
+          "balanced_accuracy": {
+            "mean": 1.0,
+            "std": 0.0001,
+            "min": 0.9998,
+            "max": 1.0
+          },
+          "loss": {
+            "mean": 0.0018,
+            "std": 0.0003,
+            "min": 0.0013,
+            "max": 0.0021
+          }
+        },
+        "test_interpolation": {
+          "balanced_accuracy": {
+            "mean": 1.0,
+            "std": 0.0,
+            "min": 1.0,
+            "max": 1.0
+          },
+          "loss": {
+            "mean": 0.0018,
+            "std": 0.0003,
+            "min": 0.0014,
+            "max": 0.0023
+          }
+        },
+        "test_extrapolation": {
+          "balanced_accuracy": {
+            "mean": 0.9914,
+            "std": 0.0052,
+            "min": 0.9852,
+            "max": 0.9972
+          },
+          "loss": {
+            "mean": 0.0283,
+            "std": 0.0239,
+            "min": 0.0052,
+            "max": 0.0598
+          }
+        },
+        "zero_shot_control_symbol": {
+          "balanced_accuracy": {
+            "mean": 0.5054,
+            "std": 0.0087,
+            "min": 0.4955,
+            "max": 0.5137
+          },
+          "loss": {
+            "mean": 24.6481,
+            "std": 0.5295,
+            "min": 23.9637,
+            "max": 25.2814
+          }
+        },
+        "zero_shot_control_order": {
+          "balanced_accuracy": {
+            "mean": 0.5049,
+            "std": 0.0067,
+            "min": 0.4985,
+            "max": 0.513
+          },
+          "loss": {
+            "mean": 24.1887,
+            "std": 0.6222,
+            "min": 23.1689,
+            "max": 24.7559
+          }
+        }
+      },
+      "trained_controls": {
+        "trained_control_symbol": {
+          "balanced_accuracy": {
+            "mean": 0.4969,
+            "std": 0.0086,
+            "min": 0.4858,
+            "max": 0.5092
+          },
+          "loss": {
+            "mean": 0.6934,
+            "std": 0.0004,
+            "min": 0.6929,
+            "max": 0.6939
+          }
+        },
+        "trained_control_order": {
+          "balanced_accuracy": {
+            "mean": 0.5017,
+            "std": 0.0073,
+            "min": 0.4928,
+            "max": 0.5122
+          },
+          "loss": {
+            "mean": 0.6934,
+            "std": 0.0005,
+            "min": 0.6929,
+            "max": 0.6941
+          }
+        }
+      },
+      "resource_profiles": {
+        "train_time_sec": {
+          "mean": 4.018,
+          "std": 0.0277,
+          "min": 3.97,
+          "max": 4.04
+        },
+        "inference_latency_ms": {
+          "mean": 0.007,
+          "std": 0.0,
+          "min": 0.007,
+          "max": 0.007
+        }
+      }
+    },
+    "Reservoir": {
+      "temporal_regimes": {
+        "test_id": {
+          "balanced_accuracy": {
+            "mean": 0.985,
+            "std": 0.0048,
+            "min": 0.979,
+            "max": 0.992
+          },
+          "loss": {
+            "mean": 0.0761,
+            "std": 0.0099,
+            "min": 0.0586,
+            "max": 0.0826
+          }
+        },
+        "test_interpolation": {
+          "balanced_accuracy": {
+            "mean": 0.9911,
+            "std": 0.007,
+            "min": 0.9835,
+            "max": 0.999
+          },
+          "loss": {
+            "mean": 0.0664,
+            "std": 0.0115,
+            "min": 0.0499,
+            "max": 0.0792
+          }
+        },
+        "test_extrapolation": {
+          "balanced_accuracy": {
+            "mean": 0.787,
+            "std": 0.0167,
+            "min": 0.7732,
+            "max": 0.8137
+          },
+          "loss": {
+            "mean": 0.5834,
+            "std": 0.049,
+            "min": 0.526,
+            "max": 0.6419
+          }
+        },
+        "zero_shot_control_symbol": {
+          "balanced_accuracy": {
+            "mean": 0.599,
+            "std": 0.0392,
+            "min": 0.559,
+            "max": 0.6562
+          },
+          "loss": {
+            "mean": 2.5559,
+            "std": 0.1252,
+            "min": 2.4269,
+            "max": 2.7331
+          }
+        },
+        "zero_shot_control_order": {
+          "balanced_accuracy": {
+            "mean": 0.5541,
+            "std": 0.0304,
+            "min": 0.509,
+            "max": 0.5938
+          },
+          "loss": {
+            "mean": 3.0856,
+            "std": 0.4557,
+            "min": 2.553,
+            "max": 3.6886
+          }
+        }
+      },
+      "trained_controls": {
+        "trained_control_symbol": {
+          "balanced_accuracy": {
+            "mean": 1.0,
+            "std": 0.0,
+            "min": 1.0,
+            "max": 1.0
+          },
+          "loss": {
+            "mean": 0.0011,
+            "std": 0.0001,
+            "min": 0.0009,
+            "max": 0.0012
+          }
+        },
+        "trained_control_order": {
+          "balanced_accuracy": {
+            "mean": 1.0,
+            "std": 0.0,
+            "min": 1.0,
+            "max": 1.0
+          },
+          "loss": {
+            "mean": 0.0039,
+            "std": 0.0014,
+            "min": 0.0021,
+            "max": 0.0051
+          }
+        }
+      },
+      "resource_profiles": {
+        "train_time_sec": {
+          "mean": 3.87,
+          "std": 0.0292,
+          "min": 3.82,
+          "max": 3.89
+        },
+        "inference_latency_ms": {
+          "mean": 0.01,
+          "std": 0.0,
+          "min": 0.01,
+          "max": 0.01
+        }
+      }
+    },
+    "TimeAwareGRU": {
+      "temporal_regimes": {
+        "test_id": {
+          "balanced_accuracy": {
+            "mean": 0.9986,
+            "std": 0.001,
+            "min": 0.9972,
+            "max": 0.9998
+          },
+          "loss": {
+            "mean": 0.0102,
+            "std": 0.0019,
+            "min": 0.0073,
+            "max": 0.0117
+          }
+        },
+        "test_interpolation": {
+          "balanced_accuracy": {
+            "mean": 0.9991,
+            "std": 0.002,
+            "min": 0.9955,
+            "max": 1.0
+          },
+          "loss": {
+            "mean": 0.0094,
+            "std": 0.0013,
+            "min": 0.008,
+            "max": 0.0113
+          }
+        },
+        "test_extrapolation": {
+          "balanced_accuracy": {
+            "mean": 0.8483,
+            "std": 0.0143,
+            "min": 0.8387,
+            "max": 0.873
+          },
+          "loss": {
+            "mean": 1.9239,
+            "std": 0.1405,
+            "min": 1.7445,
+            "max": 2.0472
+          }
+        },
+        "zero_shot_control_symbol": {
+          "balanced_accuracy": {
+            "mean": 0.5409,
+            "std": 0.0209,
+            "min": 0.5235,
+            "max": 0.5703
+          },
+          "loss": {
+            "mean": 8.7802,
+            "std": 0.785,
+            "min": 7.5023,
+            "max": 9.6527
+          }
+        },
+        "zero_shot_control_order": {
+          "balanced_accuracy": {
+            "mean": 0.5866,
+            "std": 0.0228,
+            "min": 0.562,
+            "max": 0.611
+          },
+          "loss": {
+            "mean": 7.9144,
+            "std": 0.4109,
+            "min": 7.5489,
+            "max": 8.5767
+          }
+        }
+      },
+      "trained_controls": {
+        "trained_control_symbol": {
+          "balanced_accuracy": {
+            "mean": 1.0,
+            "std": 0.0,
+            "min": 1.0,
+            "max": 1.0
+          },
+          "loss": {
+            "mean": 0.0,
+            "std": 0.0001,
+            "min": 0.0,
+            "max": 0.0001
+          }
+        },
+        "trained_control_order": {
+          "balanced_accuracy": {
+            "mean": 1.0,
+            "std": 0.0,
+            "min": 1.0,
+            "max": 1.0
+          },
+          "loss": {
+            "mean": 0.0001,
+            "std": 0.0001,
+            "min": 0.0,
+            "max": 0.0002
+          }
+        }
+      },
+      "resource_profiles": {
+        "train_time_sec": {
+          "mean": 6.784,
+          "std": 0.5958,
+          "min": 6.15,
+          "max": 7.76
+        },
+        "inference_latency_ms": {
+          "mean": 0.0118,
+          "std": 0.0004,
+          "min": 0.011,
+          "max": 0.012
+        }
+      }
+    },
+    "DiagonalDecaySSM": {
+      "temporal_regimes": {
+        "test_id": {
+          "balanced_accuracy": {
+            "mean": 0.9991,
+            "std": 0.0008,
+            "min": 0.998,
+            "max": 0.9998
+          },
+          "loss": {
+            "mean": 0.0094,
+            "std": 0.0007,
+            "min": 0.0084,
+            "max": 0.0102
+          }
+        },
+        "test_interpolation": {
+          "balanced_accuracy": {
+            "mean": 0.9993,
+            "std": 0.0011,
+            "min": 0.9975,
+            "max": 1.0
+          },
+          "loss": {
+            "mean": 0.0092,
+            "std": 0.0015,
+            "min": 0.0082,
+            "max": 0.0119
+          }
+        },
+        "test_extrapolation": {
+          "balanced_accuracy": {
+            "mean": 0.8359,
+            "std": 0.0173,
+            "min": 0.81,
+            "max": 0.851
+          },
+          "loss": {
+            "mean": 2.138,
+            "std": 0.4234,
+            "min": 1.7533,
+            "max": 2.766
+          }
+        },
+        "zero_shot_control_symbol": {
+          "balanced_accuracy": {
+            "mean": 0.5789,
+            "std": 0.0271,
+            "min": 0.5335,
+            "max": 0.6035
+          },
+          "loss": {
+            "mean": 8.4933,
+            "std": 1.0238,
+            "min": 7.6625,
+            "max": 10.2754
+          }
+        },
+        "zero_shot_control_order": {
+          "balanced_accuracy": {
+            "mean": 0.6291,
+            "std": 0.0502,
+            "min": 0.5528,
+            "max": 0.6892
+          },
+          "loss": {
+            "mean": 7.7545,
+            "std": 1.4175,
+            "min": 6.1801,
+            "max": 9.9039
+          }
+        }
+      },
+      "trained_controls": {
+        "trained_control_symbol": {
+          "balanced_accuracy": {
+            "mean": 1.0,
+            "std": 0.0,
+            "min": 1.0,
+            "max": 1.0
+          },
+          "loss": {
+            "mean": 0.0001,
+            "std": 0.0,
+            "min": 0.0001,
+            "max": 0.0001
+          }
+        },
+        "trained_control_order": {
+          "balanced_accuracy": {
+            "mean": 1.0,
+            "std": 0.0,
+            "min": 1.0,
+            "max": 1.0
+          },
+          "loss": {
+            "mean": 0.0001,
+            "std": 0.0001,
+            "min": 0.0,
+            "max": 0.0002
+          }
+        }
+      },
+      "resource_profiles": {
+        "train_time_sec": {
+          "mean": 7.258,
+          "std": 0.1397,
+          "min": 7.02,
+          "max": 7.38
+        },
+        "inference_latency_ms": {
+          "mean": 0.012,
+          "std": 0.0,
+          "min": 0.012,
+          "max": 0.012
+        }
+      }
+    },
+    "TraceBank": {
+      "temporal_regimes": {
+        "test_id": {
+          "balanced_accuracy": {
+            "mean": 0.9988,
+            "std": 0.001,
+            "min": 0.9972,
+            "max": 1.0
+          },
+          "loss": {
+            "mean": 0.0089,
+            "std": 0.0018,
+            "min": 0.0067,
+            "max": 0.011
+          }
+        },
+        "test_interpolation": {
+          "balanced_accuracy": {
+            "mean": 1.0,
+            "std": 0.0,
+            "min": 1.0,
+            "max": 1.0
+          },
+          "loss": {
+            "mean": 0.0075,
+            "std": 0.0016,
+            "min": 0.0061,
+            "max": 0.0102
+          }
+        },
+        "test_extrapolation": {
+          "balanced_accuracy": {
+            "mean": 0.8722,
+            "std": 0.0087,
+            "min": 0.8598,
+            "max": 0.8807
+          },
+          "loss": {
+            "mean": 1.1932,
+            "std": 0.2727,
+            "min": 0.795,
+            "max": 1.4736
+          }
+        },
+        "zero_shot_control_symbol": {
+          "balanced_accuracy": {
+            "mean": 0.6165,
+            "std": 0.0402,
+            "min": 0.552,
+            "max": 0.6623
+          },
+          "loss": {
+            "mean": 8.2054,
+            "std": 1.8362,
+            "min": 5.424,
+            "max": 10.5685
+          }
+        },
+        "zero_shot_control_order": {
+          "balanced_accuracy": {
+            "mean": 0.6383,
+            "std": 0.0687,
+            "min": 0.5477,
+            "max": 0.7288
+          },
+          "loss": {
+            "mean": 8.5293,
+            "std": 2.1823,
+            "min": 5.2913,
+            "max": 11.1766
+          }
+        }
+      },
+      "trained_controls": {
+        "trained_control_symbol": {
+          "balanced_accuracy": {
+            "mean": 1.0,
+            "std": 0.0,
+            "min": 1.0,
+            "max": 1.0
+          },
+          "loss": {
+            "mean": 0.0001,
+            "std": 0.0,
+            "min": 0.0001,
+            "max": 0.0001
+          }
+        },
+        "trained_control_order": {
+          "balanced_accuracy": {
+            "mean": 1.0,
+            "std": 0.0,
+            "min": 1.0,
+            "max": 1.0
+          },
+          "loss": {
+            "mean": 0.0001,
+            "std": 0.0001,
+            "min": 0.0001,
+            "max": 0.0002
+          }
+        }
+      },
+      "resource_profiles": {
+        "train_time_sec": {
+          "mean": 30.138,
+          "std": 3.4276,
+          "min": 25.04,
+          "max": 33.73
+        },
+        "inference_latency_ms": {
+          "mean": 0.0378,
+          "std": 0.0147,
+          "min": 0.031,
+          "max": 0.064
+        }
+      }
+    },
+    "SparseFIR": {
+      "temporal_regimes": {
+        "test_id": {
+          "balanced_accuracy": {
+            "mean": 0.9965,
+            "std": 0.0014,
+            "min": 0.9955,
+            "max": 0.9988
+          },
+          "loss": {
+            "mean": 0.0128,
+            "std": 0.0033,
+            "min": 0.008,
+            "max": 0.0161
+          }
+        },
+        "test_interpolation": {
+          "balanced_accuracy": {
+            "mean": 0.986,
+            "std": 0.0088,
+            "min": 0.9765,
+            "max": 0.9978
+          },
+          "loss": {
+            "mean": 0.0286,
+            "std": 0.0123,
+            "min": 0.0159,
+            "max": 0.0444
+          }
+        },
+        "test_extrapolation": {
+          "balanced_accuracy": {
+            "mean": 0.8107,
+            "std": 0.0163,
+            "min": 0.784,
+            "max": 0.8262
+          },
+          "loss": {
+            "mean": 1.8492,
+            "std": 0.6132,
+            "min": 1.0708,
+            "max": 2.715
+          }
+        },
+        "zero_shot_control_symbol": {
+          "balanced_accuracy": {
+            "mean": 0.5859,
+            "std": 0.0241,
+            "min": 0.5503,
+            "max": 0.6105
+          },
+          "loss": {
+            "mean": 7.7124,
+            "std": 1.6761,
+            "min": 5.6745,
+            "max": 9.3459
+          }
+        },
+        "zero_shot_control_order": {
+          "balanced_accuracy": {
+            "mean": 0.7028,
+            "std": 0.0151,
+            "min": 0.6837,
+            "max": 0.7248
+          },
+          "loss": {
+            "mean": 5.5702,
+            "std": 1.0633,
+            "min": 4.2177,
+            "max": 6.7568
+          }
+        }
+      },
+      "trained_controls": {
+        "trained_control_symbol": {
+          "balanced_accuracy": {
+            "mean": 1.0,
+            "std": 0.0,
+            "min": 1.0,
+            "max": 1.0
+          },
+          "loss": {
+            "mean": 0.0001,
+            "std": 0.0,
+            "min": 0.0001,
+            "max": 0.0001
+          }
+        },
+        "trained_control_order": {
+          "balanced_accuracy": {
+            "mean": 1.0,
+            "std": 0.0,
+            "min": 1.0,
+            "max": 1.0
+          },
+          "loss": {
+            "mean": 0.0002,
+            "std": 0.0001,
+            "min": 0.0001,
+            "max": 0.0003
+          }
+        }
+      },
+      "resource_profiles": {
+        "train_time_sec": {
+          "mean": 26.034,
+          "std": 3.7245,
+          "min": 20.28,
+          "max": 30.36
+        },
+        "inference_latency_ms": {
+          "mean": 0.0406,
+          "std": 0.0053,
+          "min": 0.038,
+          "max": 0.05
+        }
+      }
+    }
+  },
+  "factorial_and_ablation": {
+    "TimeAwareGRU": {
+      "model": "TimeAwareGRU",
+      "factorial_conditions": {
+        "gap_1.0": {
+          "J_0": {
+            "scheduled_evolution_acc": 1.0,
+            "mean_logit": -23.06
+          },
+          "J_1": {
+            "scheduled_evolution_acc": 1.0,
+            "mean_logit": -17.4454,
+            "clumped_compute_acc": 0.89
+          },
+          "J_8": {
+            "scheduled_evolution_acc": 0.992,
+            "mean_logit": -13.6359,
+            "clumped_compute_acc": 0.702
+          },
+          "J_64": {
+            "scheduled_evolution_acc": 1.0,
+            "mean_logit": -5.2118,
+            "clumped_compute_acc": 0.0
+          },
+          "analytic_decay_acc": 1.0
+        },
+        "gap_10.0": {
+          "J_0": {
+            "scheduled_evolution_acc": 0.998,
+            "mean_logit": 4.1319
+          },
+          "J_1": {
+            "scheduled_evolution_acc": 0.419,
+            "mean_logit": -20.8851,
+            "clumped_compute_acc": 0.642
+          },
+          "J_8": {
+            "scheduled_evolution_acc": 0.419,
+            "mean_logit": -13.4397,
+            "clumped_compute_acc": 0.769
+          },
+          "J_64": {
+            "scheduled_evolution_acc": 0.419,
+            "mean_logit": -6.263,
+            "clumped_compute_acc": 0.581
+          },
+          "analytic_decay_acc": 0.419
+        }
+      },
+      "diagnostic_ablations": {
+        "explicit_dt_feature_ablation": {
+          "post_ablation_accuracy": 0.51,
+          "mean_abs_logit_diff": 19.0673,
+          "prediction_flip_rate": 0.49
+        }
+      },
+      "base_accuracy": 1.0
+    },
+    "DiagonalDecaySSM": {
+      "model": "DiagonalDecaySSM",
+      "factorial_conditions": {
+        "gap_1.0": {
+          "J_0": {
+            "scheduled_evolution_acc": 1.0,
+            "mean_logit": -21.0484
+          },
+          "J_1": {
+            "scheduled_evolution_acc": 0.916,
+            "mean_logit": -16.0698,
+            "clumped_compute_acc": 1.0
+          },
+          "J_8": {
+            "scheduled_evolution_acc": 1.0,
+            "mean_logit": -4.3438,
+            "clumped_compute_acc": 1.0
+          },
+          "J_64": {
+            "scheduled_evolution_acc": 1.0,
+            "mean_logit": -4.1798,
+            "clumped_compute_acc": 1.0
+          },
+          "analytic_decay_acc": 0.368
+        },
+        "gap_10.0": {
+          "J_0": {
+            "scheduled_evolution_acc": 0.991,
+            "mean_logit": 5.4646
+          },
+          "J_1": {
+            "scheduled_evolution_acc": 0.548,
+            "mean_logit": -20.8904,
+            "clumped_compute_acc": 0.991
+          },
+          "J_8": {
+            "scheduled_evolution_acc": 0.381,
+            "mean_logit": 14.1223,
+            "clumped_compute_acc": 0.991
+          },
+          "J_64": {
+            "scheduled_evolution_acc": 0.419,
+            "mean_logit": -0.0571,
+            "clumped_compute_acc": 0.991
+          },
+          "analytic_decay_acc": 0.419
+        }
+      },
+      "diagnostic_ablations": {
+        "explicit_dt_feature_ablation": {
+          "post_ablation_accuracy": 0.51,
+          "mean_abs_logit_diff": 22.6682,
+          "prediction_flip_rate": 0.491
+        }
+      },
+      "base_accuracy": 0.997
+    },
+    "TraceBank": {
+      "model": "TraceBank",
+      "factorial_conditions": {
+        "gap_1.0": {
+          "J_0": {
+            "scheduled_evolution_acc": 1.0,
+            "mean_logit": -28.7232
+          },
+          "J_1": {
+            "scheduled_evolution_acc": 0.865,
+            "mean_logit": -18.9989,
+            "clumped_compute_acc": 1.0
+          },
+          "J_8": {
+            "scheduled_evolution_acc": 0.874,
+            "mean_logit": -5.4388,
+            "clumped_compute_acc": 1.0
+          },
+          "J_64": {
+            "scheduled_evolution_acc": 0.883,
+            "mean_logit": -5.0802,
+            "clumped_compute_acc": 1.0
+          },
+          "analytic_decay_acc": 0.243
+        },
+        "gap_10.0": {
+          "J_0": {
+            "scheduled_evolution_acc": 0.997,
+            "mean_logit": 6.8298
+          },
+          "J_1": {
+            "scheduled_evolution_acc": 0.7,
+            "mean_logit": -16.345,
+            "clumped_compute_acc": 0.997
+          },
+          "J_8": {
+            "scheduled_evolution_acc": 0.419,
+            "mean_logit": -2.112,
+            "clumped_compute_acc": 0.997
+          },
+          "J_64": {
+            "scheduled_evolution_acc": 0.527,
+            "mean_logit": -1.6478,
+            "clumped_compute_acc": 0.997
+          },
+          "analytic_decay_acc": 0.419
+        }
+      },
+      "diagnostic_ablations": {
+        "explicit_dt_feature_ablation": {
+          "post_ablation_accuracy": 0.51,
+          "mean_abs_logit_diff": 26.1,
+          "prediction_flip_rate": 0.491
+        },
+        "boundary_trace_ablation": {
+          "state_perturbation_l2": 0.0,
+          "mean_abs_logit_diff": 0.0,
+          "prediction_flip_rate": 0.0,
+          "post_ablation_accuracy": 0.999
+        },
+        "interval_trace_ablation": {
+          "state_perturbation_l2": 0.0,
+          "mean_abs_logit_diff": 0.0,
+          "prediction_flip_rate": 0.0,
+          "post_ablation_accuracy": 0.999
+        }
+      },
+      "base_accuracy": 0.999
+    },
+    "SparseFIR": {
+      "model": "SparseFIR",
+      "factorial_conditions": {
+        "gap_1.0": {
+          "J_0": {
+            "scheduled_evolution_acc": 1.0,
+            "mean_logit": -27.8288
+          },
+          "J_1": {
+            "scheduled_evolution_acc": 1.0,
+            "mean_logit": -28.8983,
+            "clumped_compute_acc": 1.0
+          },
+          "J_8": {
+            "scheduled_evolution_acc": 1.0,
+            "mean_logit": -27.5027,
+            "clumped_compute_acc": 1.0
+          },
+          "J_64": {
+            "scheduled_evolution_acc": 1.0,
+            "mean_logit": -27.5027,
+            "clumped_compute_acc": 1.0
+          },
+          "analytic_decay_acc": 1.0
+        },
+        "gap_10.0": {
+          "J_0": {
+            "scheduled_evolution_acc": 0.997,
+            "mean_logit": 5.8899
+          },
+          "J_1": {
+            "scheduled_evolution_acc": 0.583,
+            "mean_logit": -9.5323,
+            "clumped_compute_acc": 0.581
+          },
+          "J_8": {
+            "scheduled_evolution_acc": 0.419,
+            "mean_logit": -14.9404,
+            "clumped_compute_acc": 0.581
+          },
+          "J_64": {
+            "scheduled_evolution_acc": 0.419,
+            "mean_logit": -15.679,
+            "clumped_compute_acc": 0.581
+          },
+          "analytic_decay_acc": 0.583
+        }
+      },
+      "diagnostic_ablations": {
+        "explicit_dt_feature_ablation": {
+          "post_ablation_accuracy": 0.526,
+          "mean_abs_logit_diff": 21.1093,
+          "prediction_flip_rate": 0.474
+        }
+      },
+      "base_accuracy": 1.0
+    }
+  },
+  "seed_runs": {
+    "seed_11": {
+      "wall_time_sec": 174.76,
+      "audits": {
+        "temporal": {
+          "train": {
+            "size": 10000,
+            "positive_count": 5000,
+            "positive_fraction": 0.5,
+            "d1_min": 1.0001593508225233,
+            "d1_max": 9.999322483757473,
+            "d2_min": 1.000014026092013,
+            "d2_max": 14.99885501512947,
+            "unique_tuples": 10000
+          },
+          "val": {
+            "size": 2000,
+            "positive_count": 1000,
+            "positive_fraction": 0.5,
+            "d1_min": 1.0004643849957335,
+            "d1_max": 9.999864583127023,
+            "d2_min": 1.0192699628803448,
+            "d2_max": 14.993465712360784,
+            "unique_tuples": 2000
+          },
+          "test_id": {
+            "size": 4000,
+            "positive_count": 2000,
+            "positive_fraction": 0.5,
+            "d1_min": 1.000030102449633,
+            "d1_max": 9.999593041619349,
+            "d2_min": 1.000061441981094,
+            "d2_max": 14.998779892974083,
+            "unique_tuples": 4000
+          },
+          "test_interpolation": {
+            "size": 4000,
+            "positive_count": 2000,
+            "positive_fraction": 0.5,
+            "d1_min": 4.000758083886928,
+            "d1_max": 4.999098292344873,
+            "d2_min": 1.0026654922532376,
+            "d2_max": 14.997680360978956,
+            "unique_tuples": 4000
+          },
+          "test_extrapolation": {
+            "size": 4000,
+            "positive_count": 2000,
+            "positive_fraction": 0.5,
+            "d1_min": 12.000410677012757,
+            "d1_max": 15.999820693390294,
+            "d2_min": 10.00165704455885,
+            "d2_max": 29.995888333884853,
+            "unique_tuples": 4000
+          },
+          "overlaps": {
+            "train_vs_val": 0,
+            "train_vs_test_id": 0,
+            "train_vs_test_interpolation": 0,
+            "train_vs_test_extrapolation": 0,
+            "val_vs_test_id": 0,
+            "val_vs_test_interpolation": 0,
+            "val_vs_test_extrapolation": 0,
+            "test_id_vs_test_interpolation": 0,
+            "test_id_vs_test_extrapolation": 0,
+            "test_interpolation_vs_test_extrapolation": 0
+          }
+        },
+        "control_symbol": {
+          "train": {
+            "size": 10000,
+            "positive_count": 5000,
+            "positive_fraction": 0.5,
+            "d1_min": 1.0007608866172117,
+            "d1_max": 9.997891293635782,
+            "d2_min": 1.0014618827096495,
+            "d2_max": 14.998984832583519,
+            "unique_tuples": 10000
+          },
+          "val": {
+            "size": 2000,
+            "positive_count": 1000,
+            "positive_fraction": 0.5,
+            "d1_min": 1.0017557932932886,
+            "d1_max": 9.998445760108128,
+            "d2_min": 1.0003302853449194,
+            "d2_max": 14.999133111082697,
+            "unique_tuples": 2000
+          },
+          "test": {
+            "size": 4000,
+            "positive_count": 2000,
+            "positive_fraction": 0.5,
+            "d1_min": 1.0008748780829173,
+            "d1_max": 9.999976151682395,
+            "d2_min": 1.0025645742388687,
+            "d2_max": 14.99834636717246,
+            "unique_tuples": 4000
+          },
+          "overlaps": {
+            "train_vs_val": 0,
+            "train_vs_test": 0,
+            "val_vs_test": 0
+          }
+        },
+        "control_order": {
+          "train": {
+            "size": 10000,
+            "positive_count": 5000,
+            "positive_fraction": 0.5,
+            "d1_min": 1.000616215489679,
+            "d1_max": 9.999554194934506,
+            "d2_min": 1.0011492634418648,
+            "d2_max": 14.998623535169054,
+            "unique_tuples": 10000
+          },
+          "val": {
+            "size": 2000,
+            "positive_count": 1000,
+            "positive_fraction": 0.5,
+            "d1_min": 1.003457025183077,
+            "d1_max": 9.99975493921136,
+            "d2_min": 1.0001013601309208,
+            "d2_max": 14.987892245670768,
+            "unique_tuples": 2000
+          },
+          "test": {
+            "size": 4000,
+            "positive_count": 2000,
+            "positive_fraction": 0.5,
+            "d1_min": 1.0008263051609367,
+            "d1_max": 9.998799995162514,
+            "d2_min": 1.0013112234473782,
+            "d2_max": 14.999814828714726,
+            "unique_tuples": 4000
+          },
+          "overlaps": {
+            "train_vs_val": 0,
+            "train_vs_test": 0,
+            "val_vs_test": 0
+          }
+        }
+      },
+      "models": {
+        "Majority": {
+          "training_stats": {
+            "epochs_trained": 0,
+            "train_time_sec": 0.0,
+            "best_epoch": 0,
+            "best_val_loss": 0.6931,
+            "best_val_balanced_acc": 0.5,
+            "converged": true,
+            "inference_latency_ms_per_sample": 0.006
+          },
+          "temporal_regimes": {
+            "test_id": {
+              "loss": 0.6931,
+              "balanced_accuracy": 0.5,
+              "accuracy": 0.5,
+              "tpr": 1.0,
+              "tnr": 0.0,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 0,
+              "fp": 2000,
+              "fn": 0
+            },
+            "test_interpolation": {
+              "loss": 0.6931,
+              "balanced_accuracy": 0.5,
+              "accuracy": 0.5,
+              "tpr": 1.0,
+              "tnr": 0.0,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 0,
+              "fp": 2000,
+              "fn": 0
+            },
+            "test_extrapolation": {
+              "loss": 0.6931,
+              "balanced_accuracy": 0.5,
+              "accuracy": 0.5,
+              "tpr": 1.0,
+              "tnr": 0.0,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 0,
+              "fp": 2000,
+              "fn": 0
+            },
+            "zero_shot_control_symbol": {
+              "loss": 0.6931,
+              "balanced_accuracy": 0.5,
+              "accuracy": 0.5,
+              "tpr": 1.0,
+              "tnr": 0.0,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 0,
+              "fp": 2000,
+              "fn": 0
+            },
+            "zero_shot_control_order": {
+              "loss": 0.6931,
+              "balanced_accuracy": 0.5,
+              "accuracy": 0.5,
+              "tpr": 1.0,
+              "tnr": 0.0,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 0,
+              "fp": 2000,
+              "fn": 0
+            }
+          },
+          "trained_control_symbol": {
+            "loss": 0.6931,
+            "balanced_accuracy": 0.5,
+            "accuracy": 0.5,
+            "tpr": 1.0,
+            "tnr": 0.0,
+            "samples": 4000,
+            "tp": 2000,
+            "tn": 0,
+            "fp": 2000,
+            "fn": 0
+          },
+          "trained_control_order": {
+            "loss": 0.6931,
+            "balanced_accuracy": 0.5,
+            "accuracy": 0.5,
+            "tpr": 1.0,
+            "tnr": 0.0,
+            "samples": 4000,
+            "tp": 2000,
+            "tn": 0,
+            "fp": 2000,
+            "fn": 0
+          }
+        },
+        "ArithmeticOracle": {
+          "training_stats": {
+            "epochs_trained": 0,
+            "train_time_sec": 0.0,
+            "best_epoch": 0,
+            "best_val_loss": 0.0,
+            "best_val_balanced_acc": 1.0,
+            "converged": true,
+            "inference_latency_ms_per_sample": 0.006
+          },
+          "temporal_regimes": {
+            "test_id": {
+              "loss": 0.0,
+              "balanced_accuracy": 1.0,
+              "accuracy": 1.0,
+              "tpr": 1.0,
+              "tnr": 1.0,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 2000,
+              "fp": 0,
+              "fn": 0
+            },
+            "test_interpolation": {
+              "loss": 0.0,
+              "balanced_accuracy": 1.0,
+              "accuracy": 1.0,
+              "tpr": 1.0,
+              "tnr": 1.0,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 2000,
+              "fp": 0,
+              "fn": 0
+            },
+            "test_extrapolation": {
+              "loss": 0.0,
+              "balanced_accuracy": 1.0,
+              "accuracy": 1.0,
+              "tpr": 1.0,
+              "tnr": 1.0,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 2000,
+              "fp": 0,
+              "fn": 0
+            },
+            "zero_shot_control_symbol": {
+              "loss": 10.09,
+              "balanced_accuracy": 0.4955,
+              "accuracy": 0.4955,
+              "tpr": 0.4615,
+              "tnr": 0.5295,
+              "samples": 4000,
+              "tp": 923,
+              "tn": 1059,
+              "fp": 941,
+              "fn": 1077
+            },
+            "zero_shot_control_order": {
+              "loss": 9.74,
+              "balanced_accuracy": 0.513,
+              "accuracy": 0.513,
+              "tpr": 0.4515,
+              "tnr": 0.5745,
+              "samples": 4000,
+              "tp": 903,
+              "tn": 1149,
+              "fp": 851,
+              "fn": 1097
+            }
+          },
+          "trained_control_symbol": {
+            "loss": 10.09,
+            "balanced_accuracy": 0.4955,
+            "accuracy": 0.4955,
+            "tpr": 0.4615,
+            "tnr": 0.5295,
+            "samples": 4000,
+            "tp": 923,
+            "tn": 1059,
+            "fp": 941,
+            "fn": 1077
+          },
+          "trained_control_order": {
+            "loss": 9.74,
+            "balanced_accuracy": 0.513,
+            "accuracy": 0.513,
+            "tpr": 0.4515,
+            "tnr": 0.5745,
+            "samples": 4000,
+            "tp": 903,
+            "tn": 1149,
+            "fp": 851,
+            "fn": 1097
+          }
+        },
+        "MLPOracle": {
+          "training_stats": {
+            "epochs_trained": 25,
+            "train_time_sec": 3.97,
+            "best_epoch": 24,
+            "best_val_loss": 0.0013,
+            "best_val_balanced_acc": 1.0,
+            "early_stopped": false,
+            "inference_latency_ms_per_sample": 0.007
+          },
+          "temporal_regimes": {
+            "test_id": {
+              "loss": 0.0019,
+              "balanced_accuracy": 1.0,
+              "accuracy": 1.0,
+              "tpr": 1.0,
+              "tnr": 1.0,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 2000,
+              "fp": 0,
+              "fn": 0
+            },
+            "test_interpolation": {
+              "loss": 0.0014,
+              "balanced_accuracy": 1.0,
+              "accuracy": 1.0,
+              "tpr": 1.0,
+              "tnr": 1.0,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 2000,
+              "fp": 0,
+              "fn": 0
+            },
+            "test_extrapolation": {
+              "loss": 0.0052,
+              "balanced_accuracy": 0.9972,
+              "accuracy": 0.9972,
+              "tpr": 1.0,
+              "tnr": 0.9945,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 1989,
+              "fp": 11,
+              "fn": 0
+            },
+            "zero_shot_control_symbol": {
+              "loss": 25.2814,
+              "balanced_accuracy": 0.4955,
+              "accuracy": 0.4955,
+              "tpr": 0.4615,
+              "tnr": 0.5295,
+              "samples": 4000,
+              "tp": 923,
+              "tn": 1059,
+              "fp": 941,
+              "fn": 1077
+            },
+            "zero_shot_control_order": {
+              "loss": 24.1542,
+              "balanced_accuracy": 0.513,
+              "accuracy": 0.513,
+              "tpr": 0.4515,
+              "tnr": 0.5745,
+              "samples": 4000,
+              "tp": 903,
+              "tn": 1149,
+              "fp": 851,
+              "fn": 1097
+            }
+          },
+          "trained_control_symbol": {
+            "loss": 0.6935,
+            "balanced_accuracy": 0.4858,
+            "accuracy": 0.4858,
+            "tpr": 0.7265,
+            "tnr": 0.245,
+            "samples": 4000,
+            "tp": 1453,
+            "tn": 490,
+            "fp": 1510,
+            "fn": 547
+          },
+          "trained_control_order": {
+            "loss": 0.6936,
+            "balanced_accuracy": 0.4997,
+            "accuracy": 0.4998,
+            "tpr": 0.9255,
+            "tnr": 0.074,
+            "samples": 4000,
+            "tp": 1851,
+            "tn": 148,
+            "fp": 1852,
+            "fn": 149
+          }
+        },
+        "Reservoir": {
+          "training_stats": {
+            "epochs_trained": 25,
+            "train_time_sec": 3.82,
+            "best_epoch": 25,
+            "best_val_loss": 0.0786,
+            "best_val_balanced_acc": 0.9895,
+            "early_stopped": false,
+            "inference_latency_ms_per_sample": 0.01
+          },
+          "temporal_regimes": {
+            "test_id": {
+              "loss": 0.0814,
+              "balanced_accuracy": 0.9865,
+              "accuracy": 0.9865,
+              "tpr": 1.0,
+              "tnr": 0.973,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 1946,
+              "fp": 54,
+              "fn": 0
+            },
+            "test_interpolation": {
+              "loss": 0.0748,
+              "balanced_accuracy": 0.999,
+              "accuracy": 0.999,
+              "tpr": 1.0,
+              "tnr": 0.998,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 1996,
+              "fp": 4,
+              "fn": 0
+            },
+            "test_extrapolation": {
+              "loss": 0.627,
+              "balanced_accuracy": 0.7903,
+              "accuracy": 0.7903,
+              "tpr": 1.0,
+              "tnr": 0.5805,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 1161,
+              "fp": 839,
+              "fn": 0
+            },
+            "zero_shot_control_symbol": {
+              "loss": 2.5394,
+              "balanced_accuracy": 0.559,
+              "accuracy": 0.559,
+              "tpr": 0.606,
+              "tnr": 0.512,
+              "samples": 4000,
+              "tp": 1212,
+              "tn": 1024,
+              "fp": 976,
+              "fn": 788
+            },
+            "zero_shot_control_order": {
+              "loss": 2.8194,
+              "balanced_accuracy": 0.5485,
+              "accuracy": 0.5485,
+              "tpr": 0.4655,
+              "tnr": 0.6315,
+              "samples": 4000,
+              "tp": 931,
+              "tn": 1263,
+              "fp": 737,
+              "fn": 1069
+            }
+          },
+          "trained_control_symbol": {
+            "loss": 0.0012,
+            "balanced_accuracy": 1.0,
+            "accuracy": 1.0,
+            "tpr": 1.0,
+            "tnr": 1.0,
+            "samples": 4000,
+            "tp": 2000,
+            "tn": 2000,
+            "fp": 0,
+            "fn": 0
+          },
+          "trained_control_order": {
+            "loss": 0.0046,
+            "balanced_accuracy": 1.0,
+            "accuracy": 1.0,
+            "tpr": 1.0,
+            "tnr": 1.0,
+            "samples": 4000,
+            "tp": 2000,
+            "tn": 2000,
+            "fp": 0,
+            "fn": 0
+          }
+        },
+        "TimeAwareGRU": {
+          "training_stats": {
+            "epochs_trained": 21,
+            "train_time_sec": 6.71,
+            "best_epoch": 16,
+            "best_val_loss": 0.008,
+            "best_val_balanced_acc": 1.0,
+            "early_stopped": true,
+            "inference_latency_ms_per_sample": 0.011
+          },
+          "temporal_regimes": {
+            "test_id": {
+              "loss": 0.0117,
+              "balanced_accuracy": 0.9972,
+              "accuracy": 0.9972,
+              "tpr": 0.995,
+              "tnr": 0.9995,
+              "samples": 4000,
+              "tp": 1990,
+              "tn": 1999,
+              "fp": 1,
+              "fn": 10
+            },
+            "test_interpolation": {
+              "loss": 0.0086,
+              "balanced_accuracy": 1.0,
+              "accuracy": 1.0,
+              "tpr": 1.0,
+              "tnr": 1.0,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 2000,
+              "fp": 0,
+              "fn": 0
+            },
+            "test_extrapolation": {
+              "loss": 2.0136,
+              "balanced_accuracy": 0.8485,
+              "accuracy": 0.8485,
+              "tpr": 1.0,
+              "tnr": 0.697,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 1394,
+              "fp": 606,
+              "fn": 0
+            },
+            "zero_shot_control_symbol": {
+              "loss": 9.0054,
+              "balanced_accuracy": 0.5265,
+              "accuracy": 0.5265,
+              "tpr": 0.523,
+              "tnr": 0.53,
+              "samples": 4000,
+              "tp": 1046,
+              "tn": 1060,
+              "fp": 940,
+              "fn": 954
+            },
+            "zero_shot_control_order": {
+              "loss": 7.5943,
+              "balanced_accuracy": 0.611,
+              "accuracy": 0.611,
+              "tpr": 0.4515,
+              "tnr": 0.7705,
+              "samples": 4000,
+              "tp": 903,
+              "tn": 1541,
+              "fp": 459,
+              "fn": 1097
+            }
+          },
+          "trained_control_symbol": {
+            "loss": 0.0001,
+            "balanced_accuracy": 1.0,
+            "accuracy": 1.0,
+            "tpr": 1.0,
+            "tnr": 1.0,
+            "samples": 4000,
+            "tp": 2000,
+            "tn": 2000,
+            "fp": 0,
+            "fn": 0
+          },
+          "trained_control_order": {
+            "loss": 0.0,
+            "balanced_accuracy": 1.0,
+            "accuracy": 1.0,
+            "tpr": 1.0,
+            "tnr": 1.0,
+            "samples": 4000,
+            "tp": 2000,
+            "tn": 2000,
+            "fp": 0,
+            "fn": 0
+          }
+        },
+        "DiagonalDecaySSM": {
+          "training_stats": {
+            "epochs_trained": 25,
+            "train_time_sec": 7.26,
+            "best_epoch": 23,
+            "best_val_loss": 0.0068,
+            "best_val_balanced_acc": 1.0,
+            "early_stopped": false,
+            "inference_latency_ms_per_sample": 0.012
+          },
+          "temporal_regimes": {
+            "test_id": {
+              "loss": 0.0095,
+              "balanced_accuracy": 0.9998,
+              "accuracy": 0.9998,
+              "tpr": 1.0,
+              "tnr": 0.9995,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 1999,
+              "fp": 1,
+              "fn": 0
+            },
+            "test_interpolation": {
+              "loss": 0.0087,
+              "balanced_accuracy": 1.0,
+              "accuracy": 1.0,
+              "tpr": 1.0,
+              "tnr": 1.0,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 2000,
+              "fp": 0,
+              "fn": 0
+            },
+            "test_extrapolation": {
+              "loss": 2.3779,
+              "balanced_accuracy": 0.827,
+              "accuracy": 0.827,
+              "tpr": 1.0,
+              "tnr": 0.654,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 1308,
+              "fp": 692,
+              "fn": 0
+            },
+            "zero_shot_control_symbol": {
+              "loss": 8.2653,
+              "balanced_accuracy": 0.5913,
+              "accuracy": 0.5913,
+              "tpr": 0.6535,
+              "tnr": 0.529,
+              "samples": 4000,
+              "tp": 1307,
+              "tn": 1058,
+              "fp": 942,
+              "fn": 693
+            },
+            "zero_shot_control_order": {
+              "loss": 8.1683,
+              "balanced_accuracy": 0.6178,
+              "accuracy": 0.6178,
+              "tpr": 0.452,
+              "tnr": 0.7835,
+              "samples": 4000,
+              "tp": 904,
+              "tn": 1567,
+              "fp": 433,
+              "fn": 1096
+            }
+          },
+          "trained_control_symbol": {
+            "loss": 0.0001,
+            "balanced_accuracy": 1.0,
+            "accuracy": 1.0,
+            "tpr": 1.0,
+            "tnr": 1.0,
+            "samples": 4000,
+            "tp": 2000,
+            "tn": 2000,
+            "fp": 0,
+            "fn": 0
+          },
+          "trained_control_order": {
+            "loss": 0.0001,
+            "balanced_accuracy": 1.0,
+            "accuracy": 1.0,
+            "tpr": 1.0,
+            "tnr": 1.0,
+            "samples": 4000,
+            "tp": 2000,
+            "tn": 2000,
+            "fp": 0,
+            "fn": 0
+          }
+        },
+        "TraceBank": {
+          "training_stats": {
+            "epochs_trained": 25,
+            "train_time_sec": 30.46,
+            "best_epoch": 23,
+            "best_val_loss": 0.0081,
+            "best_val_balanced_acc": 0.999,
+            "early_stopped": false,
+            "inference_latency_ms_per_sample": 0.064
+          },
+          "temporal_regimes": {
+            "test_id": {
+              "loss": 0.0102,
+              "balanced_accuracy": 0.9972,
+              "accuracy": 0.9972,
+              "tpr": 0.9945,
+              "tnr": 1.0,
+              "samples": 4000,
+              "tp": 1989,
+              "tn": 2000,
+              "fp": 0,
+              "fn": 11
+            },
+            "test_interpolation": {
+              "loss": 0.0061,
+              "balanced_accuracy": 1.0,
+              "accuracy": 1.0,
+              "tpr": 1.0,
+              "tnr": 1.0,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 2000,
+              "fp": 0,
+              "fn": 0
+            },
+            "test_extrapolation": {
+              "loss": 1.4736,
+              "balanced_accuracy": 0.867,
+              "accuracy": 0.867,
+              "tpr": 1.0,
+              "tnr": 0.734,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 1468,
+              "fp": 532,
+              "fn": 0
+            },
+            "zero_shot_control_symbol": {
+              "loss": 8.1507,
+              "balanced_accuracy": 0.6295,
+              "accuracy": 0.6295,
+              "tpr": 0.729,
+              "tnr": 0.53,
+              "samples": 4000,
+              "tp": 1458,
+              "tn": 1060,
+              "fp": 940,
+              "fn": 542
+            },
+            "zero_shot_control_order": {
+              "loss": 9.6933,
+              "balanced_accuracy": 0.6005,
+              "accuracy": 0.6005,
+              "tpr": 0.451,
+              "tnr": 0.75,
+              "samples": 4000,
+              "tp": 902,
+              "tn": 1500,
+              "fp": 500,
+              "fn": 1098
+            }
+          },
+          "trained_control_symbol": {
+            "loss": 0.0001,
+            "balanced_accuracy": 1.0,
+            "accuracy": 1.0,
+            "tpr": 1.0,
+            "tnr": 1.0,
+            "samples": 4000,
+            "tp": 2000,
+            "tn": 2000,
+            "fp": 0,
+            "fn": 0
+          },
+          "trained_control_order": {
+            "loss": 0.0001,
+            "balanced_accuracy": 1.0,
+            "accuracy": 1.0,
+            "tpr": 1.0,
+            "tnr": 1.0,
+            "samples": 4000,
+            "tp": 2000,
+            "tn": 2000,
+            "fp": 0,
+            "fn": 0
+          }
+        },
+        "SparseFIR": {
+          "training_stats": {
+            "epochs_trained": 25,
+            "train_time_sec": 30.36,
+            "best_epoch": 23,
+            "best_val_loss": 0.0065,
+            "best_val_balanced_acc": 0.9995,
+            "early_stopped": false,
+            "inference_latency_ms_per_sample": 0.038
+          },
+          "temporal_regimes": {
+            "test_id": {
+              "loss": 0.0114,
+              "balanced_accuracy": 0.9955,
+              "accuracy": 0.9955,
+              "tpr": 0.994,
+              "tnr": 0.997,
+              "samples": 4000,
+              "tp": 1988,
+              "tn": 1994,
+              "fp": 6,
+              "fn": 12
+            },
+            "test_interpolation": {
+              "loss": 0.0369,
+              "balanced_accuracy": 0.9798,
+              "accuracy": 0.9798,
+              "tpr": 1.0,
+              "tnr": 0.9595,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 1919,
+              "fp": 81,
+              "fn": 0
+            },
+            "test_extrapolation": {
+              "loss": 1.9615,
+              "balanced_accuracy": 0.8262,
+              "accuracy": 0.8263,
+              "tpr": 1.0,
+              "tnr": 0.6525,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 1305,
+              "fp": 695,
+              "fn": 0
+            },
+            "zero_shot_control_symbol": {
+              "loss": 9.3459,
+              "balanced_accuracy": 0.58,
+              "accuracy": 0.58,
+              "tpr": 0.63,
+              "tnr": 0.53,
+              "samples": 4000,
+              "tp": 1260,
+              "tn": 1060,
+              "fp": 940,
+              "fn": 740
+            },
+            "zero_shot_control_order": {
+              "loss": 6.7568,
+              "balanced_accuracy": 0.7005,
+              "accuracy": 0.7005,
+              "tpr": 0.4515,
+              "tnr": 0.9495,
+              "samples": 4000,
+              "tp": 903,
+              "tn": 1899,
+              "fp": 101,
+              "fn": 1097
+            }
+          },
+          "trained_control_symbol": {
+            "loss": 0.0001,
+            "balanced_accuracy": 1.0,
+            "accuracy": 1.0,
+            "tpr": 1.0,
+            "tnr": 1.0,
+            "samples": 4000,
+            "tp": 2000,
+            "tn": 2000,
+            "fp": 0,
+            "fn": 0
+          },
+          "trained_control_order": {
+            "loss": 0.0001,
+            "balanced_accuracy": 1.0,
+            "accuracy": 1.0,
+            "tpr": 1.0,
+            "tnr": 1.0,
+            "samples": 4000,
+            "tp": 2000,
+            "tn": 2000,
+            "fp": 0,
+            "fn": 0
+          }
+        }
+      }
+    },
+    "seed_23": {
+      "wall_time_sec": 172.61,
+      "audits": {
+        "temporal": {
+          "train": {
+            "size": 10000,
+            "positive_count": 5000,
+            "positive_fraction": 0.5,
+            "d1_min": 1.000363472684966,
+            "d1_max": 9.999858913569186,
+            "d2_min": 1.0001059066579643,
+            "d2_max": 14.999463389956205,
+            "unique_tuples": 10000
+          },
+          "val": {
+            "size": 2000,
+            "positive_count": 1000,
+            "positive_fraction": 0.5,
+            "d1_min": 1.0097326887584457,
+            "d1_max": 9.998074036654314,
+            "d2_min": 1.0029690159833278,
+            "d2_max": 14.997738951449772,
+            "unique_tuples": 2000
+          },
+          "test_id": {
+            "size": 4000,
+            "positive_count": 2000,
+            "positive_fraction": 0.5,
+            "d1_min": 1.0001295172369773,
+            "d1_max": 9.997236970506265,
+            "d2_min": 1.0043307372308123,
+            "d2_max": 14.996827941381264,
+            "unique_tuples": 4000
+          },
+          "test_interpolation": {
+            "size": 4000,
+            "positive_count": 2000,
+            "positive_fraction": 0.5,
+            "d1_min": 4.000037331910003,
+            "d1_max": 4.999904969292153,
+            "d2_min": 1.0016786942898657,
+            "d2_max": 14.992260455260334,
+            "unique_tuples": 4000
+          },
+          "test_extrapolation": {
+            "size": 4000,
+            "positive_count": 2000,
+            "positive_fraction": 0.5,
+            "d1_min": 12.000246101384196,
+            "d1_max": 15.999951689678094,
+            "d2_min": 10.00885713850263,
+            "d2_max": 29.998066346338028,
+            "unique_tuples": 4000
+          },
+          "overlaps": {
+            "train_vs_val": 0,
+            "train_vs_test_id": 0,
+            "train_vs_test_interpolation": 0,
+            "train_vs_test_extrapolation": 0,
+            "val_vs_test_id": 0,
+            "val_vs_test_interpolation": 0,
+            "val_vs_test_extrapolation": 0,
+            "test_id_vs_test_interpolation": 0,
+            "test_id_vs_test_extrapolation": 0,
+            "test_interpolation_vs_test_extrapolation": 0
+          }
+        },
+        "control_symbol": {
+          "train": {
+            "size": 10000,
+            "positive_count": 5000,
+            "positive_fraction": 0.5,
+            "d1_min": 1.0008849053505855,
+            "d1_max": 9.999622926977965,
+            "d2_min": 1.004714210827068,
+            "d2_max": 14.99986818123325,
+            "unique_tuples": 10000
+          },
+          "val": {
+            "size": 2000,
+            "positive_count": 1000,
+            "positive_fraction": 0.5,
+            "d1_min": 1.0006554635938216,
+            "d1_max": 9.995462228950167,
+            "d2_min": 1.0088498214046655,
+            "d2_max": 14.999414772570734,
+            "unique_tuples": 2000
+          },
+          "test": {
+            "size": 4000,
+            "positive_count": 2000,
+            "positive_fraction": 0.5,
+            "d1_min": 1.000420910977581,
+            "d1_max": 9.99912491901595,
+            "d2_min": 1.0102054151054436,
+            "d2_max": 14.999369528772307,
+            "unique_tuples": 4000
+          },
+          "overlaps": {
+            "train_vs_val": 0,
+            "train_vs_test": 0,
+            "val_vs_test": 0
+          }
+        },
+        "control_order": {
+          "train": {
+            "size": 10000,
+            "positive_count": 5000,
+            "positive_fraction": 0.5,
+            "d1_min": 1.0030467268835501,
+            "d1_max": 9.99903661443307,
+            "d2_min": 1.0017034737035109,
+            "d2_max": 14.99944909849231,
+            "unique_tuples": 10000
+          },
+          "val": {
+            "size": 2000,
+            "positive_count": 1000,
+            "positive_fraction": 0.5,
+            "d1_min": 1.0008815916423617,
+            "d1_max": 9.996897125130161,
+            "d2_min": 1.0082015204384895,
+            "d2_max": 14.98943630570634,
+            "unique_tuples": 2000
+          },
+          "test": {
+            "size": 4000,
+            "positive_count": 2000,
+            "positive_fraction": 0.5,
+            "d1_min": 1.0004538052997043,
+            "d1_max": 9.997507164612724,
+            "d2_min": 1.0009798648129569,
+            "d2_max": 14.999955489150919,
+            "unique_tuples": 4000
+          },
+          "overlaps": {
+            "train_vs_val": 0,
+            "train_vs_test": 0,
+            "val_vs_test": 0
+          }
+        }
+      },
+      "models": {
+        "Majority": {
+          "training_stats": {
+            "epochs_trained": 0,
+            "train_time_sec": 0.0,
+            "best_epoch": 0,
+            "best_val_loss": 0.6931,
+            "best_val_balanced_acc": 0.5,
+            "converged": true,
+            "inference_latency_ms_per_sample": 0.006
+          },
+          "temporal_regimes": {
+            "test_id": {
+              "loss": 0.6931,
+              "balanced_accuracy": 0.5,
+              "accuracy": 0.5,
+              "tpr": 1.0,
+              "tnr": 0.0,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 0,
+              "fp": 2000,
+              "fn": 0
+            },
+            "test_interpolation": {
+              "loss": 0.6931,
+              "balanced_accuracy": 0.5,
+              "accuracy": 0.5,
+              "tpr": 1.0,
+              "tnr": 0.0,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 0,
+              "fp": 2000,
+              "fn": 0
+            },
+            "test_extrapolation": {
+              "loss": 0.6931,
+              "balanced_accuracy": 0.5,
+              "accuracy": 0.5,
+              "tpr": 1.0,
+              "tnr": 0.0,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 0,
+              "fp": 2000,
+              "fn": 0
+            },
+            "zero_shot_control_symbol": {
+              "loss": 0.6931,
+              "balanced_accuracy": 0.5,
+              "accuracy": 0.5,
+              "tpr": 1.0,
+              "tnr": 0.0,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 0,
+              "fp": 2000,
+              "fn": 0
+            },
+            "zero_shot_control_order": {
+              "loss": 0.6931,
+              "balanced_accuracy": 0.5,
+              "accuracy": 0.5,
+              "tpr": 1.0,
+              "tnr": 0.0,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 0,
+              "fp": 2000,
+              "fn": 0
+            }
+          },
+          "trained_control_symbol": {
+            "loss": 0.6931,
+            "balanced_accuracy": 0.5,
+            "accuracy": 0.5,
+            "tpr": 1.0,
+            "tnr": 0.0,
+            "samples": 4000,
+            "tp": 2000,
+            "tn": 0,
+            "fp": 2000,
+            "fn": 0
+          },
+          "trained_control_order": {
+            "loss": 0.6931,
+            "balanced_accuracy": 0.5,
+            "accuracy": 0.5,
+            "tpr": 1.0,
+            "tnr": 0.0,
+            "samples": 4000,
+            "tp": 2000,
+            "tn": 0,
+            "fp": 2000,
+            "fn": 0
+          }
+        },
+        "ArithmeticOracle": {
+          "training_stats": {
+            "epochs_trained": 0,
+            "train_time_sec": 0.0,
+            "best_epoch": 0,
+            "best_val_loss": 0.0,
+            "best_val_balanced_acc": 1.0,
+            "converged": true,
+            "inference_latency_ms_per_sample": 0.007
+          },
+          "temporal_regimes": {
+            "test_id": {
+              "loss": 0.0,
+              "balanced_accuracy": 1.0,
+              "accuracy": 1.0,
+              "tpr": 1.0,
+              "tnr": 1.0,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 2000,
+              "fp": 0,
+              "fn": 0
+            },
+            "test_interpolation": {
+              "loss": 0.0,
+              "balanced_accuracy": 1.0,
+              "accuracy": 1.0,
+              "tpr": 1.0,
+              "tnr": 1.0,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 2000,
+              "fp": 0,
+              "fn": 0
+            },
+            "test_extrapolation": {
+              "loss": 0.0,
+              "balanced_accuracy": 1.0,
+              "accuracy": 1.0,
+              "tpr": 1.0,
+              "tnr": 1.0,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 2000,
+              "fp": 0,
+              "fn": 0
+            },
+            "zero_shot_control_symbol": {
+              "loss": 9.8,
+              "balanced_accuracy": 0.51,
+              "accuracy": 0.51,
+              "tpr": 0.473,
+              "tnr": 0.547,
+              "samples": 4000,
+              "tp": 946,
+              "tn": 1094,
+              "fp": 906,
+              "fn": 1054
+            },
+            "zero_shot_control_order": {
+              "loss": 10.025,
+              "balanced_accuracy": 0.4988,
+              "accuracy": 0.4988,
+              "tpr": 0.4635,
+              "tnr": 0.534,
+              "samples": 4000,
+              "tp": 927,
+              "tn": 1068,
+              "fp": 932,
+              "fn": 1073
+            }
+          },
+          "trained_control_symbol": {
+            "loss": 9.8,
+            "balanced_accuracy": 0.51,
+            "accuracy": 0.51,
+            "tpr": 0.473,
+            "tnr": 0.547,
+            "samples": 4000,
+            "tp": 946,
+            "tn": 1094,
+            "fp": 906,
+            "fn": 1054
+          },
+          "trained_control_order": {
+            "loss": 10.025,
+            "balanced_accuracy": 0.4988,
+            "accuracy": 0.4988,
+            "tpr": 0.4635,
+            "tnr": 0.534,
+            "samples": 4000,
+            "tp": 927,
+            "tn": 1068,
+            "fp": 932,
+            "fn": 1073
+          }
+        },
+        "MLPOracle": {
+          "training_stats": {
+            "epochs_trained": 25,
+            "train_time_sec": 4.03,
+            "best_epoch": 22,
+            "best_val_loss": 0.0019,
+            "best_val_balanced_acc": 1.0,
+            "early_stopped": false,
+            "inference_latency_ms_per_sample": 0.007
+          },
+          "temporal_regimes": {
+            "test_id": {
+              "loss": 0.002,
+              "balanced_accuracy": 1.0,
+              "accuracy": 1.0,
+              "tpr": 1.0,
+              "tnr": 1.0,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 2000,
+              "fp": 0,
+              "fn": 0
+            },
+            "test_interpolation": {
+              "loss": 0.0019,
+              "balanced_accuracy": 1.0,
+              "accuracy": 1.0,
+              "tpr": 1.0,
+              "tnr": 1.0,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 2000,
+              "fp": 0,
+              "fn": 0
+            },
+            "test_extrapolation": {
+              "loss": 0.0126,
+              "balanced_accuracy": 0.9952,
+              "accuracy": 0.9952,
+              "tpr": 1.0,
+              "tnr": 0.9905,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 1981,
+              "fp": 19,
+              "fn": 0
+            },
+            "zero_shot_control_symbol": {
+              "loss": 24.8174,
+              "balanced_accuracy": 0.51,
+              "accuracy": 0.51,
+              "tpr": 0.473,
+              "tnr": 0.547,
+              "samples": 4000,
+              "tp": 946,
+              "tn": 1094,
+              "fp": 906,
+              "fn": 1054
+            },
+            "zero_shot_control_order": {
+              "loss": 24.7559,
+              "balanced_accuracy": 0.4988,
+              "accuracy": 0.4988,
+              "tpr": 0.4635,
+              "tnr": 0.534,
+              "samples": 4000,
+              "tp": 927,
+              "tn": 1068,
+              "fp": 932,
+              "fn": 1073
+            }
+          },
+          "trained_control_symbol": {
+            "loss": 0.6935,
+            "balanced_accuracy": 0.5,
+            "accuracy": 0.5,
+            "tpr": 0.003,
+            "tnr": 0.997,
+            "samples": 4000,
+            "tp": 6,
+            "tn": 1994,
+            "fp": 6,
+            "fn": 1994
+          },
+          "trained_control_order": {
+            "loss": 0.6934,
+            "balanced_accuracy": 0.4987,
+            "accuracy": 0.4988,
+            "tpr": 0.1745,
+            "tnr": 0.823,
+            "samples": 4000,
+            "tp": 349,
+            "tn": 1646,
+            "fp": 354,
+            "fn": 1651
+          }
+        },
+        "Reservoir": {
+          "training_stats": {
+            "epochs_trained": 25,
+            "train_time_sec": 3.89,
+            "best_epoch": 25,
+            "best_val_loss": 0.0814,
+            "best_val_balanced_acc": 0.9825,
+            "early_stopped": false,
+            "inference_latency_ms_per_sample": 0.01
+          },
+          "temporal_regimes": {
+            "test_id": {
+              "loss": 0.0786,
+              "balanced_accuracy": 0.9825,
+              "accuracy": 0.9825,
+              "tpr": 0.9965,
+              "tnr": 0.9685,
+              "samples": 4000,
+              "tp": 1993,
+              "tn": 1937,
+              "fp": 63,
+              "fn": 7
+            },
+            "test_interpolation": {
+              "loss": 0.0668,
+              "balanced_accuracy": 0.9945,
+              "accuracy": 0.9945,
+              "tpr": 0.989,
+              "tnr": 1.0,
+              "samples": 4000,
+              "tp": 1978,
+              "tn": 2000,
+              "fp": 0,
+              "fn": 22
+            },
+            "test_extrapolation": {
+              "loss": 0.6419,
+              "balanced_accuracy": 0.7732,
+              "accuracy": 0.7732,
+              "tpr": 1.0,
+              "tnr": 0.5465,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 1093,
+              "fp": 907,
+              "fn": 0
+            },
+            "zero_shot_control_symbol": {
+              "loss": 2.4269,
+              "balanced_accuracy": 0.6002,
+              "accuracy": 0.6002,
+              "tpr": 0.669,
+              "tnr": 0.5315,
+              "samples": 4000,
+              "tp": 1338,
+              "tn": 1063,
+              "fp": 937,
+              "fn": 662
+            },
+            "zero_shot_control_order": {
+              "loss": 3.3997,
+              "balanced_accuracy": 0.509,
+              "accuracy": 0.509,
+              "tpr": 0.4745,
+              "tnr": 0.5435,
+              "samples": 4000,
+              "tp": 949,
+              "tn": 1087,
+              "fp": 913,
+              "fn": 1051
+            }
+          },
+          "trained_control_symbol": {
+            "loss": 0.0011,
+            "balanced_accuracy": 1.0,
+            "accuracy": 1.0,
+            "tpr": 1.0,
+            "tnr": 1.0,
+            "samples": 4000,
+            "tp": 2000,
+            "tn": 2000,
+            "fp": 0,
+            "fn": 0
+          },
+          "trained_control_order": {
+            "loss": 0.0051,
+            "balanced_accuracy": 1.0,
+            "accuracy": 1.0,
+            "tpr": 1.0,
+            "tnr": 1.0,
+            "samples": 4000,
+            "tp": 2000,
+            "tn": 2000,
+            "fp": 0,
+            "fn": 0
+          }
+        },
+        "TimeAwareGRU": {
+          "training_stats": {
+            "epochs_trained": 21,
+            "train_time_sec": 6.76,
+            "best_epoch": 16,
+            "best_val_loss": 0.0108,
+            "best_val_balanced_acc": 1.0,
+            "early_stopped": true,
+            "inference_latency_ms_per_sample": 0.012
+          },
+          "temporal_regimes": {
+            "test_id": {
+              "loss": 0.011,
+              "balanced_accuracy": 0.9983,
+              "accuracy": 0.9982,
+              "tpr": 0.998,
+              "tnr": 0.9985,
+              "samples": 4000,
+              "tp": 1996,
+              "tn": 1997,
+              "fp": 3,
+              "fn": 4
+            },
+            "test_interpolation": {
+              "loss": 0.0101,
+              "balanced_accuracy": 0.9998,
+              "accuracy": 0.9998,
+              "tpr": 1.0,
+              "tnr": 0.9995,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 1999,
+              "fp": 1,
+              "fn": 0
+            },
+            "test_extrapolation": {
+              "loss": 2.0472,
+              "balanced_accuracy": 0.839,
+              "accuracy": 0.839,
+              "tpr": 1.0,
+              "tnr": 0.678,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 1356,
+              "fp": 644,
+              "fn": 0
+            },
+            "zero_shot_control_symbol": {
+              "loss": 8.9139,
+              "balanced_accuracy": 0.5285,
+              "accuracy": 0.5285,
+              "tpr": 0.51,
+              "tnr": 0.547,
+              "samples": 4000,
+              "tp": 1020,
+              "tn": 1094,
+              "fp": 906,
+              "fn": 980
+            },
+            "zero_shot_control_order": {
+              "loss": 7.9378,
+              "balanced_accuracy": 0.5885,
+              "accuracy": 0.5885,
+              "tpr": 0.4645,
+              "tnr": 0.7125,
+              "samples": 4000,
+              "tp": 929,
+              "tn": 1425,
+              "fp": 575,
+              "fn": 1071
+            }
+          },
+          "trained_control_symbol": {
+            "loss": 0.0001,
+            "balanced_accuracy": 1.0,
+            "accuracy": 1.0,
+            "tpr": 1.0,
+            "tnr": 1.0,
+            "samples": 4000,
+            "tp": 2000,
+            "tn": 2000,
+            "fp": 0,
+            "fn": 0
+          },
+          "trained_control_order": {
+            "loss": 0.0001,
+            "balanced_accuracy": 1.0,
+            "accuracy": 1.0,
+            "tpr": 1.0,
+            "tnr": 1.0,
+            "samples": 4000,
+            "tp": 2000,
+            "tn": 2000,
+            "fp": 0,
+            "fn": 0
+          }
+        },
+        "DiagonalDecaySSM": {
+          "training_stats": {
+            "epochs_trained": 25,
+            "train_time_sec": 7.32,
+            "best_epoch": 23,
+            "best_val_loss": 0.01,
+            "best_val_balanced_acc": 0.9985,
+            "early_stopped": false,
+            "inference_latency_ms_per_sample": 0.012
+          },
+          "temporal_regimes": {
+            "test_id": {
+              "loss": 0.0102,
+              "balanced_accuracy": 0.9985,
+              "accuracy": 0.9985,
+              "tpr": 0.997,
+              "tnr": 1.0,
+              "samples": 4000,
+              "tp": 1994,
+              "tn": 2000,
+              "fp": 0,
+              "fn": 6
+            },
+            "test_interpolation": {
+              "loss": 0.0082,
+              "balanced_accuracy": 1.0,
+              "accuracy": 1.0,
+              "tpr": 1.0,
+              "tnr": 1.0,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 2000,
+              "fp": 0,
+              "fn": 0
+            },
+            "test_extrapolation": {
+              "loss": 1.8816,
+              "balanced_accuracy": 0.8495,
+              "accuracy": 0.8495,
+              "tpr": 1.0,
+              "tnr": 0.699,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 1398,
+              "fp": 602,
+              "fn": 0
+            },
+            "zero_shot_control_symbol": {
+              "loss": 10.2754,
+              "balanced_accuracy": 0.5335,
+              "accuracy": 0.5335,
+              "tpr": 0.5195,
+              "tnr": 0.5475,
+              "samples": 4000,
+              "tp": 1039,
+              "tn": 1095,
+              "fp": 905,
+              "fn": 961
+            },
+            "zero_shot_control_order": {
+              "loss": 9.9039,
+              "balanced_accuracy": 0.5528,
+              "accuracy": 0.5527,
+              "tpr": 0.4625,
+              "tnr": 0.643,
+              "samples": 4000,
+              "tp": 925,
+              "tn": 1286,
+              "fp": 714,
+              "fn": 1075
+            }
+          },
+          "trained_control_symbol": {
+            "loss": 0.0001,
+            "balanced_accuracy": 1.0,
+            "accuracy": 1.0,
+            "tpr": 1.0,
+            "tnr": 1.0,
+            "samples": 4000,
+            "tp": 2000,
+            "tn": 2000,
+            "fp": 0,
+            "fn": 0
+          },
+          "trained_control_order": {
+            "loss": 0.0002,
+            "balanced_accuracy": 1.0,
+            "accuracy": 1.0,
+            "tpr": 1.0,
+            "tnr": 1.0,
+            "samples": 4000,
+            "tp": 2000,
+            "tn": 2000,
+            "fp": 0,
+            "fn": 0
+          }
+        },
+        "TraceBank": {
+          "training_stats": {
+            "epochs_trained": 25,
+            "train_time_sec": 32.64,
+            "best_epoch": 23,
+            "best_val_loss": 0.0089,
+            "best_val_balanced_acc": 1.0,
+            "early_stopped": false,
+            "inference_latency_ms_per_sample": 0.031
+          },
+          "temporal_regimes": {
+            "test_id": {
+              "loss": 0.009,
+              "balanced_accuracy": 0.9988,
+              "accuracy": 0.9988,
+              "tpr": 0.9975,
+              "tnr": 1.0,
+              "samples": 4000,
+              "tp": 1995,
+              "tn": 2000,
+              "fp": 0,
+              "fn": 5
+            },
+            "test_interpolation": {
+              "loss": 0.0076,
+              "balanced_accuracy": 1.0,
+              "accuracy": 1.0,
+              "tpr": 1.0,
+              "tnr": 1.0,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 2000,
+              "fp": 0,
+              "fn": 0
+            },
+            "test_extrapolation": {
+              "loss": 1.0983,
+              "balanced_accuracy": 0.875,
+              "accuracy": 0.875,
+              "tpr": 1.0,
+              "tnr": 0.75,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 1500,
+              "fp": 500,
+              "fn": 0
+            },
+            "zero_shot_control_symbol": {
+              "loss": 10.5685,
+              "balanced_accuracy": 0.552,
+              "accuracy": 0.552,
+              "tpr": 0.557,
+              "tnr": 0.547,
+              "samples": 4000,
+              "tp": 1114,
+              "tn": 1094,
+              "fp": 906,
+              "fn": 886
+            },
+            "zero_shot_control_order": {
+              "loss": 11.1766,
+              "balanced_accuracy": 0.5477,
+              "accuracy": 0.5477,
+              "tpr": 0.4635,
+              "tnr": 0.632,
+              "samples": 4000,
+              "tp": 927,
+              "tn": 1264,
+              "fp": 736,
+              "fn": 1073
+            }
+          },
+          "trained_control_symbol": {
+            "loss": 0.0001,
+            "balanced_accuracy": 1.0,
+            "accuracy": 1.0,
+            "tpr": 1.0,
+            "tnr": 1.0,
+            "samples": 4000,
+            "tp": 2000,
+            "tn": 2000,
+            "fp": 0,
+            "fn": 0
+          },
+          "trained_control_order": {
+            "loss": 0.0001,
+            "balanced_accuracy": 1.0,
+            "accuracy": 1.0,
+            "tpr": 1.0,
+            "tnr": 1.0,
+            "samples": 4000,
+            "tp": 2000,
+            "tn": 2000,
+            "fp": 0,
+            "fn": 0
+          }
+        },
+        "SparseFIR": {
+          "training_stats": {
+            "epochs_trained": 22,
+            "train_time_sec": 27.17,
+            "best_epoch": 17,
+            "best_val_loss": 0.0133,
+            "best_val_balanced_acc": 0.9955,
+            "early_stopped": true,
+            "inference_latency_ms_per_sample": 0.038
+          },
+          "temporal_regimes": {
+            "test_id": {
+              "loss": 0.0133,
+              "balanced_accuracy": 0.9963,
+              "accuracy": 0.9962,
+              "tpr": 0.995,
+              "tnr": 0.9975,
+              "samples": 4000,
+              "tp": 1990,
+              "tn": 1995,
+              "fp": 5,
+              "fn": 10
+            },
+            "test_interpolation": {
+              "loss": 0.0281,
+              "balanced_accuracy": 0.984,
+              "accuracy": 0.984,
+              "tpr": 0.989,
+              "tnr": 0.979,
+              "samples": 4000,
+              "tp": 1978,
+              "tn": 1958,
+              "fp": 42,
+              "fn": 22
+            },
+            "test_extrapolation": {
+              "loss": 1.9903,
+              "balanced_accuracy": 0.8117,
+              "accuracy": 0.8117,
+              "tpr": 1.0,
+              "tnr": 0.6235,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 1247,
+              "fp": 753,
+              "fn": 0
+            },
+            "zero_shot_control_symbol": {
+              "loss": 8.6361,
+              "balanced_accuracy": 0.5503,
+              "accuracy": 0.5503,
+              "tpr": 0.553,
+              "tnr": 0.5475,
+              "samples": 4000,
+              "tp": 1106,
+              "tn": 1095,
+              "fp": 905,
+              "fn": 894
+            },
+            "zero_shot_control_order": {
+              "loss": 5.7271,
+              "balanced_accuracy": 0.6973,
+              "accuracy": 0.6973,
+              "tpr": 0.4645,
+              "tnr": 0.93,
+              "samples": 4000,
+              "tp": 929,
+              "tn": 1860,
+              "fp": 140,
+              "fn": 1071
+            }
+          },
+          "trained_control_symbol": {
+            "loss": 0.0001,
+            "balanced_accuracy": 1.0,
+            "accuracy": 1.0,
+            "tpr": 1.0,
+            "tnr": 1.0,
+            "samples": 4000,
+            "tp": 2000,
+            "tn": 2000,
+            "fp": 0,
+            "fn": 0
+          },
+          "trained_control_order": {
+            "loss": 0.0001,
+            "balanced_accuracy": 1.0,
+            "accuracy": 1.0,
+            "tpr": 1.0,
+            "tnr": 1.0,
+            "samples": 4000,
+            "tp": 2000,
+            "tn": 2000,
+            "fp": 0,
+            "fn": 0
+          }
+        }
+      }
+    },
+    "seed_37": {
+      "wall_time_sec": 171.11,
+      "audits": {
+        "temporal": {
+          "train": {
+            "size": 10000,
+            "positive_count": 5000,
+            "positive_fraction": 0.5,
+            "d1_min": 1.0005645263665632,
+            "d1_max": 9.999682873221738,
+            "d2_min": 1.0026648460971217,
+            "d2_max": 14.999184667469928,
+            "unique_tuples": 10000
+          },
+          "val": {
+            "size": 2000,
+            "positive_count": 1000,
+            "positive_fraction": 0.5,
+            "d1_min": 1.0022537834990068,
+            "d1_max": 9.99098148243329,
+            "d2_min": 1.0051630453926437,
+            "d2_max": 14.998239724854692,
+            "unique_tuples": 2000
+          },
+          "test_id": {
+            "size": 4000,
+            "positive_count": 2000,
+            "positive_fraction": 0.5,
+            "d1_min": 1.0028139884364764,
+            "d1_max": 9.999107752408705,
+            "d2_min": 1.0114996353903696,
+            "d2_max": 14.998203645376863,
+            "unique_tuples": 4000
+          },
+          "test_interpolation": {
+            "size": 4000,
+            "positive_count": 2000,
+            "positive_fraction": 0.5,
+            "d1_min": 4.000123946718066,
+            "d1_max": 4.999906572432767,
+            "d2_min": 1.000573773573914,
+            "d2_max": 14.989988060604857,
+            "unique_tuples": 4000
+          },
+          "test_extrapolation": {
+            "size": 4000,
+            "positive_count": 2000,
+            "positive_fraction": 0.5,
+            "d1_min": 12.001259368774184,
+            "d1_max": 15.99954430120268,
+            "d2_min": 10.002106025657948,
+            "d2_max": 29.994336604417814,
+            "unique_tuples": 4000
+          },
+          "overlaps": {
+            "train_vs_val": 0,
+            "train_vs_test_id": 0,
+            "train_vs_test_interpolation": 0,
+            "train_vs_test_extrapolation": 0,
+            "val_vs_test_id": 0,
+            "val_vs_test_interpolation": 0,
+            "val_vs_test_extrapolation": 0,
+            "test_id_vs_test_interpolation": 0,
+            "test_id_vs_test_extrapolation": 0,
+            "test_interpolation_vs_test_extrapolation": 0
+          }
+        },
+        "control_symbol": {
+          "train": {
+            "size": 10000,
+            "positive_count": 5000,
+            "positive_fraction": 0.5,
+            "d1_min": 1.0014034643251208,
+            "d1_max": 9.999055393644515,
+            "d2_min": 1.0006840127108536,
+            "d2_max": 14.999564512847154,
+            "unique_tuples": 10000
+          },
+          "val": {
+            "size": 2000,
+            "positive_count": 1000,
+            "positive_fraction": 0.5,
+            "d1_min": 1.0024924775645627,
+            "d1_max": 9.993149608411876,
+            "d2_min": 1.018488874982209,
+            "d2_max": 14.99887387518084,
+            "unique_tuples": 2000
+          },
+          "test": {
+            "size": 4000,
+            "positive_count": 2000,
+            "positive_fraction": 0.5,
+            "d1_min": 1.0010143876517605,
+            "d1_max": 9.995955989396212,
+            "d2_min": 1.001615754580559,
+            "d2_max": 14.999525528305943,
+            "unique_tuples": 4000
+          },
+          "overlaps": {
+            "train_vs_val": 0,
+            "train_vs_test": 0,
+            "val_vs_test": 0
+          }
+        },
+        "control_order": {
+          "train": {
+            "size": 10000,
+            "positive_count": 5000,
+            "positive_fraction": 0.5,
+            "d1_min": 1.0018039869502078,
+            "d1_max": 9.999214869643337,
+            "d2_min": 1.001401687240402,
+            "d2_max": 14.99957585615546,
+            "unique_tuples": 10000
+          },
+          "val": {
+            "size": 2000,
+            "positive_count": 1000,
+            "positive_fraction": 0.5,
+            "d1_min": 1.0001791383104224,
+            "d1_max": 9.999911092117854,
+            "d2_min": 1.0032359836649714,
+            "d2_max": 14.998380524878675,
+            "unique_tuples": 2000
+          },
+          "test": {
+            "size": 4000,
+            "positive_count": 2000,
+            "positive_fraction": 0.5,
+            "d1_min": 1.0043209954532002,
+            "d1_max": 9.991152416008406,
+            "d2_min": 1.0003306748987488,
+            "d2_max": 14.98743928284538,
+            "unique_tuples": 4000
+          },
+          "overlaps": {
+            "train_vs_val": 0,
+            "train_vs_test": 0,
+            "val_vs_test": 0
+          }
+        }
+      },
+      "models": {
+        "Majority": {
+          "training_stats": {
+            "epochs_trained": 0,
+            "train_time_sec": 0.0,
+            "best_epoch": 0,
+            "best_val_loss": 0.6931,
+            "best_val_balanced_acc": 0.5,
+            "converged": true,
+            "inference_latency_ms_per_sample": 0.006
+          },
+          "temporal_regimes": {
+            "test_id": {
+              "loss": 0.6931,
+              "balanced_accuracy": 0.5,
+              "accuracy": 0.5,
+              "tpr": 1.0,
+              "tnr": 0.0,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 0,
+              "fp": 2000,
+              "fn": 0
+            },
+            "test_interpolation": {
+              "loss": 0.6931,
+              "balanced_accuracy": 0.5,
+              "accuracy": 0.5,
+              "tpr": 1.0,
+              "tnr": 0.0,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 0,
+              "fp": 2000,
+              "fn": 0
+            },
+            "test_extrapolation": {
+              "loss": 0.6931,
+              "balanced_accuracy": 0.5,
+              "accuracy": 0.5,
+              "tpr": 1.0,
+              "tnr": 0.0,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 0,
+              "fp": 2000,
+              "fn": 0
+            },
+            "zero_shot_control_symbol": {
+              "loss": 0.6931,
+              "balanced_accuracy": 0.5,
+              "accuracy": 0.5,
+              "tpr": 1.0,
+              "tnr": 0.0,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 0,
+              "fp": 2000,
+              "fn": 0
+            },
+            "zero_shot_control_order": {
+              "loss": 0.6931,
+              "balanced_accuracy": 0.5,
+              "accuracy": 0.5,
+              "tpr": 1.0,
+              "tnr": 0.0,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 0,
+              "fp": 2000,
+              "fn": 0
+            }
+          },
+          "trained_control_symbol": {
+            "loss": 0.6931,
+            "balanced_accuracy": 0.5,
+            "accuracy": 0.5,
+            "tpr": 1.0,
+            "tnr": 0.0,
+            "samples": 4000,
+            "tp": 2000,
+            "tn": 0,
+            "fp": 2000,
+            "fn": 0
+          },
+          "trained_control_order": {
+            "loss": 0.6931,
+            "balanced_accuracy": 0.5,
+            "accuracy": 0.5,
+            "tpr": 1.0,
+            "tnr": 0.0,
+            "samples": 4000,
+            "tp": 2000,
+            "tn": 0,
+            "fp": 2000,
+            "fn": 0
+          }
+        },
+        "ArithmeticOracle": {
+          "training_stats": {
+            "epochs_trained": 0,
+            "train_time_sec": 0.0,
+            "best_epoch": 0,
+            "best_val_loss": 0.0,
+            "best_val_balanced_acc": 1.0,
+            "converged": true,
+            "inference_latency_ms_per_sample": 0.007
+          },
+          "temporal_regimes": {
+            "test_id": {
+              "loss": 0.0,
+              "balanced_accuracy": 1.0,
+              "accuracy": 1.0,
+              "tpr": 1.0,
+              "tnr": 1.0,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 2000,
+              "fp": 0,
+              "fn": 0
+            },
+            "test_interpolation": {
+              "loss": 0.0,
+              "balanced_accuracy": 1.0,
+              "accuracy": 1.0,
+              "tpr": 1.0,
+              "tnr": 1.0,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 2000,
+              "fp": 0,
+              "fn": 0
+            },
+            "test_extrapolation": {
+              "loss": 0.0,
+              "balanced_accuracy": 1.0,
+              "accuracy": 1.0,
+              "tpr": 1.0,
+              "tnr": 1.0,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 2000,
+              "fp": 0,
+              "fn": 0
+            },
+            "zero_shot_control_symbol": {
+              "loss": 9.725,
+              "balanced_accuracy": 0.5137,
+              "accuracy": 0.5138,
+              "tpr": 0.494,
+              "tnr": 0.5335,
+              "samples": 4000,
+              "tp": 988,
+              "tn": 1067,
+              "fp": 933,
+              "fn": 1012
+            },
+            "zero_shot_control_order": {
+              "loss": 9.935,
+              "balanced_accuracy": 0.5032,
+              "accuracy": 0.5032,
+              "tpr": 0.4685,
+              "tnr": 0.538,
+              "samples": 4000,
+              "tp": 937,
+              "tn": 1076,
+              "fp": 924,
+              "fn": 1063
+            }
+          },
+          "trained_control_symbol": {
+            "loss": 9.725,
+            "balanced_accuracy": 0.5137,
+            "accuracy": 0.5138,
+            "tpr": 0.494,
+            "tnr": 0.5335,
+            "samples": 4000,
+            "tp": 988,
+            "tn": 1067,
+            "fp": 933,
+            "fn": 1012
+          },
+          "trained_control_order": {
+            "loss": 9.935,
+            "balanced_accuracy": 0.5032,
+            "accuracy": 0.5032,
+            "tpr": 0.4685,
+            "tnr": 0.538,
+            "samples": 4000,
+            "tp": 937,
+            "tn": 1076,
+            "fp": 924,
+            "fn": 1063
+          }
+        },
+        "MLPOracle": {
+          "training_stats": {
+            "epochs_trained": 25,
+            "train_time_sec": 4.02,
+            "best_epoch": 20,
+            "best_val_loss": 0.0011,
+            "best_val_balanced_acc": 1.0,
+            "early_stopped": true,
+            "inference_latency_ms_per_sample": 0.007
+          },
+          "temporal_regimes": {
+            "test_id": {
+              "loss": 0.0021,
+              "balanced_accuracy": 1.0,
+              "accuracy": 1.0,
+              "tpr": 1.0,
+              "tnr": 1.0,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 2000,
+              "fp": 0,
+              "fn": 0
+            },
+            "test_interpolation": {
+              "loss": 0.0023,
+              "balanced_accuracy": 1.0,
+              "accuracy": 1.0,
+              "tpr": 1.0,
+              "tnr": 1.0,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 2000,
+              "fp": 0,
+              "fn": 0
+            },
+            "test_extrapolation": {
+              "loss": 0.0164,
+              "balanced_accuracy": 0.9923,
+              "accuracy": 0.9922,
+              "tpr": 1.0,
+              "tnr": 0.9845,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 1969,
+              "fp": 31,
+              "fn": 0
+            },
+            "zero_shot_control_symbol": {
+              "loss": 23.9637,
+              "balanced_accuracy": 0.5137,
+              "accuracy": 0.5138,
+              "tpr": 0.494,
+              "tnr": 0.5335,
+              "samples": 4000,
+              "tp": 988,
+              "tn": 1067,
+              "fp": 933,
+              "fn": 1012
+            },
+            "zero_shot_control_order": {
+              "loss": 24.2494,
+              "balanced_accuracy": 0.5032,
+              "accuracy": 0.5032,
+              "tpr": 0.4685,
+              "tnr": 0.538,
+              "samples": 4000,
+              "tp": 937,
+              "tn": 1076,
+              "fp": 924,
+              "fn": 1063
+            }
+          },
+          "trained_control_symbol": {
+            "loss": 0.6929,
+            "balanced_accuracy": 0.5092,
+            "accuracy": 0.5092,
+            "tpr": 0.244,
+            "tnr": 0.7745,
+            "samples": 4000,
+            "tp": 488,
+            "tn": 1549,
+            "fp": 451,
+            "fn": 1512
+          },
+          "trained_control_order": {
+            "loss": 0.6941,
+            "balanced_accuracy": 0.4928,
+            "accuracy": 0.4928,
+            "tpr": 0.3905,
+            "tnr": 0.595,
+            "samples": 4000,
+            "tp": 781,
+            "tn": 1190,
+            "fp": 810,
+            "fn": 1219
+          }
+        },
+        "Reservoir": {
+          "training_stats": {
+            "epochs_trained": 25,
+            "train_time_sec": 3.87,
+            "best_epoch": 25,
+            "best_val_loss": 0.0678,
+            "best_val_balanced_acc": 0.988,
+            "early_stopped": false,
+            "inference_latency_ms_per_sample": 0.01
+          },
+          "temporal_regimes": {
+            "test_id": {
+              "loss": 0.0793,
+              "balanced_accuracy": 0.979,
+              "accuracy": 0.979,
+              "tpr": 0.9775,
+              "tnr": 0.9805,
+              "samples": 4000,
+              "tp": 1955,
+              "tn": 1961,
+              "fp": 39,
+              "fn": 45
+            },
+            "test_interpolation": {
+              "loss": 0.0613,
+              "balanced_accuracy": 0.984,
+              "accuracy": 0.984,
+              "tpr": 0.968,
+              "tnr": 1.0,
+              "samples": 4000,
+              "tp": 1936,
+              "tn": 2000,
+              "fp": 0,
+              "fn": 64
+            },
+            "test_extrapolation": {
+              "loss": 0.5617,
+              "balanced_accuracy": 0.7732,
+              "accuracy": 0.7732,
+              "tpr": 1.0,
+              "tnr": 0.5465,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 1093,
+              "fp": 907,
+              "fn": 0
+            },
+            "zero_shot_control_symbol": {
+              "loss": 2.4565,
+              "balanced_accuracy": 0.6133,
+              "accuracy": 0.6132,
+              "tpr": 0.6905,
+              "tnr": 0.536,
+              "samples": 4000,
+              "tp": 1381,
+              "tn": 1072,
+              "fp": 928,
+              "fn": 619
+            },
+            "zero_shot_control_order": {
+              "loss": 2.9673,
+              "balanced_accuracy": 0.5597,
+              "accuracy": 0.5597,
+              "tpr": 0.467,
+              "tnr": 0.6525,
+              "samples": 4000,
+              "tp": 934,
+              "tn": 1305,
+              "fp": 695,
+              "fn": 1066
+            }
+          },
+          "trained_control_symbol": {
+            "loss": 0.001,
+            "balanced_accuracy": 1.0,
+            "accuracy": 1.0,
+            "tpr": 1.0,
+            "tnr": 1.0,
+            "samples": 4000,
+            "tp": 2000,
+            "tn": 2000,
+            "fp": 0,
+            "fn": 0
+          },
+          "trained_control_order": {
+            "loss": 0.0021,
+            "balanced_accuracy": 1.0,
+            "accuracy": 1.0,
+            "tpr": 1.0,
+            "tnr": 1.0,
+            "samples": 4000,
+            "tp": 2000,
+            "tn": 2000,
+            "fp": 0,
+            "fn": 0
+          }
+        },
+        "TimeAwareGRU": {
+          "training_stats": {
+            "epochs_trained": 19,
+            "train_time_sec": 6.15,
+            "best_epoch": 14,
+            "best_val_loss": 0.0071,
+            "best_val_balanced_acc": 1.0,
+            "early_stopped": true,
+            "inference_latency_ms_per_sample": 0.012
+          },
+          "temporal_regimes": {
+            "test_id": {
+              "loss": 0.0116,
+              "balanced_accuracy": 0.9983,
+              "accuracy": 0.9982,
+              "tpr": 0.997,
+              "tnr": 0.9995,
+              "samples": 4000,
+              "tp": 1994,
+              "tn": 1999,
+              "fp": 1,
+              "fn": 6
+            },
+            "test_interpolation": {
+              "loss": 0.0113,
+              "balanced_accuracy": 0.9955,
+              "accuracy": 0.9955,
+              "tpr": 0.991,
+              "tnr": 1.0,
+              "samples": 4000,
+              "tp": 1982,
+              "tn": 2000,
+              "fp": 0,
+              "fn": 18
+            },
+            "test_extrapolation": {
+              "loss": 1.8001,
+              "balanced_accuracy": 0.8425,
+              "accuracy": 0.8425,
+              "tpr": 1.0,
+              "tnr": 0.685,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 1370,
+              "fp": 630,
+              "fn": 0
+            },
+            "zero_shot_control_symbol": {
+              "loss": 7.5023,
+              "balanced_accuracy": 0.5703,
+              "accuracy": 0.5703,
+              "tpr": 0.6045,
+              "tnr": 0.536,
+              "samples": 4000,
+              "tp": 1209,
+              "tn": 1072,
+              "fp": 928,
+              "fn": 791
+            },
+            "zero_shot_control_order": {
+              "loss": 7.5489,
+              "balanced_accuracy": 0.5648,
+              "accuracy": 0.5647,
+              "tpr": 0.4685,
+              "tnr": 0.661,
+              "samples": 4000,
+              "tp": 937,
+              "tn": 1322,
+              "fp": 678,
+              "fn": 1063
+            }
+          },
+          "trained_control_symbol": {
+            "loss": 0.0,
+            "balanced_accuracy": 1.0,
+            "accuracy": 1.0,
+            "tpr": 1.0,
+            "tnr": 1.0,
+            "samples": 4000,
+            "tp": 2000,
+            "tn": 2000,
+            "fp": 0,
+            "fn": 0
+          },
+          "trained_control_order": {
+            "loss": 0.0,
+            "balanced_accuracy": 1.0,
+            "accuracy": 1.0,
+            "tpr": 1.0,
+            "tnr": 1.0,
+            "samples": 4000,
+            "tp": 2000,
+            "tn": 2000,
+            "fp": 0,
+            "fn": 0
+          }
+        },
+        "DiagonalDecaySSM": {
+          "training_stats": {
+            "epochs_trained": 25,
+            "train_time_sec": 7.31,
+            "best_epoch": 21,
+            "best_val_loss": 0.0065,
+            "best_val_balanced_acc": 0.9995,
+            "early_stopped": false,
+            "inference_latency_ms_per_sample": 0.012
+          },
+          "temporal_regimes": {
+            "test_id": {
+              "loss": 0.009,
+              "balanced_accuracy": 0.9998,
+              "accuracy": 0.9998,
+              "tpr": 0.9995,
+              "tnr": 1.0,
+              "samples": 4000,
+              "tp": 1999,
+              "tn": 2000,
+              "fp": 0,
+              "fn": 1
+            },
+            "test_interpolation": {
+              "loss": 0.0086,
+              "balanced_accuracy": 1.0,
+              "accuracy": 1.0,
+              "tpr": 1.0,
+              "tnr": 1.0,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 2000,
+              "fp": 0,
+              "fn": 0
+            },
+            "test_extrapolation": {
+              "loss": 1.7533,
+              "balanced_accuracy": 0.851,
+              "accuracy": 0.851,
+              "tpr": 1.0,
+              "tnr": 0.702,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 1404,
+              "fp": 596,
+              "fn": 0
+            },
+            "zero_shot_control_symbol": {
+              "loss": 7.6625,
+              "balanced_accuracy": 0.6035,
+              "accuracy": 0.6035,
+              "tpr": 0.6735,
+              "tnr": 0.5335,
+              "samples": 4000,
+              "tp": 1347,
+              "tn": 1067,
+              "fp": 933,
+              "fn": 653
+            },
+            "zero_shot_control_order": {
+              "loss": 6.1801,
+              "balanced_accuracy": 0.6892,
+              "accuracy": 0.6893,
+              "tpr": 0.469,
+              "tnr": 0.9095,
+              "samples": 4000,
+              "tp": 938,
+              "tn": 1819,
+              "fp": 181,
+              "fn": 1062
+            }
+          },
+          "trained_control_symbol": {
+            "loss": 0.0001,
+            "balanced_accuracy": 1.0,
+            "accuracy": 1.0,
+            "tpr": 1.0,
+            "tnr": 1.0,
+            "samples": 4000,
+            "tp": 2000,
+            "tn": 2000,
+            "fp": 0,
+            "fn": 0
+          },
+          "trained_control_order": {
+            "loss": 0.0001,
+            "balanced_accuracy": 1.0,
+            "accuracy": 1.0,
+            "tpr": 1.0,
+            "tnr": 1.0,
+            "samples": 4000,
+            "tp": 2000,
+            "tn": 2000,
+            "fp": 0,
+            "fn": 0
+          }
+        },
+        "TraceBank": {
+          "training_stats": {
+            "epochs_trained": 22,
+            "train_time_sec": 28.82,
+            "best_epoch": 17,
+            "best_val_loss": 0.0078,
+            "best_val_balanced_acc": 1.0,
+            "early_stopped": true,
+            "inference_latency_ms_per_sample": 0.031
+          },
+          "temporal_regimes": {
+            "test_id": {
+              "loss": 0.011,
+              "balanced_accuracy": 0.9992,
+              "accuracy": 0.9992,
+              "tpr": 0.9985,
+              "tnr": 1.0,
+              "samples": 4000,
+              "tp": 1997,
+              "tn": 2000,
+              "fp": 0,
+              "fn": 3
+            },
+            "test_interpolation": {
+              "loss": 0.0102,
+              "balanced_accuracy": 1.0,
+              "accuracy": 1.0,
+              "tpr": 1.0,
+              "tnr": 1.0,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 2000,
+              "fp": 0,
+              "fn": 0
+            },
+            "test_extrapolation": {
+              "loss": 0.795,
+              "balanced_accuracy": 0.8787,
+              "accuracy": 0.8788,
+              "tpr": 1.0,
+              "tnr": 0.7575,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 1515,
+              "fp": 485,
+              "fn": 0
+            },
+            "zero_shot_control_symbol": {
+              "loss": 5.424,
+              "balanced_accuracy": 0.6623,
+              "accuracy": 0.6623,
+              "tpr": 0.791,
+              "tnr": 0.5335,
+              "samples": 4000,
+              "tp": 1582,
+              "tn": 1067,
+              "fp": 933,
+              "fn": 418
+            },
+            "zero_shot_control_order": {
+              "loss": 5.2913,
+              "balanced_accuracy": 0.7288,
+              "accuracy": 0.7288,
+              "tpr": 0.4675,
+              "tnr": 0.99,
+              "samples": 4000,
+              "tp": 935,
+              "tn": 1980,
+              "fp": 20,
+              "fn": 1065
+            }
+          },
+          "trained_control_symbol": {
+            "loss": 0.0001,
+            "balanced_accuracy": 1.0,
+            "accuracy": 1.0,
+            "tpr": 1.0,
+            "tnr": 1.0,
+            "samples": 4000,
+            "tp": 2000,
+            "tn": 2000,
+            "fp": 0,
+            "fn": 0
+          },
+          "trained_control_order": {
+            "loss": 0.0001,
+            "balanced_accuracy": 1.0,
+            "accuracy": 1.0,
+            "tpr": 1.0,
+            "tnr": 1.0,
+            "samples": 4000,
+            "tp": 2000,
+            "tn": 2000,
+            "fp": 0,
+            "fn": 0
+          }
+        },
+        "SparseFIR": {
+          "training_stats": {
+            "epochs_trained": 22,
+            "train_time_sec": 27.26,
+            "best_epoch": 17,
+            "best_val_loss": 0.0117,
+            "best_val_balanced_acc": 0.996,
+            "early_stopped": true,
+            "inference_latency_ms_per_sample": 0.038
+          },
+          "temporal_regimes": {
+            "test_id": {
+              "loss": 0.0153,
+              "balanced_accuracy": 0.9955,
+              "accuracy": 0.9955,
+              "tpr": 0.9915,
+              "tnr": 0.9995,
+              "samples": 4000,
+              "tp": 1983,
+              "tn": 1999,
+              "fp": 1,
+              "fn": 17
+            },
+            "test_interpolation": {
+              "loss": 0.0444,
+              "balanced_accuracy": 0.9765,
+              "accuracy": 0.9765,
+              "tpr": 0.9975,
+              "tnr": 0.9555,
+              "samples": 4000,
+              "tp": 1995,
+              "tn": 1911,
+              "fp": 89,
+              "fn": 5
+            },
+            "test_extrapolation": {
+              "loss": 1.0708,
+              "balanced_accuracy": 0.821,
+              "accuracy": 0.821,
+              "tpr": 1.0,
+              "tnr": 0.642,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 1284,
+              "fp": 716,
+              "fn": 0
+            },
+            "zero_shot_control_symbol": {
+              "loss": 6.1435,
+              "balanced_accuracy": 0.6105,
+              "accuracy": 0.6105,
+              "tpr": 0.6855,
+              "tnr": 0.5355,
+              "samples": 4000,
+              "tp": 1371,
+              "tn": 1071,
+              "fp": 929,
+              "fn": 629
+            },
+            "zero_shot_control_order": {
+              "loss": 4.7808,
+              "balanced_accuracy": 0.7077,
+              "accuracy": 0.7077,
+              "tpr": 0.4655,
+              "tnr": 0.95,
+              "samples": 4000,
+              "tp": 931,
+              "tn": 1900,
+              "fp": 100,
+              "fn": 1069
+            }
+          },
+          "trained_control_symbol": {
+            "loss": 0.0001,
+            "balanced_accuracy": 1.0,
+            "accuracy": 1.0,
+            "tpr": 1.0,
+            "tnr": 1.0,
+            "samples": 4000,
+            "tp": 2000,
+            "tn": 2000,
+            "fp": 0,
+            "fn": 0
+          },
+          "trained_control_order": {
+            "loss": 0.0001,
+            "balanced_accuracy": 1.0,
+            "accuracy": 1.0,
+            "tpr": 1.0,
+            "tnr": 1.0,
+            "samples": 4000,
+            "tp": 2000,
+            "tn": 2000,
+            "fp": 0,
+            "fn": 0
+          }
+        }
+      }
+    },
+    "seed_41": {
+      "wall_time_sec": 163.63,
+      "audits": {
+        "temporal": {
+          "train": {
+            "size": 10000,
+            "positive_count": 5000,
+            "positive_fraction": 0.5,
+            "d1_min": 1.0005774740206332,
+            "d1_max": 9.998578211245938,
+            "d2_min": 1.0023718541796933,
+            "d2_max": 14.999275167106006,
+            "unique_tuples": 10000
+          },
+          "val": {
+            "size": 2000,
+            "positive_count": 1000,
+            "positive_fraction": 0.5,
+            "d1_min": 1.0019278803895926,
+            "d1_max": 9.998830926727,
+            "d2_min": 1.0056663040175982,
+            "d2_max": 14.997040138898392,
+            "unique_tuples": 2000
+          },
+          "test_id": {
+            "size": 4000,
+            "positive_count": 2000,
+            "positive_fraction": 0.5,
+            "d1_min": 1.0001442170892698,
+            "d1_max": 9.997145314588575,
+            "d2_min": 1.0088127358350465,
+            "d2_max": 14.999829165778248,
+            "unique_tuples": 4000
+          },
+          "test_interpolation": {
+            "size": 4000,
+            "positive_count": 2000,
+            "positive_fraction": 0.5,
+            "d1_min": 4.000642806751192,
+            "d1_max": 4.999674961892303,
+            "d2_min": 1.0011003699214134,
+            "d2_max": 14.997368425245766,
+            "unique_tuples": 4000
+          },
+          "test_extrapolation": {
+            "size": 4000,
+            "positive_count": 2000,
+            "positive_fraction": 0.5,
+            "d1_min": 12.00069759988202,
+            "d1_max": 15.999691396694924,
+            "d2_min": 10.0001662169506,
+            "d2_max": 29.998657971618897,
+            "unique_tuples": 4000
+          },
+          "overlaps": {
+            "train_vs_val": 0,
+            "train_vs_test_id": 0,
+            "train_vs_test_interpolation": 0,
+            "train_vs_test_extrapolation": 0,
+            "val_vs_test_id": 0,
+            "val_vs_test_interpolation": 0,
+            "val_vs_test_extrapolation": 0,
+            "test_id_vs_test_interpolation": 0,
+            "test_id_vs_test_extrapolation": 0,
+            "test_interpolation_vs_test_extrapolation": 0
+          }
+        },
+        "control_symbol": {
+          "train": {
+            "size": 10000,
+            "positive_count": 5000,
+            "positive_fraction": 0.5,
+            "d1_min": 1.0021286504857265,
+            "d1_max": 9.996567799324003,
+            "d2_min": 1.0065926279334443,
+            "d2_max": 14.997764861205097,
+            "unique_tuples": 10000
+          },
+          "val": {
+            "size": 2000,
+            "positive_count": 1000,
+            "positive_fraction": 0.5,
+            "d1_min": 1.0094230970839582,
+            "d1_max": 9.99793051358076,
+            "d2_min": 1.0015991013160812,
+            "d2_max": 14.992515119962091,
+            "unique_tuples": 2000
+          },
+          "test": {
+            "size": 4000,
+            "positive_count": 2000,
+            "positive_fraction": 0.5,
+            "d1_min": 1.0002257572120357,
+            "d1_max": 9.996367455463712,
+            "d2_min": 1.0021705119769184,
+            "d2_max": 14.997941609090544,
+            "unique_tuples": 4000
+          },
+          "overlaps": {
+            "train_vs_val": 0,
+            "train_vs_test": 0,
+            "val_vs_test": 0
+          }
+        },
+        "control_order": {
+          "train": {
+            "size": 10000,
+            "positive_count": 5000,
+            "positive_fraction": 0.5,
+            "d1_min": 1.0000033296113506,
+            "d1_max": 9.999020865282924,
+            "d2_min": 1.0047342220772097,
+            "d2_max": 14.995662665943696,
+            "unique_tuples": 10000
+          },
+          "val": {
+            "size": 2000,
+            "positive_count": 1000,
+            "positive_fraction": 0.5,
+            "d1_min": 1.000227963224972,
+            "d1_max": 9.996754822210528,
+            "d2_min": 1.0042185535237707,
+            "d2_max": 14.998477609066299,
+            "unique_tuples": 2000
+          },
+          "test": {
+            "size": 4000,
+            "positive_count": 2000,
+            "positive_fraction": 0.5,
+            "d1_min": 1.0013653508829008,
+            "d1_max": 9.997280950205983,
+            "d2_min": 1.0009267066739411,
+            "d2_max": 14.999947279709001,
+            "unique_tuples": 4000
+          },
+          "overlaps": {
+            "train_vs_val": 0,
+            "train_vs_test": 0,
+            "val_vs_test": 0
+          }
+        }
+      },
+      "models": {
+        "Majority": {
+          "training_stats": {
+            "epochs_trained": 0,
+            "train_time_sec": 0.0,
+            "best_epoch": 0,
+            "best_val_loss": 0.6931,
+            "best_val_balanced_acc": 0.5,
+            "converged": true,
+            "inference_latency_ms_per_sample": 0.006
+          },
+          "temporal_regimes": {
+            "test_id": {
+              "loss": 0.6931,
+              "balanced_accuracy": 0.5,
+              "accuracy": 0.5,
+              "tpr": 1.0,
+              "tnr": 0.0,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 0,
+              "fp": 2000,
+              "fn": 0
+            },
+            "test_interpolation": {
+              "loss": 0.6931,
+              "balanced_accuracy": 0.5,
+              "accuracy": 0.5,
+              "tpr": 1.0,
+              "tnr": 0.0,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 0,
+              "fp": 2000,
+              "fn": 0
+            },
+            "test_extrapolation": {
+              "loss": 0.6931,
+              "balanced_accuracy": 0.5,
+              "accuracy": 0.5,
+              "tpr": 1.0,
+              "tnr": 0.0,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 0,
+              "fp": 2000,
+              "fn": 0
+            },
+            "zero_shot_control_symbol": {
+              "loss": 0.6931,
+              "balanced_accuracy": 0.5,
+              "accuracy": 0.5,
+              "tpr": 1.0,
+              "tnr": 0.0,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 0,
+              "fp": 2000,
+              "fn": 0
+            },
+            "zero_shot_control_order": {
+              "loss": 0.6931,
+              "balanced_accuracy": 0.5,
+              "accuracy": 0.5,
+              "tpr": 1.0,
+              "tnr": 0.0,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 0,
+              "fp": 2000,
+              "fn": 0
+            }
+          },
+          "trained_control_symbol": {
+            "loss": 0.6931,
+            "balanced_accuracy": 0.5,
+            "accuracy": 0.5,
+            "tpr": 1.0,
+            "tnr": 0.0,
+            "samples": 4000,
+            "tp": 2000,
+            "tn": 0,
+            "fp": 2000,
+            "fn": 0
+          },
+          "trained_control_order": {
+            "loss": 0.6931,
+            "balanced_accuracy": 0.5,
+            "accuracy": 0.5,
+            "tpr": 1.0,
+            "tnr": 0.0,
+            "samples": 4000,
+            "tp": 2000,
+            "tn": 0,
+            "fp": 2000,
+            "fn": 0
+          }
+        },
+        "ArithmeticOracle": {
+          "training_stats": {
+            "epochs_trained": 0,
+            "train_time_sec": 0.0,
+            "best_epoch": 0,
+            "best_val_loss": 0.0,
+            "best_val_balanced_acc": 1.0,
+            "converged": true,
+            "inference_latency_ms_per_sample": 0.007
+          },
+          "temporal_regimes": {
+            "test_id": {
+              "loss": 0.0,
+              "balanced_accuracy": 1.0,
+              "accuracy": 1.0,
+              "tpr": 1.0,
+              "tnr": 1.0,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 2000,
+              "fp": 0,
+              "fn": 0
+            },
+            "test_interpolation": {
+              "loss": 0.0,
+              "balanced_accuracy": 1.0,
+              "accuracy": 1.0,
+              "tpr": 1.0,
+              "tnr": 1.0,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 2000,
+              "fp": 0,
+              "fn": 0
+            },
+            "test_extrapolation": {
+              "loss": 0.0,
+              "balanced_accuracy": 1.0,
+              "accuracy": 1.0,
+              "tpr": 1.0,
+              "tnr": 1.0,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 2000,
+              "fp": 0,
+              "fn": 0
+            },
+            "zero_shot_control_symbol": {
+              "loss": 9.77,
+              "balanced_accuracy": 0.5115,
+              "accuracy": 0.5115,
+              "tpr": 0.4665,
+              "tnr": 0.5565,
+              "samples": 4000,
+              "tp": 933,
+              "tn": 1113,
+              "fp": 887,
+              "fn": 1067
+            },
+            "zero_shot_control_order": {
+              "loss": 9.785,
+              "balanced_accuracy": 0.5108,
+              "accuracy": 0.5108,
+              "tpr": 0.478,
+              "tnr": 0.5435,
+              "samples": 4000,
+              "tp": 956,
+              "tn": 1087,
+              "fp": 913,
+              "fn": 1044
+            }
+          },
+          "trained_control_symbol": {
+            "loss": 9.77,
+            "balanced_accuracy": 0.5115,
+            "accuracy": 0.5115,
+            "tpr": 0.4665,
+            "tnr": 0.5565,
+            "samples": 4000,
+            "tp": 933,
+            "tn": 1113,
+            "fp": 887,
+            "fn": 1067
+          },
+          "trained_control_order": {
+            "loss": 9.785,
+            "balanced_accuracy": 0.5108,
+            "accuracy": 0.5108,
+            "tpr": 0.478,
+            "tnr": 0.5435,
+            "samples": 4000,
+            "tp": 956,
+            "tn": 1087,
+            "fp": 913,
+            "fn": 1044
+          }
+        },
+        "MLPOracle": {
+          "training_stats": {
+            "epochs_trained": 25,
+            "train_time_sec": 4.04,
+            "best_epoch": 25,
+            "best_val_loss": 0.0014,
+            "best_val_balanced_acc": 1.0,
+            "early_stopped": false,
+            "inference_latency_ms_per_sample": 0.007
+          },
+          "temporal_regimes": {
+            "test_id": {
+              "loss": 0.0013,
+              "balanced_accuracy": 1.0,
+              "accuracy": 1.0,
+              "tpr": 1.0,
+              "tnr": 1.0,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 2000,
+              "fp": 0,
+              "fn": 0
+            },
+            "test_interpolation": {
+              "loss": 0.0018,
+              "balanced_accuracy": 1.0,
+              "accuracy": 1.0,
+              "tpr": 1.0,
+              "tnr": 1.0,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 2000,
+              "fp": 0,
+              "fn": 0
+            },
+            "test_extrapolation": {
+              "loss": 0.0475,
+              "balanced_accuracy": 0.987,
+              "accuracy": 0.987,
+              "tpr": 1.0,
+              "tnr": 0.974,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 1948,
+              "fp": 52,
+              "fn": 0
+            },
+            "zero_shot_control_symbol": {
+              "loss": 24.9177,
+              "balanced_accuracy": 0.5115,
+              "accuracy": 0.5115,
+              "tpr": 0.4665,
+              "tnr": 0.5565,
+              "samples": 4000,
+              "tp": 933,
+              "tn": 1113,
+              "fp": 887,
+              "fn": 1067
+            },
+            "zero_shot_control_order": {
+              "loss": 24.6152,
+              "balanced_accuracy": 0.5108,
+              "accuracy": 0.5108,
+              "tpr": 0.478,
+              "tnr": 0.5435,
+              "samples": 4000,
+              "tp": 956,
+              "tn": 1087,
+              "fp": 913,
+              "fn": 1044
+            }
+          },
+          "trained_control_symbol": {
+            "loss": 0.6939,
+            "balanced_accuracy": 0.4955,
+            "accuracy": 0.4955,
+            "tpr": 0.631,
+            "tnr": 0.36,
+            "samples": 4000,
+            "tp": 1262,
+            "tn": 720,
+            "fp": 1280,
+            "fn": 738
+          },
+          "trained_control_order": {
+            "loss": 0.6932,
+            "balanced_accuracy": 0.505,
+            "accuracy": 0.505,
+            "tpr": 0.333,
+            "tnr": 0.677,
+            "samples": 4000,
+            "tp": 666,
+            "tn": 1354,
+            "fp": 646,
+            "fn": 1334
+          }
+        },
+        "Reservoir": {
+          "training_stats": {
+            "epochs_trained": 25,
+            "train_time_sec": 3.88,
+            "best_epoch": 25,
+            "best_val_loss": 0.0828,
+            "best_val_balanced_acc": 0.981,
+            "early_stopped": false,
+            "inference_latency_ms_per_sample": 0.01
+          },
+          "temporal_regimes": {
+            "test_id": {
+              "loss": 0.0826,
+              "balanced_accuracy": 0.9852,
+              "accuracy": 0.9852,
+              "tpr": 0.993,
+              "tnr": 0.9775,
+              "samples": 4000,
+              "tp": 1986,
+              "tn": 1955,
+              "fp": 45,
+              "fn": 14
+            },
+            "test_interpolation": {
+              "loss": 0.0792,
+              "balanced_accuracy": 0.9835,
+              "accuracy": 0.9835,
+              "tpr": 0.967,
+              "tnr": 1.0,
+              "samples": 4000,
+              "tp": 1934,
+              "tn": 2000,
+              "fp": 0,
+              "fn": 66
+            },
+            "test_extrapolation": {
+              "loss": 0.526,
+              "balanced_accuracy": 0.7845,
+              "accuracy": 0.7845,
+              "tpr": 1.0,
+              "tnr": 0.569,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 1138,
+              "fp": 862,
+              "fn": 0
+            },
+            "zero_shot_control_symbol": {
+              "loss": 2.7331,
+              "balanced_accuracy": 0.5665,
+              "accuracy": 0.5665,
+              "tpr": 0.5905,
+              "tnr": 0.5425,
+              "samples": 4000,
+              "tp": 1181,
+              "tn": 1085,
+              "fp": 915,
+              "fn": 819
+            },
+            "zero_shot_control_order": {
+              "loss": 2.553,
+              "balanced_accuracy": 0.5938,
+              "accuracy": 0.5938,
+              "tpr": 0.491,
+              "tnr": 0.6965,
+              "samples": 4000,
+              "tp": 982,
+              "tn": 1393,
+              "fp": 607,
+              "fn": 1018
+            }
+          },
+          "trained_control_symbol": {
+            "loss": 0.0012,
+            "balanced_accuracy": 1.0,
+            "accuracy": 1.0,
+            "tpr": 1.0,
+            "tnr": 1.0,
+            "samples": 4000,
+            "tp": 2000,
+            "tn": 2000,
+            "fp": 0,
+            "fn": 0
+          },
+          "trained_control_order": {
+            "loss": 0.005,
+            "balanced_accuracy": 1.0,
+            "accuracy": 1.0,
+            "tpr": 1.0,
+            "tnr": 1.0,
+            "samples": 4000,
+            "tp": 2000,
+            "tn": 2000,
+            "fp": 0,
+            "fn": 0
+          }
+        },
+        "TimeAwareGRU": {
+          "training_stats": {
+            "epochs_trained": 24,
+            "train_time_sec": 7.76,
+            "best_epoch": 19,
+            "best_val_loss": 0.0076,
+            "best_val_balanced_acc": 1.0,
+            "early_stopped": true,
+            "inference_latency_ms_per_sample": 0.012
+          },
+          "temporal_regimes": {
+            "test_id": {
+              "loss": 0.0073,
+              "balanced_accuracy": 0.9998,
+              "accuracy": 0.9998,
+              "tpr": 1.0,
+              "tnr": 0.9995,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 1999,
+              "fp": 1,
+              "fn": 0
+            },
+            "test_interpolation": {
+              "loss": 0.008,
+              "balanced_accuracy": 1.0,
+              "accuracy": 1.0,
+              "tpr": 1.0,
+              "tnr": 1.0,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 2000,
+              "fp": 0,
+              "fn": 0
+            },
+            "test_extrapolation": {
+              "loss": 1.7445,
+              "balanced_accuracy": 0.873,
+              "accuracy": 0.873,
+              "tpr": 1.0,
+              "tnr": 0.746,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 1492,
+              "fp": 508,
+              "fn": 0
+            },
+            "zero_shot_control_symbol": {
+              "loss": 9.6527,
+              "balanced_accuracy": 0.5555,
+              "accuracy": 0.5555,
+              "tpr": 0.5545,
+              "tnr": 0.5565,
+              "samples": 4000,
+              "tp": 1109,
+              "tn": 1113,
+              "fp": 887,
+              "fn": 891
+            },
+            "zero_shot_control_order": {
+              "loss": 8.5767,
+              "balanced_accuracy": 0.6068,
+              "accuracy": 0.6068,
+              "tpr": 0.478,
+              "tnr": 0.7355,
+              "samples": 4000,
+              "tp": 956,
+              "tn": 1471,
+              "fp": 529,
+              "fn": 1044
+            }
+          },
+          "trained_control_symbol": {
+            "loss": 0.0,
+            "balanced_accuracy": 1.0,
+            "accuracy": 1.0,
+            "tpr": 1.0,
+            "tnr": 1.0,
+            "samples": 4000,
+            "tp": 2000,
+            "tn": 2000,
+            "fp": 0,
+            "fn": 0
+          },
+          "trained_control_order": {
+            "loss": 0.0001,
+            "balanced_accuracy": 1.0,
+            "accuracy": 1.0,
+            "tpr": 1.0,
+            "tnr": 1.0,
+            "samples": 4000,
+            "tp": 2000,
+            "tn": 2000,
+            "fp": 0,
+            "fn": 0
+          }
+        },
+        "DiagonalDecaySSM": {
+          "training_stats": {
+            "epochs_trained": 24,
+            "train_time_sec": 7.02,
+            "best_epoch": 19,
+            "best_val_loss": 0.0101,
+            "best_val_balanced_acc": 0.999,
+            "early_stopped": true,
+            "inference_latency_ms_per_sample": 0.012
+          },
+          "temporal_regimes": {
+            "test_id": {
+              "loss": 0.0084,
+              "balanced_accuracy": 0.9995,
+              "accuracy": 0.9995,
+              "tpr": 1.0,
+              "tnr": 0.999,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 1998,
+              "fp": 2,
+              "fn": 0
+            },
+            "test_interpolation": {
+              "loss": 0.0119,
+              "balanced_accuracy": 0.9975,
+              "accuracy": 0.9975,
+              "tpr": 1.0,
+              "tnr": 0.995,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 1990,
+              "fp": 10,
+              "fn": 0
+            },
+            "test_extrapolation": {
+              "loss": 1.9113,
+              "balanced_accuracy": 0.842,
+              "accuracy": 0.842,
+              "tpr": 1.0,
+              "tnr": 0.684,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 1368,
+              "fp": 632,
+              "fn": 0
+            },
+            "zero_shot_control_symbol": {
+              "loss": 8.2122,
+              "balanced_accuracy": 0.577,
+              "accuracy": 0.577,
+              "tpr": 0.5985,
+              "tnr": 0.5555,
+              "samples": 4000,
+              "tp": 1197,
+              "tn": 1111,
+              "fp": 889,
+              "fn": 803
+            },
+            "zero_shot_control_order": {
+              "loss": 6.887,
+              "balanced_accuracy": 0.6507,
+              "accuracy": 0.6508,
+              "tpr": 0.478,
+              "tnr": 0.8235,
+              "samples": 4000,
+              "tp": 956,
+              "tn": 1647,
+              "fp": 353,
+              "fn": 1044
+            }
+          },
+          "trained_control_symbol": {
+            "loss": 0.0001,
+            "balanced_accuracy": 1.0,
+            "accuracy": 1.0,
+            "tpr": 1.0,
+            "tnr": 1.0,
+            "samples": 4000,
+            "tp": 2000,
+            "tn": 2000,
+            "fp": 0,
+            "fn": 0
+          },
+          "trained_control_order": {
+            "loss": 0.0002,
+            "balanced_accuracy": 1.0,
+            "accuracy": 1.0,
+            "tpr": 1.0,
+            "tnr": 1.0,
+            "samples": 4000,
+            "tp": 2000,
+            "tn": 2000,
+            "fp": 0,
+            "fn": 0
+          }
+        },
+        "TraceBank": {
+          "training_stats": {
+            "epochs_trained": 25,
+            "train_time_sec": 33.73,
+            "best_epoch": 24,
+            "best_val_loss": 0.0077,
+            "best_val_balanced_acc": 1.0,
+            "early_stopped": false,
+            "inference_latency_ms_per_sample": 0.031
+          },
+          "temporal_regimes": {
+            "test_id": {
+              "loss": 0.0067,
+              "balanced_accuracy": 1.0,
+              "accuracy": 1.0,
+              "tpr": 1.0,
+              "tnr": 1.0,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 2000,
+              "fp": 0,
+              "fn": 0
+            },
+            "test_interpolation": {
+              "loss": 0.007,
+              "balanced_accuracy": 1.0,
+              "accuracy": 1.0,
+              "tpr": 1.0,
+              "tnr": 1.0,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 2000,
+              "fp": 0,
+              "fn": 0
+            },
+            "test_extrapolation": {
+              "loss": 1.1798,
+              "balanced_accuracy": 0.8807,
+              "accuracy": 0.8808,
+              "tpr": 1.0,
+              "tnr": 0.7615,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 1523,
+              "fp": 477,
+              "fn": 0
+            },
+            "zero_shot_control_symbol": {
+              "loss": 8.6027,
+              "balanced_accuracy": 0.6233,
+              "accuracy": 0.6232,
+              "tpr": 0.6905,
+              "tnr": 0.556,
+              "samples": 4000,
+              "tp": 1381,
+              "tn": 1112,
+              "fp": 888,
+              "fn": 619
+            },
+            "zero_shot_control_order": {
+              "loss": 8.104,
+              "balanced_accuracy": 0.6698,
+              "accuracy": 0.6697,
+              "tpr": 0.479,
+              "tnr": 0.8605,
+              "samples": 4000,
+              "tp": 958,
+              "tn": 1721,
+              "fp": 279,
+              "fn": 1042
+            }
+          },
+          "trained_control_symbol": {
+            "loss": 0.0001,
+            "balanced_accuracy": 1.0,
+            "accuracy": 1.0,
+            "tpr": 1.0,
+            "tnr": 1.0,
+            "samples": 4000,
+            "tp": 2000,
+            "tn": 2000,
+            "fp": 0,
+            "fn": 0
+          },
+          "trained_control_order": {
+            "loss": 0.0002,
+            "balanced_accuracy": 1.0,
+            "accuracy": 1.0,
+            "tpr": 1.0,
+            "tnr": 1.0,
+            "samples": 4000,
+            "tp": 2000,
+            "tn": 2000,
+            "fp": 0,
+            "fn": 0
+          }
+        },
+        "SparseFIR": {
+          "training_stats": {
+            "epochs_trained": 16,
+            "train_time_sec": 20.28,
+            "best_epoch": 11,
+            "best_val_loss": 0.0164,
+            "best_val_balanced_acc": 0.997,
+            "early_stopped": true,
+            "inference_latency_ms_per_sample": 0.05
+          },
+          "temporal_regimes": {
+            "test_id": {
+              "loss": 0.0161,
+              "balanced_accuracy": 0.9965,
+              "accuracy": 0.9965,
+              "tpr": 0.9955,
+              "tnr": 0.9975,
+              "samples": 4000,
+              "tp": 1991,
+              "tn": 1995,
+              "fp": 5,
+              "fn": 9
+            },
+            "test_interpolation": {
+              "loss": 0.0159,
+              "balanced_accuracy": 0.9978,
+              "accuracy": 0.9978,
+              "tpr": 0.9965,
+              "tnr": 0.999,
+              "samples": 4000,
+              "tp": 1993,
+              "tn": 1998,
+              "fp": 2,
+              "fn": 7
+            },
+            "test_extrapolation": {
+              "loss": 1.5086,
+              "balanced_accuracy": 0.8108,
+              "accuracy": 0.8107,
+              "tpr": 1.0,
+              "tnr": 0.6215,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 1243,
+              "fp": 757,
+              "fn": 0
+            },
+            "zero_shot_control_symbol": {
+              "loss": 5.6745,
+              "balanced_accuracy": 0.606,
+              "accuracy": 0.606,
+              "tpr": 0.6605,
+              "tnr": 0.5515,
+              "samples": 4000,
+              "tp": 1321,
+              "tn": 1103,
+              "fp": 897,
+              "fn": 679
+            },
+            "zero_shot_control_order": {
+              "loss": 4.2177,
+              "balanced_accuracy": 0.7248,
+              "accuracy": 0.7248,
+              "tpr": 0.4805,
+              "tnr": 0.969,
+              "samples": 4000,
+              "tp": 961,
+              "tn": 1938,
+              "fp": 62,
+              "fn": 1039
+            }
+          },
+          "trained_control_symbol": {
+            "loss": 0.0001,
+            "balanced_accuracy": 1.0,
+            "accuracy": 1.0,
+            "tpr": 1.0,
+            "tnr": 1.0,
+            "samples": 4000,
+            "tp": 2000,
+            "tn": 2000,
+            "fp": 0,
+            "fn": 0
+          },
+          "trained_control_order": {
+            "loss": 0.0003,
+            "balanced_accuracy": 1.0,
+            "accuracy": 1.0,
+            "tpr": 1.0,
+            "tnr": 1.0,
+            "samples": 4000,
+            "tp": 2000,
+            "tn": 2000,
+            "fp": 0,
+            "fn": 0
+          }
+        }
+      }
+    },
+    "seed_53": {
+      "wall_time_sec": 168.82,
+      "audits": {
+        "temporal": {
+          "train": {
+            "size": 10000,
+            "positive_count": 5000,
+            "positive_fraction": 0.5,
+            "d1_min": 1.0019019206661306,
+            "d1_max": 9.998523943587918,
+            "d2_min": 1.0008697950866674,
+            "d2_max": 14.998271478642003,
+            "unique_tuples": 10000
+          },
+          "val": {
+            "size": 2000,
+            "positive_count": 1000,
+            "positive_fraction": 0.5,
+            "d1_min": 1.0034864932133798,
+            "d1_max": 9.998581715963692,
+            "d2_min": 1.0159310450347112,
+            "d2_max": 14.995147627304183,
+            "unique_tuples": 2000
+          },
+          "test_id": {
+            "size": 4000,
+            "positive_count": 2000,
+            "positive_fraction": 0.5,
+            "d1_min": 1.0046732819805948,
+            "d1_max": 9.99994112355044,
+            "d2_min": 1.011093704574412,
+            "d2_max": 14.997953498744048,
+            "unique_tuples": 4000
+          },
+          "test_interpolation": {
+            "size": 4000,
+            "positive_count": 2000,
+            "positive_fraction": 0.5,
+            "d1_min": 4.000329194866753,
+            "d1_max": 4.99968221968155,
+            "d2_min": 1.0000688484127083,
+            "d2_max": 14.992404851394028,
+            "unique_tuples": 4000
+          },
+          "test_extrapolation": {
+            "size": 4000,
+            "positive_count": 2000,
+            "positive_fraction": 0.5,
+            "d1_min": 12.000516888561563,
+            "d1_max": 15.999847283503463,
+            "d2_min": 10.002411193519888,
+            "d2_max": 29.998719862502647,
+            "unique_tuples": 4000
+          },
+          "overlaps": {
+            "train_vs_val": 0,
+            "train_vs_test_id": 0,
+            "train_vs_test_interpolation": 0,
+            "train_vs_test_extrapolation": 0,
+            "val_vs_test_id": 0,
+            "val_vs_test_interpolation": 0,
+            "val_vs_test_extrapolation": 0,
+            "test_id_vs_test_interpolation": 0,
+            "test_id_vs_test_extrapolation": 0,
+            "test_interpolation_vs_test_extrapolation": 0
+          }
+        },
+        "control_symbol": {
+          "train": {
+            "size": 10000,
+            "positive_count": 5000,
+            "positive_fraction": 0.5,
+            "d1_min": 1.0006954349624255,
+            "d1_max": 9.999234382017317,
+            "d2_min": 1.002384360111501,
+            "d2_max": 14.998554271379822,
+            "unique_tuples": 10000
+          },
+          "val": {
+            "size": 2000,
+            "positive_count": 1000,
+            "positive_fraction": 0.5,
+            "d1_min": 1.0012289715353355,
+            "d1_max": 9.994941801792717,
+            "d2_min": 1.0025734924393,
+            "d2_max": 14.998818063648052,
+            "unique_tuples": 2000
+          },
+          "test": {
+            "size": 4000,
+            "positive_count": 2000,
+            "positive_fraction": 0.5,
+            "d1_min": 1.0001456250662386,
+            "d1_max": 9.99371726899139,
+            "d2_min": 1.0016970714545006,
+            "d2_max": 14.996960927262315,
+            "unique_tuples": 4000
+          },
+          "overlaps": {
+            "train_vs_val": 0,
+            "train_vs_test": 0,
+            "val_vs_test": 0
+          }
+        },
+        "control_order": {
+          "train": {
+            "size": 10000,
+            "positive_count": 5000,
+            "positive_fraction": 0.5,
+            "d1_min": 1.0002311601051734,
+            "d1_max": 9.998869778864899,
+            "d2_min": 1.0035934904988633,
+            "d2_max": 14.999031653901847,
+            "unique_tuples": 10000
+          },
+          "val": {
+            "size": 2000,
+            "positive_count": 1000,
+            "positive_fraction": 0.5,
+            "d1_min": 1.002478650245664,
+            "d1_max": 9.998489520417367,
+            "d2_min": 1.0012591794682077,
+            "d2_max": 14.999056713957673,
+            "unique_tuples": 2000
+          },
+          "test": {
+            "size": 4000,
+            "positive_count": 2000,
+            "positive_fraction": 0.5,
+            "d1_min": 1.0025773569048801,
+            "d1_max": 9.998102656483322,
+            "d2_min": 1.0018244064223205,
+            "d2_max": 14.996203219823352,
+            "unique_tuples": 4000
+          },
+          "overlaps": {
+            "train_vs_val": 0,
+            "train_vs_test": 0,
+            "val_vs_test": 0
+          }
+        }
+      },
+      "models": {
+        "Majority": {
+          "training_stats": {
+            "epochs_trained": 0,
+            "train_time_sec": 0.0,
+            "best_epoch": 0,
+            "best_val_loss": 0.6931,
+            "best_val_balanced_acc": 0.5,
+            "converged": true,
+            "inference_latency_ms_per_sample": 0.006
+          },
+          "temporal_regimes": {
+            "test_id": {
+              "loss": 0.6931,
+              "balanced_accuracy": 0.5,
+              "accuracy": 0.5,
+              "tpr": 1.0,
+              "tnr": 0.0,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 0,
+              "fp": 2000,
+              "fn": 0
+            },
+            "test_interpolation": {
+              "loss": 0.6931,
+              "balanced_accuracy": 0.5,
+              "accuracy": 0.5,
+              "tpr": 1.0,
+              "tnr": 0.0,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 0,
+              "fp": 2000,
+              "fn": 0
+            },
+            "test_extrapolation": {
+              "loss": 0.6931,
+              "balanced_accuracy": 0.5,
+              "accuracy": 0.5,
+              "tpr": 1.0,
+              "tnr": 0.0,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 0,
+              "fp": 2000,
+              "fn": 0
+            },
+            "zero_shot_control_symbol": {
+              "loss": 0.6931,
+              "balanced_accuracy": 0.5,
+              "accuracy": 0.5,
+              "tpr": 1.0,
+              "tnr": 0.0,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 0,
+              "fp": 2000,
+              "fn": 0
+            },
+            "zero_shot_control_order": {
+              "loss": 0.6931,
+              "balanced_accuracy": 0.5,
+              "accuracy": 0.5,
+              "tpr": 1.0,
+              "tnr": 0.0,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 0,
+              "fp": 2000,
+              "fn": 0
+            }
+          },
+          "trained_control_symbol": {
+            "loss": 0.6931,
+            "balanced_accuracy": 0.5,
+            "accuracy": 0.5,
+            "tpr": 1.0,
+            "tnr": 0.0,
+            "samples": 4000,
+            "tp": 2000,
+            "tn": 0,
+            "fp": 2000,
+            "fn": 0
+          },
+          "trained_control_order": {
+            "loss": 0.6931,
+            "balanced_accuracy": 0.5,
+            "accuracy": 0.5,
+            "tpr": 1.0,
+            "tnr": 0.0,
+            "samples": 4000,
+            "tp": 2000,
+            "tn": 0,
+            "fp": 2000,
+            "fn": 0
+          }
+        },
+        "ArithmeticOracle": {
+          "training_stats": {
+            "epochs_trained": 0,
+            "train_time_sec": 0.0,
+            "best_epoch": 0,
+            "best_val_loss": 0.0,
+            "best_val_balanced_acc": 1.0,
+            "converged": true,
+            "inference_latency_ms_per_sample": 0.007
+          },
+          "temporal_regimes": {
+            "test_id": {
+              "loss": 0.0,
+              "balanced_accuracy": 1.0,
+              "accuracy": 1.0,
+              "tpr": 1.0,
+              "tnr": 1.0,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 2000,
+              "fp": 0,
+              "fn": 0
+            },
+            "test_interpolation": {
+              "loss": 0.0,
+              "balanced_accuracy": 1.0,
+              "accuracy": 1.0,
+              "tpr": 1.0,
+              "tnr": 1.0,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 2000,
+              "fp": 0,
+              "fn": 0
+            },
+            "test_extrapolation": {
+              "loss": 0.0,
+              "balanced_accuracy": 1.0,
+              "accuracy": 1.0,
+              "tpr": 1.0,
+              "tnr": 1.0,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 2000,
+              "fp": 0,
+              "fn": 0
+            },
+            "zero_shot_control_symbol": {
+              "loss": 10.07,
+              "balanced_accuracy": 0.4965,
+              "accuracy": 0.4965,
+              "tpr": 0.4725,
+              "tnr": 0.5205,
+              "samples": 4000,
+              "tp": 945,
+              "tn": 1041,
+              "fp": 959,
+              "fn": 1055
+            },
+            "zero_shot_control_order": {
+              "loss": 10.03,
+              "balanced_accuracy": 0.4985,
+              "accuracy": 0.4985,
+              "tpr": 0.4655,
+              "tnr": 0.5315,
+              "samples": 4000,
+              "tp": 931,
+              "tn": 1063,
+              "fp": 937,
+              "fn": 1069
+            }
+          },
+          "trained_control_symbol": {
+            "loss": 10.07,
+            "balanced_accuracy": 0.4965,
+            "accuracy": 0.4965,
+            "tpr": 0.4725,
+            "tnr": 0.5205,
+            "samples": 4000,
+            "tp": 945,
+            "tn": 1041,
+            "fp": 959,
+            "fn": 1055
+          },
+          "trained_control_order": {
+            "loss": 10.03,
+            "balanced_accuracy": 0.4985,
+            "accuracy": 0.4985,
+            "tpr": 0.4655,
+            "tnr": 0.5315,
+            "samples": 4000,
+            "tp": 931,
+            "tn": 1063,
+            "fp": 937,
+            "fn": 1069
+          }
+        },
+        "MLPOracle": {
+          "training_stats": {
+            "epochs_trained": 25,
+            "train_time_sec": 4.03,
+            "best_epoch": 23,
+            "best_val_loss": 0.0023,
+            "best_val_balanced_acc": 1.0,
+            "early_stopped": false,
+            "inference_latency_ms_per_sample": 0.007
+          },
+          "temporal_regimes": {
+            "test_id": {
+              "loss": 0.0017,
+              "balanced_accuracy": 0.9998,
+              "accuracy": 0.9998,
+              "tpr": 1.0,
+              "tnr": 0.9995,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 1999,
+              "fp": 1,
+              "fn": 0
+            },
+            "test_interpolation": {
+              "loss": 0.0018,
+              "balanced_accuracy": 1.0,
+              "accuracy": 1.0,
+              "tpr": 1.0,
+              "tnr": 1.0,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 2000,
+              "fp": 0,
+              "fn": 0
+            },
+            "test_extrapolation": {
+              "loss": 0.0598,
+              "balanced_accuracy": 0.9852,
+              "accuracy": 0.9852,
+              "tpr": 1.0,
+              "tnr": 0.9705,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 1941,
+              "fp": 59,
+              "fn": 0
+            },
+            "zero_shot_control_symbol": {
+              "loss": 24.2601,
+              "balanced_accuracy": 0.4965,
+              "accuracy": 0.4965,
+              "tpr": 0.4725,
+              "tnr": 0.5205,
+              "samples": 4000,
+              "tp": 945,
+              "tn": 1041,
+              "fp": 959,
+              "fn": 1055
+            },
+            "zero_shot_control_order": {
+              "loss": 23.1689,
+              "balanced_accuracy": 0.4985,
+              "accuracy": 0.4985,
+              "tpr": 0.4655,
+              "tnr": 0.5315,
+              "samples": 4000,
+              "tp": 931,
+              "tn": 1063,
+              "fp": 937,
+              "fn": 1069
+            }
+          },
+          "trained_control_symbol": {
+            "loss": 0.6934,
+            "balanced_accuracy": 0.494,
+            "accuracy": 0.494,
+            "tpr": 0.4635,
+            "tnr": 0.5245,
+            "samples": 4000,
+            "tp": 927,
+            "tn": 1049,
+            "fp": 951,
+            "fn": 1073
+          },
+          "trained_control_order": {
+            "loss": 0.6929,
+            "balanced_accuracy": 0.5122,
+            "accuracy": 0.5122,
+            "tpr": 0.1365,
+            "tnr": 0.888,
+            "samples": 4000,
+            "tp": 273,
+            "tn": 1776,
+            "fp": 224,
+            "fn": 1727
+          }
+        },
+        "Reservoir": {
+          "training_stats": {
+            "epochs_trained": 25,
+            "train_time_sec": 3.89,
+            "best_epoch": 25,
+            "best_val_loss": 0.0678,
+            "best_val_balanced_acc": 0.9905,
+            "early_stopped": false,
+            "inference_latency_ms_per_sample": 0.01
+          },
+          "temporal_regimes": {
+            "test_id": {
+              "loss": 0.0586,
+              "balanced_accuracy": 0.992,
+              "accuracy": 0.992,
+              "tpr": 0.9935,
+              "tnr": 0.9905,
+              "samples": 4000,
+              "tp": 1987,
+              "tn": 1981,
+              "fp": 19,
+              "fn": 13
+            },
+            "test_interpolation": {
+              "loss": 0.0499,
+              "balanced_accuracy": 0.9945,
+              "accuracy": 0.9945,
+              "tpr": 0.989,
+              "tnr": 1.0,
+              "samples": 4000,
+              "tp": 1978,
+              "tn": 2000,
+              "fp": 0,
+              "fn": 22
+            },
+            "test_extrapolation": {
+              "loss": 0.5603,
+              "balanced_accuracy": 0.8137,
+              "accuracy": 0.8137,
+              "tpr": 1.0,
+              "tnr": 0.6275,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 1255,
+              "fp": 745,
+              "fn": 0
+            },
+            "zero_shot_control_symbol": {
+              "loss": 2.6234,
+              "balanced_accuracy": 0.6562,
+              "accuracy": 0.6562,
+              "tpr": 0.797,
+              "tnr": 0.5155,
+              "samples": 4000,
+              "tp": 1594,
+              "tn": 1031,
+              "fp": 969,
+              "fn": 406
+            },
+            "zero_shot_control_order": {
+              "loss": 3.6886,
+              "balanced_accuracy": 0.5597,
+              "accuracy": 0.5597,
+              "tpr": 0.4665,
+              "tnr": 0.653,
+              "samples": 4000,
+              "tp": 933,
+              "tn": 1306,
+              "fp": 694,
+              "fn": 1067
+            }
+          },
+          "trained_control_symbol": {
+            "loss": 0.0009,
+            "balanced_accuracy": 1.0,
+            "accuracy": 1.0,
+            "tpr": 1.0,
+            "tnr": 1.0,
+            "samples": 4000,
+            "tp": 2000,
+            "tn": 2000,
+            "fp": 0,
+            "fn": 0
+          },
+          "trained_control_order": {
+            "loss": 0.0028,
+            "balanced_accuracy": 1.0,
+            "accuracy": 1.0,
+            "tpr": 1.0,
+            "tnr": 1.0,
+            "samples": 4000,
+            "tp": 2000,
+            "tn": 2000,
+            "fp": 0,
+            "fn": 0
+          }
+        },
+        "TimeAwareGRU": {
+          "training_stats": {
+            "epochs_trained": 20,
+            "train_time_sec": 6.54,
+            "best_epoch": 15,
+            "best_val_loss": 0.012,
+            "best_val_balanced_acc": 1.0,
+            "early_stopped": true,
+            "inference_latency_ms_per_sample": 0.012
+          },
+          "temporal_regimes": {
+            "test_id": {
+              "loss": 0.0094,
+              "balanced_accuracy": 0.9992,
+              "accuracy": 0.9992,
+              "tpr": 0.999,
+              "tnr": 0.9995,
+              "samples": 4000,
+              "tp": 1998,
+              "tn": 1999,
+              "fp": 1,
+              "fn": 2
+            },
+            "test_interpolation": {
+              "loss": 0.0092,
+              "balanced_accuracy": 1.0,
+              "accuracy": 1.0,
+              "tpr": 1.0,
+              "tnr": 1.0,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 2000,
+              "fp": 0,
+              "fn": 0
+            },
+            "test_extrapolation": {
+              "loss": 2.0143,
+              "balanced_accuracy": 0.8387,
+              "accuracy": 0.8387,
+              "tpr": 1.0,
+              "tnr": 0.6775,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 1355,
+              "fp": 645,
+              "fn": 0
+            },
+            "zero_shot_control_symbol": {
+              "loss": 8.8268,
+              "balanced_accuracy": 0.5235,
+              "accuracy": 0.5235,
+              "tpr": 0.526,
+              "tnr": 0.521,
+              "samples": 4000,
+              "tp": 1052,
+              "tn": 1042,
+              "fp": 958,
+              "fn": 948
+            },
+            "zero_shot_control_order": {
+              "loss": 7.9143,
+              "balanced_accuracy": 0.562,
+              "accuracy": 0.562,
+              "tpr": 0.466,
+              "tnr": 0.658,
+              "samples": 4000,
+              "tp": 932,
+              "tn": 1316,
+              "fp": 684,
+              "fn": 1068
+            }
+          },
+          "trained_control_symbol": {
+            "loss": 0.0,
+            "balanced_accuracy": 1.0,
+            "accuracy": 1.0,
+            "tpr": 1.0,
+            "tnr": 1.0,
+            "samples": 4000,
+            "tp": 2000,
+            "tn": 2000,
+            "fp": 0,
+            "fn": 0
+          },
+          "trained_control_order": {
+            "loss": 0.0002,
+            "balanced_accuracy": 1.0,
+            "accuracy": 1.0,
+            "tpr": 1.0,
+            "tnr": 1.0,
+            "samples": 4000,
+            "tp": 2000,
+            "tn": 2000,
+            "fp": 0,
+            "fn": 0
+          }
+        },
+        "DiagonalDecaySSM": {
+          "training_stats": {
+            "epochs_trained": 25,
+            "train_time_sec": 7.38,
+            "best_epoch": 24,
+            "best_val_loss": 0.0115,
+            "best_val_balanced_acc": 0.998,
+            "early_stopped": false,
+            "inference_latency_ms_per_sample": 0.012
+          },
+          "temporal_regimes": {
+            "test_id": {
+              "loss": 0.0099,
+              "balanced_accuracy": 0.998,
+              "accuracy": 0.998,
+              "tpr": 0.9975,
+              "tnr": 0.9985,
+              "samples": 4000,
+              "tp": 1995,
+              "tn": 1997,
+              "fp": 3,
+              "fn": 5
+            },
+            "test_interpolation": {
+              "loss": 0.0084,
+              "balanced_accuracy": 0.9988,
+              "accuracy": 0.9988,
+              "tpr": 0.9975,
+              "tnr": 1.0,
+              "samples": 4000,
+              "tp": 1995,
+              "tn": 2000,
+              "fp": 0,
+              "fn": 5
+            },
+            "test_extrapolation": {
+              "loss": 2.766,
+              "balanced_accuracy": 0.81,
+              "accuracy": 0.81,
+              "tpr": 1.0,
+              "tnr": 0.62,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 1240,
+              "fp": 760,
+              "fn": 0
+            },
+            "zero_shot_control_symbol": {
+              "loss": 8.0509,
+              "balanced_accuracy": 0.5893,
+              "accuracy": 0.5893,
+              "tpr": 0.658,
+              "tnr": 0.5205,
+              "samples": 4000,
+              "tp": 1316,
+              "tn": 1041,
+              "fp": 959,
+              "fn": 684
+            },
+            "zero_shot_control_order": {
+              "loss": 7.6332,
+              "balanced_accuracy": 0.635,
+              "accuracy": 0.635,
+              "tpr": 0.462,
+              "tnr": 0.808,
+              "samples": 4000,
+              "tp": 924,
+              "tn": 1616,
+              "fp": 384,
+              "fn": 1076
+            }
+          },
+          "trained_control_symbol": {
+            "loss": 0.0001,
+            "balanced_accuracy": 1.0,
+            "accuracy": 1.0,
+            "tpr": 1.0,
+            "tnr": 1.0,
+            "samples": 4000,
+            "tp": 2000,
+            "tn": 2000,
+            "fp": 0,
+            "fn": 0
+          },
+          "trained_control_order": {
+            "loss": 0.0,
+            "balanced_accuracy": 1.0,
+            "accuracy": 1.0,
+            "tpr": 1.0,
+            "tnr": 1.0,
+            "samples": 4000,
+            "tp": 2000,
+            "tn": 2000,
+            "fp": 0,
+            "fn": 0
+          }
+        },
+        "TraceBank": {
+          "training_stats": {
+            "epochs_trained": 25,
+            "train_time_sec": 25.04,
+            "best_epoch": 24,
+            "best_val_loss": 0.0091,
+            "best_val_balanced_acc": 0.9995,
+            "early_stopped": false,
+            "inference_latency_ms_per_sample": 0.032
+          },
+          "temporal_regimes": {
+            "test_id": {
+              "loss": 0.0074,
+              "balanced_accuracy": 0.999,
+              "accuracy": 0.999,
+              "tpr": 0.999,
+              "tnr": 0.999,
+              "samples": 4000,
+              "tp": 1998,
+              "tn": 1998,
+              "fp": 2,
+              "fn": 2
+            },
+            "test_interpolation": {
+              "loss": 0.0067,
+              "balanced_accuracy": 1.0,
+              "accuracy": 1.0,
+              "tpr": 1.0,
+              "tnr": 1.0,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 2000,
+              "fp": 0,
+              "fn": 0
+            },
+            "test_extrapolation": {
+              "loss": 1.4191,
+              "balanced_accuracy": 0.8598,
+              "accuracy": 0.8598,
+              "tpr": 1.0,
+              "tnr": 0.7195,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 1439,
+              "fp": 561,
+              "fn": 0
+            },
+            "zero_shot_control_symbol": {
+              "loss": 8.2811,
+              "balanced_accuracy": 0.6155,
+              "accuracy": 0.6155,
+              "tpr": 0.71,
+              "tnr": 0.521,
+              "samples": 4000,
+              "tp": 1420,
+              "tn": 1042,
+              "fp": 958,
+              "fn": 580
+            },
+            "zero_shot_control_order": {
+              "loss": 8.3812,
+              "balanced_accuracy": 0.6445,
+              "accuracy": 0.6445,
+              "tpr": 0.465,
+              "tnr": 0.824,
+              "samples": 4000,
+              "tp": 930,
+              "tn": 1648,
+              "fp": 352,
+              "fn": 1070
+            }
+          },
+          "trained_control_symbol": {
+            "loss": 0.0001,
+            "balanced_accuracy": 1.0,
+            "accuracy": 1.0,
+            "tpr": 1.0,
+            "tnr": 1.0,
+            "samples": 4000,
+            "tp": 2000,
+            "tn": 2000,
+            "fp": 0,
+            "fn": 0
+          },
+          "trained_control_order": {
+            "loss": 0.0002,
+            "balanced_accuracy": 1.0,
+            "accuracy": 1.0,
+            "tpr": 1.0,
+            "tnr": 1.0,
+            "samples": 4000,
+            "tp": 2000,
+            "tn": 2000,
+            "fp": 0,
+            "fn": 0
+          }
+        },
+        "SparseFIR": {
+          "training_stats": {
+            "epochs_trained": 25,
+            "train_time_sec": 25.1,
+            "best_epoch": 24,
+            "best_val_loss": 0.011,
+            "best_val_balanced_acc": 0.9965,
+            "early_stopped": false,
+            "inference_latency_ms_per_sample": 0.039
+          },
+          "temporal_regimes": {
+            "test_id": {
+              "loss": 0.008,
+              "balanced_accuracy": 0.9988,
+              "accuracy": 0.9988,
+              "tpr": 0.9985,
+              "tnr": 0.999,
+              "samples": 4000,
+              "tp": 1997,
+              "tn": 1998,
+              "fp": 2,
+              "fn": 3
+            },
+            "test_interpolation": {
+              "loss": 0.0175,
+              "balanced_accuracy": 0.992,
+              "accuracy": 0.992,
+              "tpr": 0.992,
+              "tnr": 0.992,
+              "samples": 4000,
+              "tp": 1984,
+              "tn": 1984,
+              "fp": 16,
+              "fn": 16
+            },
+            "test_extrapolation": {
+              "loss": 2.715,
+              "balanced_accuracy": 0.784,
+              "accuracy": 0.784,
+              "tpr": 1.0,
+              "tnr": 0.568,
+              "samples": 4000,
+              "tp": 2000,
+              "tn": 1136,
+              "fp": 864,
+              "fn": 0
+            },
+            "zero_shot_control_symbol": {
+              "loss": 8.762,
+              "balanced_accuracy": 0.5827,
+              "accuracy": 0.5827,
+              "tpr": 0.644,
+              "tnr": 0.5215,
+              "samples": 4000,
+              "tp": 1288,
+              "tn": 1043,
+              "fp": 957,
+              "fn": 712
+            },
+            "zero_shot_control_order": {
+              "loss": 6.3687,
+              "balanced_accuracy": 0.6837,
+              "accuracy": 0.6837,
+              "tpr": 0.462,
+              "tnr": 0.9055,
+              "samples": 4000,
+              "tp": 924,
+              "tn": 1811,
+              "fp": 189,
+              "fn": 1076
+            }
+          },
+          "trained_control_symbol": {
+            "loss": 0.0001,
+            "balanced_accuracy": 1.0,
+            "accuracy": 1.0,
+            "tpr": 1.0,
+            "tnr": 1.0,
+            "samples": 4000,
+            "tp": 2000,
+            "tn": 2000,
+            "fp": 0,
+            "fn": 0
+          },
+          "trained_control_order": {
+            "loss": 0.0002,
+            "balanced_accuracy": 1.0,
+            "accuracy": 1.0,
+            "tpr": 1.0,
+            "tnr": 1.0,
+            "samples": 4000,
+            "tp": 2000,
+            "tn": 2000,
+            "fp": 0,
+            "fn": 0
+          }
+        }
+      }
+    }
+  }
+}

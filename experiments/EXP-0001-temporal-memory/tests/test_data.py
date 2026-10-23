@@ -5,12 +5,14 @@ from src.data import generate_all_datasets, audit_splits
 
 
 def test_data_generation_balance_and_shapes():
-    datasets, audit = generate_all_datasets(
+    suites, audits = generate_all_datasets(
         seed=11,
         train_size=200,
         val_size=50,
         test_size=50,
     )
+    datasets = suites["temporal"]
+    audit = audits["temporal"]
 
     for name in ["train", "val", "test_id", "test_interpolation", "test_extrapolation"]:
         ds = datasets[name]
@@ -27,12 +29,14 @@ def test_data_generation_balance_and_shapes():
 
 
 def test_data_regimes_and_disjointness():
-    datasets, audit = generate_all_datasets(
+    suites, audits = generate_all_datasets(
         seed=11,
         train_size=300,
         val_size=100,
         test_size=100,
     )
+    datasets = suites["temporal"]
+    audit = audits["temporal"]
 
     # Train excludes [4, 5] for d1
     train_ds = datasets["train"]
@@ -57,21 +61,21 @@ def test_data_regimes_and_disjointness():
 
 
 def test_negative_controls():
-    datasets, audit = generate_all_datasets(
+    suites, audits = generate_all_datasets(
         seed=11,
         train_size=100,
         val_size=40,
         test_size=40,
     )
 
-    ctrl_sym = datasets["control_symbol"]
+    ctrl_sym = suites["control_symbol"]["test"]
     assert len(ctrl_sym) == 40
     # Final symbol must be token 2 or 3
     for s in ctrl_sym.samples:
         assert s.symbols[2] in (2, 3)
         assert s.label == (1 if s.symbols[2] == 3 else 0)
 
-    ctrl_ord = datasets["control_order"]
+    ctrl_ord = suites["control_order"]["test"]
     assert len(ctrl_ord) == 40
     for s in ctrl_ord.samples:
         assert s.symbols[:2] in ([0, 1], [1, 0])
