@@ -24,4 +24,7 @@ raw/
 outputs/
 wandb/
 tensorboard/
+# Allow small compact JSON metrics in runs/
+!runs/
+!runs/**/metrics.json
 .DS_Store
