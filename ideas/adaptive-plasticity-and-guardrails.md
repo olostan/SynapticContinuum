@@ -2,7 +2,19 @@
 
 **Status:** candidate mechanisms, not demonstrated in SynapticContinuum.
 
-Our goal is not teacher/student language imitation. The evolving substrate explores its own representational space. A conventional, frozen LLM is a **fallible guardrail** that can identify possible semantic regressions, not a source of target thoughts or a universal reward oracle.
+Our goal is not permanent teacher/student language imitation. The evolving substrate explores its own representational space. A conventional, frozen LLM is a **fallible guardrail** and, as a separate *bootstrapping hypothesis*, may provide **limited positive reinforcement for grounded early behaviors**. These roles must be distinguished experimentally; early-stage scaffolding may be useful even if lifelong imitation is undesirable.
+
+## New hypothesis: asymmetric early bootstrapping through conventional inference
+
+The initial research question was whether a continuously operating system could *learn to communicate at all*, starting with a trivial HI → HELLO interaction—not whether it could be optimized into a fast chatbot. An external frozen LM could sometimes recognize meaningful emergent utterances or judge whether a proposed response is compatible with observed input. Its judgment could act as **weak, provisional positive reinforcement** for a new behavior, especially before richer feedback mechanisms exist.
+
+**Two intentionally distinct regimes:**
+1. **Scaffolding:** optional reference-model judgments reinforce some independently emitted, grounded communication attempts. Compare positive-only, graded and purely diagnostic variants. The substrate must emit first; do not generate teacher outputs and feed them as mandatory targets by default.
+2. **Open exploration:** gradually reduce or withdraw reference feedback; evaluate whether retained communication is useful and whether autonomous internal activity continues or diversifies. No requirement to agree with the frozen LM.
+
+**Controls:** reference-LLM-assisted versus unassisted learning; supervised HI→HELLO baseline; simple environmental verification versus LLM judgment; intentionally mistaken or contradictory reference judgments; withdrawal of reference feedback; memorized output/replay tests; and delayed rewards with eligibility traces. Record whether the reference critic rewards its own style, whether the system collapses into imitation, and whether a behavior persists after critic removal.
+
+**Critical limitation:** reference-model agreement is *not* ground truth, nor evidence of consciousness, reflective thought or understanding. Language emergence and autonomous internal cognition should be measured separately. A simple greeting is a wiring experiment, not proof of emergent language.
 
 ## Three kinds of change
 
