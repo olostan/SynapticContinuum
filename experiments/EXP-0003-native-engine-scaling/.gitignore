@@ -1,0 +1,46 @@
+# No generated heavyweight experiment outputs in Git
+*.pt
+*.pth
+*.ckpt
+*.safetensors
+*.onnx
+*.npz
+*.npy
+*.pkl
+*.pickle
+*.parquet
+*.arrow
+*.log
+*.prof
+*.trace
+__pycache__/
+.pytest_cache/
+.venv/
+venv/
+data/
+checkpoints/
+artifacts/
+raw/
+outputs/
+wandb/
+tensorboard/
+.DS_Store
+
+# C++ Build outputs and binaries
+build/
+bin/
+*.o
+*.a
+*.so
+*.dylib
+*.exe
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+*.scg
+*.sce
+
+# Allow small compact JSON metrics in runs/
+!runs/
+!runs/**/metrics.json
