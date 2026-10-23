@@ -1,0 +1,15 @@
+# EXP-0003 execution-agent handoff
+
+Repository https://github.com/olostan/SynapticContinuum
+
+1. Pull the latest main (EXP-0002 execution and EXP-0003 design must be merged). Create `experiment/exp-0003-native-engine-scaling`.
+2. Read AGENTS.md, FOUNDATIONS.md, EXPERIMENTATION.md, campaign COMMON.md, EXP-0001 and EXP-0002 reports/code/tests (especially scheduler semantics, limitations), EXP-0003 SPEC.md and manifest.yaml. The **SPEC is preregistered and immutable-first**, the REPORT is NOT RUN.
+3. Confirm real host specs / free memory before implementation; start Linux, on any installed RAM. Build portable C++20 with recorded compiler/configuration; implement a deterministic portable graph/event fixture generator and Python invocation shim. Pin exact EXP-0002 reference and test *semantic parity*, not just similar end metrics.
+4. Follow the staged implementation ladder A–H and optional I/J in SPEC. Benchmark naive Python, Python NumPy dense, C++ literal port, packed CSR/POD C++, multiple queues, strong C++ dense/sparse, mutex-based parallel baseline, partition-owner parallel baseline. Test migration/hybrid only after validated foundations and budget check.
+5. Write actual tests (analytic oracle, golden traces, tie ordering, refractory, cross-region causal arrivals, fixed seeds, parallel replay, intervention parity, dt/fidelity convergence) and run them before any performance conclusions. Stop on divergences and report them rather than quietly accepting faster wrong output.
+6. Run small matched Linux screening, then gated scaling. Use explicit active fraction AND event rate, history depth, graph locality, queue occupancy, number of workers. Record throughput, latency, peak RAM, per-optimization deltas, cross-region traffic and meaningful safety/fidelity failures. Save all measured configurations, not just favorable ones. No giant cross product; timed repetitions and multiple seeds.
+7. Provide a single `scripts/run-exp0003.sh --profile standard|extended --out ...` or equivalent portable entrypoint for Linux and macOS. Standard should run shared configs; extended uses preflight/available memory to admit larger graphs. Same versioned experiment branch can be checked out on Mac M4 Pro 48GB. **Never claim Mac measurements before actually running on Mac.**
+8. Maintain small per-host result bundles with source/config hashes and COMPILER/OS info; no raw large event logs or binaries committed. Track all deviations in AMENDMENTS.md. Make a substantial REPORT distinguishing measurements, confidence bounds, performance break-even points, bottlenecks, limitations and explicit NOT RUN cells; mark 1B projections as PROJECTIONS only.
+9. Open PR `[EXP-0003] Native engine variants and cross-platform scalability` to main; do NOT merge. If only Linux phase complete, title/body/report must say MAC PENDING and leave straightforward repeatable Mac execution instructions.
+
+**Scientific requirement:** Never optimize by changing what the neural dynamics mean. Always require causal/numerical equivalence at declared tolerance and isolate one optimization at a time. Negative evidence is a successful experiment.

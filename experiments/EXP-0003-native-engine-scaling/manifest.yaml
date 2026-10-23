@@ -1,0 +1,64 @@
+schema_version: 1
+id: EXP-0003
+name: native-engine-scaling
+status: planned
+design_date: 2026-10-23
+depends_on: [EXP-0002]
+purpose: controlled-native-vs-python-and-scheduling-scalability
+hosts:
+  linux:
+    architecture: x86_64
+    cpu: ryzen-5-pro-5650ge
+    physical_ram: detect-at-runtime
+    planned_total_ram_gib: 32
+    do_not_assume_upgrade: true
+  mac:
+    architecture: arm64
+    cpu: apple-m4-pro
+    physical_ram_gib: 48
+  available_memory_fraction_limit: 0.60
+  memory_preflight_required: true
+  swap_or_oom_abort: true
+build:
+  standard: c++20
+  system: cmake
+  compiler: auto-discover
+  record_compiler_flags: true
+execution:
+  seeds_screen: [11, 23, 37]
+  seeds_primary: [11, 23, 37, 41, 53]
+  warmups_min: 2
+  independent_timed_repetitions_min: 5
+  per_cell_wall_minutes: 10
+  max_campaign_wall_minutes: 360
+  target_sizes: [128, 1024, 10000, 100000, 1000000]
+  optional_ext_sizes: [3000000, 10000000]
+  degrees: [4, 16, 64]
+  active_fractions: [0.001, 0.01, 0.10, 0.50, 1.00]
+  rates_per_active_neuron: [0.01, 1, 10]
+  history_depths: [0, 16, 64, 256]
+  trace_bank_bases: [0, 4, 8]
+  topology: [random, modular]
+  event_timing: [regular, poisson, bursty]
+  workers_linux_core: [1, 2, 4, 6]
+  workers_linux_smt_diagnostic: [8, 12]
+  standard_shared:
+    sizes: [128, 1024, 10000]
+    degree: 16
+    active_fractions: [0.01, 0.10, 1.00]
+    rate: 1
+    history: 0
+    topology: random
+  no_test_tuning: true
+engines:
+  required: [py-event, py-sync, cpp-literal, cpp-packed, cpp-queues, cpp-sync, cpp-locked, cpp-owner]
+  contingent: [cpp-dynamic, cpp-hybrid]
+evidence:
+  output_root: runs
+  unique_per_host_commit_config_seed: true
+  small_git_only: true
+  no_checkpoints_or_raw_event_logs: true
+  report_observed_separately_from_projections: true
+review:
+  independent_review: true
+  merge_execution_pr_automatically: false
