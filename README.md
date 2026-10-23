@@ -10,8 +10,15 @@
 
 We are not trying to build another text-based agent loop and call it continuous thought. The central object of study is **latent neural state that changes without generating tokens**. We are also not asserting that persistent computation implies consciousness.
 
+## Current research focus (2026-10-22)
+
+The latest discussion extends the original latent-recurrence thesis into a **shared, temporally expressive neural substrate**. Inputs, internal activity, communication output and feedback are interacting neural events; connections may remember earlier activations. Faster plasticity, slower LoRA-style consolidation, evolutionary selection, and an optional conventional-LLM **guardrail** remain separate hypotheses rather than prescribed mechanisms.
+
+**Read [Living Foundations](FOUNDATIONS.md) first** for the current working principles. The original atlas remains a broad hypothesis map, not a frozen architecture. Recent independent papers: [temporal connection memory](ideas/temporal-connection-memory.md), [communication as activation](ideas/communication-as-activation.md), [adaptive plasticity and guardrails](ideas/adaptive-plasticity-and-guardrails.md). Initial experimental entry point: [timed HI → HELLO](experiments/E004-timed-greeting.md).
+
 ## How to navigate
 
+- **[FOUNDATIONS.md](FOUNDATIONS.md)** — concise current hypotheses and invariants; start here for the newest conceptual synthesis.
 - **[ATLAS.md](ATLAS.md)** — the main evolving research map: hypotheses, alternatives, technical constraints, discriminating tests, open tensions, and possible trajectories. Start here for understanding.
 - **[AGENTS.md](AGENTS.md)** — short operating guidance and ready-to-use prompts for parallel research agents. Start here when delegating.
 - **[SOURCES.md](SOURCES.md)** — research map and verified reading list, with relevance and caveats.

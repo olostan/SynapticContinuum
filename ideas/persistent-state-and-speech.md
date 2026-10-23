@@ -35,3 +35,10 @@ Inject partial evidence, let state evolve or pause, then inject a new clue; test
 
 ## Avoid anthropomorphic conclusions
 Unprompted text generation is not proof of a self, subjective awareness, intentions, or consciousness. Measure objective information use and causal impact of internal states.
+
+
+## 2026-10-22 alternative: continuous communication as neural activity
+
+**Important research update:** the periodic snapshot/readout model above is now one baseline, **not** the current preferred architecture. The more recent hypothesis treats outgoing communication as activity in the same field as incoming input and other internal events. It retains an internal action trace while live output ports render the event externally; delayed observer feedback modulates eligible pathways rather than requiring a full-state snapshot.
+
+See [Communication as activation](communication-as-activation.md) and [Foundations](../FOUNDATIONS.md). Compare both approaches empirically; don't erase the older alternative solely because a newer idea seems more elegant.

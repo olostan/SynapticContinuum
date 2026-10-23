@@ -2,9 +2,15 @@
 
 This repo is a **research commons**, not a software delivery organization. The purpose of agents is to expand the idea space, attack assumptions, and generate *testable* knowledge.
 
+## Latest priority / orientation (2026-10-22)
+
+Read [FOUNDATIONS.md](FOUNDATIONS.md) and the three newer idea papers before assuming that communication is a periodic whole-state snapshot. The current leading hypothesis treats incoming sensory pulses, internal activations, outgoing communication and feedback as events in **one evolving substrate**, with connections responding to historical activity. The original frozen-Transformer/CA proposals remain legitimate alternatives.
+
+Research independently in these lanes: **temporal connection kernels vs state-space memory; live communication/outgoing action copy; delayed eligibility-based reward; LLM guardrail as non-authoritative validator; LoRA/evolutionary consolidation; skeptical controlled baselines**. No implementation is required by this update. Never describe the greeting experiment as verified unless runnable code and rerun evidence appear.
+
 ## Invariants worth preserving
 
-1. The central proposal is **neural-state evolution without requiring intermediate language-token generation**. Do not silently substitute text-based agents or ordinary chain-of-thought.
+1. The central proposal is **persistent neural-state evolution and temporal connection memory without requiring intermediate language-token generation**. Do not silently substitute text-based agents or ordinary chain-of-thought.
 2. No default architecture. Keep frozen recurrence, feedback LoRA, dynamic routing, cellular automata, persistent memory, and skeptical alternatives alive until evidence discriminates among them.
 3. Separate **published**, **reproduced**, **hypothesized**, and **speculative**. Attach exact URLs and describe the limits of cited work. Never invent paper findings, code behavior, benchmarks, or local measurements.
 4. Optimize for insights, not volume. Every contribution should name what existing uncertainty it reduces or what new falsifiable question it opens.

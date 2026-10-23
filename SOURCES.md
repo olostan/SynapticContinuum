@@ -116,3 +116,17 @@
 ## How to extend this bibliography
 
 For each new source, record title, link, authors/year, method, training/inference budget if stated, what it establishes, what it does **not** establish, and which hypothesis or experiment it informs. Prefer the original paper and implementation to secondary summaries. Add contradictory sources rather than only confirming ones.
+
+
+## Temporal communication, online learning and live feedback — added 2026-10-22
+
+- [Neural Controlled Differential Equations](https://arxiv.org/abs/2005.08926) (2020): models irregularly sampled input driving continuous hidden dynamics. **Not** a persistent general cognitive substrate.
+- [Neural Hawkes Process](https://arxiv.org/abs/1612.09328) (2016): event-triggered recurrent intensity modelling; useful for temporal events. **Not** a learned general reasoning system.
+- [S4: Efficiently Modeling Long Sequences with Structured State Spaces](https://arxiv.org/abs/2111.00396) (2021): compact learnable long-term sequence dynamics; candidate baseline against per-edge delay kernels.
+- [Mamba](https://arxiv.org/abs/2312.00752) (2023): selective recurrent state conditioned on incoming data; excellent baseline for streaming inputs, **not** an autonomous self-plastic neural field.
+- [Moshi: a speech-text foundation model for real-time dialogue](https://arxiv.org/abs/2410.00037) (2024): full-duplex streaming speech handling; uses tokenized audio rather than the postulated shared activation substrate.
+- [Differentiable Plasticity](https://proceedings.mlr.press/v80/miconi18a.html) (2018): trainable plastic connections in recurrent networks; relevant to connection-specific fast-changing state.
+- [e-prop: A solution to the learning dilemma for recurrent networks of spiking neurons](https://www.nature.com/articles/s41467-020-17236-y) (2020): local eligibility and learning signals, a precedent for delayed modulation; our simplified trace equations are not the full method.
+- [Constitutional AI](https://arxiv.org/abs/2212.08073) (2022): illustrates AI-generated feedback. In SynapticContinuum **the reference LLM is a fallible validator, not a teacher or a target to imitate**.
+
+**New comparison questions:** What changes when timestamps are injected versus when extra neural cycles occur during silence? Can compressed source-traces match per-edge temporal kernels? Is an internally emitted communication command distinguishable from observed delivery? What validated outcome provides learning signals when the LLM validator is uncertain?

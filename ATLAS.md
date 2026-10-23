@@ -4,6 +4,18 @@
 
 > This atlas is not a specification to implement. It is a continually revised map of possibilities, confusions, known results, predictions, and experiments. Keep interesting alternatives alive long enough to test them.
 
+## Latest conceptual synthesis — temporal connection memory and shared event dynamics
+
+**2026-10-22 update:** in addition to recurrent hidden-state computation, the newer central idea is a shared, persistently evolving field of activations with **temporal response functions on connections**. Input, internal propagation, output events and delayed reinforcement all affect the same substrate. The system can retain intended outgoing communication as internal activity; actual delivery must remain separately observable.
+
+Communication need not freeze/copy the complete state. Continuous output ports may emit events, and a conventional frozen LLM can act as an **occasional, fallible semantic guardrail rather than a teacher**. Positive learning signals must depend on independently checked task outcomes, not solely model agreement. Fast plasticity, slower LoRA consolidation and evolutionary routing are competing add-ons, not assumptions.
+
+**Current papers:** [Foundations](FOUNDATIONS.md), [Temporal connection memory](ideas/temporal-connection-memory.md), [Communication as activation](ideas/communication-as-activation.md), [Plasticity and guardrails](ideas/adaptive-plasticity-and-guardrails.md).
+
+**Controlled proposals:** [E004 timed greeting](experiments/E004-timed-greeting.md), [E005 temporal ablation](experiments/E005-temporal-memory-ablation.md), [E006 live feedback](experiments/E006-live-feedback.md).
+
+Earlier references to snapshots below describe **an optional baseline**, not a commitment to snapshot-oriented communication. Preserving the older proposals helps falsify the newer preference.
+
 ## 0. Origin of the idea — preserve this accurately
 
 The motivating intuition is **not** “let an LLM generate more hidden thought tokens.” It is not merely an agent repeatedly prompting an LLM, nor a chatbot with longer context.
