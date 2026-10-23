@@ -2,13 +2,27 @@
 
 **Reviewed:** 2026-10-22. **Status:** living, critical literature map; not a systematic review, peer review, or novelty certification.
 
+## Interpretive correction: research intent (2026-10-23)
+
+**Primary goal is not inference efficiency or better benchmark throughput.** SynapticContinuum investigates whether a continuously operating artificial mind could sustain self-directed neural activity, self-reflection, and potentially emergent thought-like structures when external events and communication are incidental. The central contrast with prompt-to-response inference is *endogenous, persistent organization of activity*, not speed or cost.
+
+This shifts the interpretation of earlier wording in this document:
+- Statements that an active system must “outperform” a sleeping system should be read as **discriminating causal controls**, not a requirement for the project to be worthwhile.
+- Matched FLOPs, energy and latency are valuable to rule out confounds; they are *not* the principal success criteria.
+- A system that is less efficient but demonstrates robust, internally initiated, nontrivial representation development could be more interesting than an efficient model that merely answers more questions.
+- “Thoughts not based on pattern matching” is an aspirational question, not an empirically established categorical distinction. Probe internally generated hypotheses, novelty relative to training/evidence, persistence, cross-time causal influence, and nontrivial counterfactual behavior, while acknowledging that learned neural dynamics are themselves statistical computations.
+
+**Further literature to explore because of this correction:** autonomous recurrent activity, spontaneous cortical dynamics, predictive processing/active inference, global workspace theories, recurrent self-modeling, generative replay, attractor networks, intrinsic motivation, open-ended learning and artificial life. These are comparison targets and theoretical perspectives, **not evidence of subjective experience**.
+
+**Proposed E010 — endogenous thought-like dynamics:** initialize and train a small system on a limited environment, then run a prolonged stimulus-free phase without target outputs. Record internal structure, recurrence, novelty, perturbation response, and later effects on held-out probes. Compare activity against random recurrences, shuffled connectivity, attractor/replay controls and explicit self-prompt baselines. Avoid declaring either high entropy or novel-looking states to be thoughts.
+
 ## Purpose and scope
 
 This document compares [the founding vision](FOUNDATIONS.md) and [research atlas](ATLAS.md) with published research. It distinguishes three claims that should never be merged:
 
 1. **Existing result:** some neural architectures perform repeated latent computation, model temporal activation history, process irregular event streams, or update memory online.
 2. **SynapticContinuum hypothesis:** a shared, *persistent*, event-responsive neural substrate can integrate internal activity, input, output, multiple timescales and possibly plasticity while communication is an optional actuator, not the inner clock.
-3. **Unestablished added value:** this combination provides more useful reasoning, learning or efficiency than simpler streaming memory, recurrent networks, state-space models, trained recurrent-depth networks or ordinary agents.
+3. **Unestablished phenomenon:** whether the combination supports internally initiated, persistent, causally meaningful and possibly self-reflective neural trajectories, as distinguished from replay, noise or fixed-point recurrence. Functional utility and resource efficiency are secondary tests, not the central ambition.
 
 The **combination is a research direction, not an established invention**. Individual ingredients have substantial prior art.
 
@@ -108,4 +122,4 @@ This is **an evolving narrative bibliography, not a systematic review**: no full
 - Keep FOUNDATIONS short and hypothesis-centered; do **not** turn it into a manifesto asserting precedence.
 - Keep SOURCES as the annotated bibliography and use this file for **explicit comparative judgments and audit limitations**.
 - Attribute mathematical primitives (time delays, eligibility traces, ODE/CDE, recurrent loops) to prior art.
-- State the most important unresolved scientific question in one line: **What useful behavior is obtained by allowing neural activity to evolve between external events that cannot be obtained more cheaply by preserved state plus computation on demand?**
+- State the most important unresolved scientific question in one line: **Can a continuously active system develop causally meaningful, internally initiated thought-like trajectories that are not reducible to trivial replay, noise, or an externally scheduled inference loop?**
