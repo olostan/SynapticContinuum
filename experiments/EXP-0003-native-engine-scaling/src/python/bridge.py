@@ -38,20 +38,29 @@ BIN_PATH = os.path.abspath(os.path.join(
 ))
 
 
-def run_py_event(
+def create_py_fixture(
     num_nodes: int,
     degree: int,
     active_fraction: float,
     rate: float,
     t_max: float,
     seed: int,
-) -> Dict[str, Any]:
-    """Runs Python Event-Driven Scheduler from EXP-0002."""
+) -> Tuple[PySubstrateConfig, PyNeuralGraph, List[Tuple[float, int, float]]]:
+    """Pre-generates identical Python graph and event fixtures for clean benchmark timing."""
     config = PySubstrateConfig(num_nodes=num_nodes, mean_out_degree=degree)
     adj_targets, adj_weights, adj_delays = generate_deterministic_graph(num_nodes, degree, seed)
     graph = PyNeuralGraph(num_nodes, adj_targets, adj_weights, adj_delays)
     ext_events = generate_deterministic_events(num_nodes, active_fraction, rate, t_max, seed)
+    return config, graph, ext_events
 
+
+def run_py_event_sim(
+    config: PySubstrateConfig,
+    graph: PyNeuralGraph,
+    ext_events: List[Tuple[float, int, float]],
+    t_max: float,
+) -> Dict[str, Any]:
+    """Runs Python Event-Driven Scheduler measuring pure simulation time (isolated)."""
     sched = PyEventScheduler(config, graph)
     res = sched.run(ext_events, t_max)
 
@@ -71,22 +80,15 @@ def run_py_event(
     }
 
 
-def run_py_sync(
-    num_nodes: int,
-    degree: int,
-    active_fraction: float,
-    rate: float,
+def run_py_sync_sim(
+    config: PySubstrateConfig,
+    graph: PyNeuralGraph,
+    ext_events: List[Tuple[float, int, float]],
     t_max: float,
-    seed: int,
     dt: float = 0.1,
     sparse: bool = False,
 ) -> Dict[str, Any]:
-    """Runs Python Synchronous Scheduler (Dense or Sparse) from EXP-0002."""
-    config = PySubstrateConfig(num_nodes=num_nodes, mean_out_degree=degree)
-    adj_targets, adj_weights, adj_delays = generate_deterministic_graph(num_nodes, degree, seed)
-    graph = PyNeuralGraph(num_nodes, adj_targets, adj_weights, adj_delays)
-    ext_events = generate_deterministic_events(num_nodes, active_fraction, rate, t_max, seed)
-
+    """Runs Python Synchronous Scheduler measuring pure simulation time (isolated)."""
     if sparse:
         sched = PySparseSyncScheduler(config, graph, dt=dt)
     else:
@@ -106,6 +108,32 @@ def run_py_sync(
         "final_potentials": res.final_potentials,
         "spike_records": res.spike_records,
     }
+
+
+def run_py_event(
+    num_nodes: int,
+    degree: int,
+    active_fraction: float,
+    rate: float,
+    t_max: float,
+    seed: int,
+) -> Dict[str, Any]:
+    config, graph, ext_events = create_py_fixture(num_nodes, degree, active_fraction, rate, t_max, seed)
+    return run_py_event_sim(config, graph, ext_events, t_max)
+
+
+def run_py_sync(
+    num_nodes: int,
+    degree: int,
+    active_fraction: float,
+    rate: float,
+    t_max: float,
+    seed: int,
+    dt: float = 0.1,
+    sparse: bool = False,
+) -> Dict[str, Any]:
+    config, graph, ext_events = create_py_fixture(num_nodes, degree, active_fraction, rate, t_max, seed)
+    return run_py_sync_sim(config, graph, ext_events, t_max, dt=dt, sparse=sparse)
 
 
 def run_cpp_engine(
@@ -145,12 +173,16 @@ def run_cpp_engine(
         "--reps", str(reps),
     ]
 
+    t0 = time.perf_counter()
     p = subprocess.run(cmd, capture_output=True, text=True)
+    e2e_time = time.perf_counter() - t0
+
     if p.returncode != 0:
         raise RuntimeError(f"sc_engine failed with code {p.returncode}: {p.stderr}")
 
     try:
         data = json.loads(p.stdout)
+        data["e2e_wall_time_sec"] = e2e_time
         return data
     except json.JSONDecodeError as e:
         raise RuntimeError(f"Failed to parse JSON output: {p.stdout}") from e

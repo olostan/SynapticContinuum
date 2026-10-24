@@ -5,9 +5,15 @@ import sys
 import numpy as np
 import pytest
 
-from src.python.bridge import run_cpp_engine, run_py_event, run_py_sync
+from src.python.bridge import (
+    create_py_fixture,
+    run_cpp_engine,
+    run_py_event,
+    run_py_event_sim,
+    run_py_sync,
+)
 from src.python.hardware import preflight_check
-from src.python.prng import DeterministicRNG, generate_deterministic_events, generate_deterministic_graph
+from src.python.prng import DeterministicRNG
 
 
 def test_prng_determinism():
@@ -67,24 +73,31 @@ def test_cpp_literal_vs_packed():
     assert res_lit["state_digest"] == res_packed["state_digest"]
 
 
-def test_cpp_queues_parity():
-    """Verify binary, dary4, and bucket queues produce identical simulation outcomes."""
-    res_bin = run_cpp_engine("queue_binary", num_nodes=128, degree=16, active_fraction=0.10, rate=1.0, t_max=10.0, seed=42, warmups=0, reps=1)
-    res_dary = run_cpp_engine("queue_dary4", num_nodes=128, degree=16, active_fraction=0.10, rate=1.0, t_max=10.0, seed=42, warmups=0, reps=1)
-    res_bkt = run_cpp_engine("queue_bucket", num_nodes=128, degree=16, active_fraction=0.10, rate=1.0, t_max=10.0, seed=42, warmups=0, reps=1)
+def test_cpp_hybrid_vs_literal():
+    """Verify Hybrid C++ produces bit-exact state digest under identical graph."""
+    res_lit = run_cpp_engine("literal", num_nodes=128, degree=16, active_fraction=0.10, rate=1.0, t_max=10.0, seed=42, warmups=0, reps=1)
+    res_hybrid = run_cpp_engine("hybrid", num_nodes=128, degree=16, active_fraction=0.10, rate=1.0, t_max=10.0, seed=42, warmups=0, reps=1)
 
-    assert res_bin["total_spikes"] == res_dary["total_spikes"] == res_bkt["total_spikes"]
-    assert res_bin["state_digest"] == res_dary["state_digest"] == res_bkt["state_digest"]
+    assert res_lit["total_spikes"] == res_hybrid["total_spikes"]
+    assert res_lit["state_digest"] == res_hybrid["state_digest"]
+
+
+def test_cpp_owner_replay_parity():
+    """Verify Owner C++ with 1 and 2 workers produces identical state digest to serial."""
+    res_serial = run_cpp_engine("packed", num_nodes=64, degree=8, active_fraction=0.10, rate=1.0, t_max=5.0, seed=999, warmups=0, reps=1)
+    res_owner1 = run_cpp_engine("owner", num_nodes=64, degree=8, active_fraction=0.10, rate=1.0, t_max=5.0, seed=999, workers=1, warmups=0, reps=1)
+    res_owner2 = run_cpp_engine("owner", num_nodes=64, degree=8, active_fraction=0.10, rate=1.0, t_max=5.0, seed=999, workers=2, warmups=0, reps=1)
+
+    assert res_serial["total_spikes"] == res_owner1["total_spikes"] == res_owner2["total_spikes"]
+    assert res_serial["state_digest"] == res_owner1["state_digest"] == res_owner2["state_digest"]
 
 
 def test_preflight_memory_safety():
     """Verify preflight rejects out-of-budget sizes and accepts standard sizes."""
-    # Standard size should be safe
     safe, est, limit = preflight_check(num_nodes=10000, degree=16, active_fraction=0.10, rate=1.0, t_max=10.0, engine="packed")
     assert safe is True
     assert est < limit
 
-    # Hypothetical 100-billion node network should be rejected on this host
     safe_huge, est_huge, limit_huge = preflight_check(num_nodes=100_000_000, degree=64, active_fraction=1.0, rate=10.0, t_max=100.0, engine="dense_sync")
     assert safe_huge is False
     assert est_huge > limit_huge

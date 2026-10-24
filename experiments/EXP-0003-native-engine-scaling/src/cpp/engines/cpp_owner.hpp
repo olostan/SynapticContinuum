@@ -11,6 +11,7 @@
 #include <chrono>
 #include <barrier>
 #include <algorithm>
+#include <limits>
 
 namespace sc {
 
@@ -33,18 +34,42 @@ public:
         int32_t W = num_workers_;
         int32_t nodes_per_worker = (N + W - 1) / W;
 
-        // Partition bounds
-        std::vector<int32_t> part_start(W);
-        std::vector<int32_t> part_end(W);
-        for (int32_t w = 0; w < W; ++w) {
-            part_start[w] = w * nodes_per_worker;
-            part_end[w] = std::min(N, (w + 1) * nodes_per_worker);
-        }
-
         auto get_partition = [&](int32_t node) noexcept -> int32_t {
             int32_t p = node / nodes_per_worker;
             return (p < W) ? p : (W - 1);
         };
+
+        // Compute exact conservative lookahead from minimum cross-region edge delay
+        double min_cross_delay = std::numeric_limits<double>::infinity();
+        bool has_cross_edges = false;
+
+        for (int32_t u = 0; u < N; ++u) {
+            int32_t part_u = get_partition(u);
+            const int32_t* tgts = nullptr;
+            const float* w = nullptr;
+            const float* d = nullptr;
+            uint32_t cnt = 0;
+            graph_.get_outgoing(u, tgts, w, d, cnt);
+
+            for (uint32_t i = 0; i < cnt; ++i) {
+                int32_t v = tgts[i];
+                int32_t part_v = get_partition(v);
+                if (part_u != part_v) {
+                    has_cross_edges = true;
+                    if (d[i] < min_cross_delay) {
+                        min_cross_delay = d[i];
+                    }
+                }
+            }
+        }
+
+        double epoch_delta = config_.min_delay;
+        if (has_cross_edges) {
+            epoch_delta = (min_cross_delay > 0.0) ? min_cross_delay : 0.001;
+        } else {
+            // Completely independent partitions: safe lookahead is the entire simulation horizon
+            epoch_delta = t_max + 1.0;
+        }
 
         // Per-worker event queues
         std::vector<BinaryHeapQueue> local_queues;
@@ -71,7 +96,7 @@ public:
         // Cross-worker mailboxes: outgoing[from_w][to_w]
         std::vector<std::vector<std::vector<Event>>> mailboxes(W, std::vector<std::vector<Event>>(W));
 
-        // Shared state across all nodes
+        // State: partitioned by node ownership, each worker accesses its own nodes exclusively
         SubstrateStatePacked state(config_);
 
         std::atomic<uint64_t> total_processed{0};
@@ -85,11 +110,7 @@ public:
             per_worker_seq[w] = static_cast<uint64_t>(w) << 48;
         }
 
-        double epoch_delta = config_.min_delay; // Guaranteed lookahead window
-        if (epoch_delta <= 0.0) epoch_delta = 0.2;
-
         std::barrier sync_barrier(W);
-
         std::vector<std::thread> workers;
         workers.reserve(W);
 
@@ -104,7 +125,6 @@ public:
                 double epoch_limit = epoch_delta;
 
                 while (epoch_limit - epoch_delta <= t_max) {
-                    // Process all events up to epoch_limit
                     while (!my_queue.empty()) {
                         if (my_queue.peek().timestamp >= epoch_limit) {
                             break;
@@ -147,11 +167,9 @@ public:
                         }
                     }
 
-                    // Barrier 1: ensure all workers finished current epoch and wrote outgoing mailboxes
                     causal_stalls.fetch_add(1, std::memory_order_relaxed);
                     sync_barrier.arrive_and_wait();
 
-                    // Drain all incoming messages destined for worker w
                     for (int32_t from_w = 0; from_w < W; ++from_w) {
                         if (from_w != w) {
                             auto& incoming = mailboxes[from_w][w];
@@ -162,9 +180,7 @@ public:
                         }
                     }
 
-                    // Barrier 2: ensure all workers cleared mailboxes before next epoch
                     sync_barrier.arrive_and_wait();
-
                     epoch_limit += epoch_delta;
                 }
             });
@@ -208,7 +224,8 @@ public:
             (config_.num_nodes * std::max(t_max, 1e-5));
         res.cross_region_events = cross_region_count.load();
         res.causal_stalls = causal_stalls.load();
-        res.rss_bytes = state.memory_bytes() + graph_.memory_bytes() + peak_q * W * sizeof(Event);
+        res.rss_bytes = get_actual_peak_rss_bytes();
+        res.estimated_memory_bytes = state.memory_bytes() + graph_.memory_bytes() + peak_q * W * sizeof(Event);
 
         return res;
     }

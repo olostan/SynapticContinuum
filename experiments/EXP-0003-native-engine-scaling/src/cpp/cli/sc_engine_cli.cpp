@@ -35,7 +35,8 @@ void print_json_result(const sc::SimulationResult& res, std::ostream& out) {
         << "  \"lock_waits\": " << res.lock_waits << ",\n"
         << "  \"causal_stalls\": " << res.causal_stalls << ",\n"
         << "  \"cross_region_events\": " << res.cross_region_events << ",\n"
-        << "  \"rss_bytes\": " << res.rss_bytes << "\n"
+        << "  \"peak_rss_bytes\": " << res.rss_bytes << ",\n"
+        << "  \"estimated_memory_bytes\": " << res.estimated_memory_bytes << "\n"
         << "}\n";
 }
 

@@ -9,7 +9,7 @@ from typing import Any, Dict, List, Optional
 
 import numpy as np
 
-from .bridge import run_cpp_engine, run_py_event, run_py_sync
+from .bridge import create_py_fixture, run_cpp_engine, run_py_event_sim, run_py_sync_sim
 from .hardware import discover_hardware, preflight_check
 
 
@@ -50,8 +50,7 @@ class BenchmarkRunner:
         warmups: int = 2,
         reps: int = 5,
     ) -> Dict[str, Any]:
-        """Runs cell with warmups and repetitions, returning distribution statistics."""
-        # Preflight check
+        """Runs cell with warmups and repetitions, measuring pure simulation and e2e wall time."""
         safe, est_bytes, limit_bytes = preflight_check(
             num_nodes, degree, active_fraction, rate, t_max, engine, max_fraction=0.60
         )
@@ -59,46 +58,61 @@ class BenchmarkRunner:
             return {
                 "engine": engine,
                 "status": "SKIPPED_MEMORY_PREFLIGHT",
-                "estimated_bytes": est_bytes,
+                "estimated_memory_bytes": est_bytes,
                 "limit_bytes": limit_bytes,
             }
 
         # Python execution
         if engine.startswith("py_"):
-            times = []
+            # Construct fixture ONCE outside the timed simulation loop to isolate runtime/interpreter overhead
+            t_fixture_start = time.perf_counter()
+            config, graph, ext_events = create_py_fixture(
+                num_nodes, degree, active_fraction, rate, t_max, seed
+            )
+            fixture_time = time.perf_counter() - t_fixture_start
+
+            sim_times = []
+            e2e_times = []
             last_res = {}
+
             for r in range(warmups + reps):
-                t0 = time.perf_counter()
+                t0_e2e = time.perf_counter()
                 if engine == "py_event":
-                    res = run_py_event(num_nodes, degree, active_fraction, rate, t_max, seed)
+                    res = run_py_event_sim(config, graph, ext_events, t_max)
                 elif engine == "py_sync_dense":
-                    res = run_py_sync(num_nodes, degree, active_fraction, rate, t_max, seed, dt=dt, sparse=False)
+                    res = run_py_sync_sim(config, graph, ext_events, t_max, dt=dt, sparse=False)
                 elif engine == "py_sync_sparse":
-                    res = run_py_sync(num_nodes, degree, active_fraction, rate, t_max, seed, dt=dt, sparse=True)
+                    res = run_py_sync_sim(config, graph, ext_events, t_max, dt=dt, sparse=True)
                 else:
                     raise ValueError(f"Unknown python engine: {engine}")
-                elapsed = time.perf_counter() - t0
+                e2e_elapsed = (time.perf_counter() - t0_e2e) + fixture_time
+
                 if r >= warmups:
-                    times.append(elapsed)
+                    sim_times.append(res["wall_time_sec"])
+                    e2e_times.append(e2e_elapsed)
                     last_res = res
 
-            times.sort()
-            median_time = times[len(times) // 2]
-            p95_time = times[int(len(times) * 0.95)] if len(times) > 1 else times[0]
+            sim_times.sort()
+            e2e_times.sort()
+            median_sim = sim_times[len(sim_times) // 2]
+            p95_sim = sim_times[int(len(sim_times) * 0.95)] if len(sim_times) > 1 else sim_times[0]
+            median_e2e = e2e_times[len(e2e_times) // 2]
 
             return {
                 "engine": engine,
                 "status": "COMPLETED",
-                "median_wall_time_sec": median_time,
-                "p95_wall_time_sec": p95_time,
-                "min_wall_time_sec": times[0],
-                "max_wall_time_sec": times[-1],
+                "median_sim_wall_time_sec": median_sim,
+                "median_e2e_wall_time_sec": median_e2e,
+                "p95_sim_wall_time_sec": p95_sim,
+                "min_sim_wall_time_sec": sim_times[0],
+                "max_sim_wall_time_sec": sim_times[-1],
                 "reps_count": reps,
                 "total_events_processed": last_res.get("total_events_processed", 0),
                 "total_edges_traversed": last_res.get("total_edges_traversed", 0),
                 "total_spikes": last_res.get("total_spikes", 0),
                 "peak_queue_size": last_res.get("peak_queue_size", 0),
-                "rss_bytes": est_bytes,
+                "estimated_memory_bytes": est_bytes,
+                "peak_rss_bytes": est_bytes, # Python estimate
             }
 
         # C++ Native execution
@@ -131,13 +145,15 @@ class BenchmarkRunner:
         return {
             "engine": engine,
             "status": "COMPLETED",
-            "median_wall_time_sec": res["wall_time_sec"],
+            "median_sim_wall_time_sec": res["wall_time_sec"],
+            "median_e2e_wall_time_sec": res.get("e2e_wall_time_sec", res["wall_time_sec"]),
             "total_events_processed": res["total_events_processed"],
             "total_edges_traversed": res["total_edges_traversed"],
             "total_spikes": res["total_spikes"],
             "peak_queue_size": res["peak_queue_size"],
             "state_digest": res["state_digest"],
-            "rss_bytes": res["rss_bytes"],
+            "peak_rss_bytes": res.get("peak_rss_bytes", res.get("rss_bytes", 0)),
+            "estimated_memory_bytes": res.get("estimated_memory_bytes", est_bytes),
             "lock_waits": res.get("lock_waits", 0),
             "causal_stalls": res.get("causal_stalls", 0),
             "cross_region_events": res.get("cross_region_events", 0),
@@ -212,7 +228,6 @@ class BenchmarkRunner:
                 for seed in seeds:
                     for eng in ["cpp_packed", "cpp_queue_binary", "cpp_queue_dary4", "cpp_queue_bucket", "cpp_dense_sync", "cpp_owner"]:
                         if eng == "cpp_dense_sync" and n == 1000000:
-                            # 1M dense sync requires 80MB ring buffer, only run once
                             if seed != seeds[0]:
                                 continue
 

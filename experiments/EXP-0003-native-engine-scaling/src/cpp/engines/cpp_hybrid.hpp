@@ -4,6 +4,7 @@
 #include "../core/graph.hpp"
 #include "../core/state.hpp"
 #include "../queues/binary_heap.hpp"
+#include <vector>
 #include <chrono>
 
 namespace sc {
@@ -47,6 +48,9 @@ public:
         const float* delays = nullptr;
         uint32_t count = 0;
 
+        std::vector<Event> batch_events;
+        batch_events.reserve(16);
+
         while (!queue.empty()) {
             if (events_processed >= max_events) {
                 capacity_exceeded = true;
@@ -60,37 +64,43 @@ public:
                 break;
             }
 
-            // Exact-time batching: peek next event and check if it targets the same node at the exact same timestamp
-            float batched_amp = ev.amplitude;
+            batch_events.clear();
+            batch_events.push_back(ev);
+
+            // Pop all simultaneous events targeting the same node at the exact same timestamp
             while (!queue.empty()) {
                 const Event& next_ev = queue.peek();
                 if (next_ev.timestamp == ev.timestamp && next_ev.target == ev.target) {
-                    batched_amp += next_ev.amplitude;
-                    queue.pop();
+                    batch_events.push_back(queue.pop());
                     events_processed++;
                 } else {
                     break;
                 }
             }
 
-            bool fired = state.receive_impulse(ev.target, ev.timestamp, batched_amp, ev.kind);
-            if (fired) {
-                spike_records.push_back({ev.timestamp, ev.target});
+            // Process each impulse sequentially to preserve strict LIF semantics:
+            // - If first impulse crosses threshold, neuron resets and enters refractory
+            // - Subsequent impulses at same timestamp are correctly clamped by refractory state
+            for (const auto& item : batch_events) {
+                bool fired = state.receive_impulse(item.target, item.timestamp, item.amplitude, item.kind);
+                if (fired) {
+                    spike_records.push_back({item.timestamp, item.target});
 
-                graph_.get_outgoing(ev.target, targets, weights, delays, count);
-                edges_traversed += count;
+                    graph_.get_outgoing(item.target, targets, weights, delays, count);
+                    edges_traversed += count;
 
-                for (uint32_t i = 0; i < count; ++i) {
-                    double arrival_t = ev.timestamp + static_cast<double>(delays[i]);
-                    if (arrival_t <= t_max) {
-                        queue.push(Event{
-                            arrival_t,
-                            seq_counter++,
-                            ev.target,
-                            targets[i],
-                            weights[i],
-                            static_cast<int32_t>(EventKind::SPIKE)
-                        });
+                    for (uint32_t i = 0; i < count; ++i) {
+                        double arrival_t = item.timestamp + static_cast<double>(delays[i]);
+                        if (arrival_t <= t_max) {
+                            queue.push(Event{
+                                arrival_t,
+                                seq_counter++,
+                                item.target,
+                                targets[i],
+                                weights[i],
+                                static_cast<int32_t>(EventKind::SPIKE)
+                            });
+                        }
                     }
                 }
             }
@@ -117,7 +127,8 @@ public:
         res.propagated_active_fraction = static_cast<double>(state.total_spikes) /
             (config_.num_nodes * std::max(t_max, 1e-5));
         res.max_queue_exceeded = capacity_exceeded;
-        res.rss_bytes = state.memory_bytes() + graph_.memory_bytes() + queue.memory_bytes();
+        res.rss_bytes = get_actual_peak_rss_bytes();
+        res.estimated_memory_bytes = state.memory_bytes() + graph_.memory_bytes() + queue.memory_bytes();
 
         return res;
     }

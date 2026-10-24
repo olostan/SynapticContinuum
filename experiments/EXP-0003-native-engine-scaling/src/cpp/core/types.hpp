@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <cmath>
+#include <sys/resource.h>
 
 namespace sc {
 
@@ -24,10 +25,20 @@ struct Event {
     float amplitude;
     int32_t kind;
 
-    // For min-heap: smaller timestamp first, then smaller seq_id
+    // Deterministic priority ordering:
+    // 1. timestamp (earlier first)
+    // 2. target (lower node index first)
+    // 3. source (lower source index first)
+    // 4. seq_id (stable tie-breaking)
     bool operator>(const Event& other) const noexcept {
         if (timestamp != other.timestamp) {
             return timestamp > other.timestamp;
+        }
+        if (target != other.target) {
+            return target > other.target;
+        }
+        if (source != other.source) {
+            return source > other.source;
         }
         return seq_id > other.seq_id;
     }
@@ -36,14 +47,20 @@ struct Event {
         if (timestamp != other.timestamp) {
             return timestamp < other.timestamp;
         }
+        if (target != other.target) {
+            return target < other.target;
+        }
+        if (source != other.source) {
+            return source < other.source;
+        }
         return seq_id < other.seq_id;
     }
 
     bool operator==(const Event& other) const noexcept {
         return timestamp == other.timestamp &&
-               seq_id == other.seq_id &&
-               source == other.source &&
                target == other.target &&
+               source == other.source &&
+               seq_id == other.seq_id &&
                amplitude == other.amplitude &&
                kind == other.kind;
     }
@@ -96,11 +113,25 @@ struct SimulationResult {
     double injected_active_fraction = 0.0;
     double propagated_active_fraction = 0.0;
     bool max_queue_exceeded = false;
-    uint64_t rss_bytes = 0;
+    uint64_t rss_bytes = 0;             // Actual OS peak RSS measured via getrusage
+    uint64_t estimated_memory_bytes = 0; // Model-based theoretical estimate
     uint64_t lock_waits = 0;
     uint64_t causal_stalls = 0;
     uint64_t cross_region_events = 0;
 };
+
+// Query operating system process peak resident set size
+inline uint64_t get_actual_peak_rss_bytes() noexcept {
+    struct rusage usage;
+    if (getrusage(RUSAGE_SELF, &usage) == 0) {
+#if defined(__APPLE__)
+        return static_cast<uint64_t>(usage.ru_maxrss); // bytes on Darwin
+#else
+        return static_cast<uint64_t>(usage.ru_maxrss) * 1024ULL; // kilobytes on Linux
+#endif
+    }
+    return 0;
+}
 
 // 64-bit FNV-1a hash combiner
 inline uint64_t hash_combine64(uint64_t hash, uint64_t value) noexcept {

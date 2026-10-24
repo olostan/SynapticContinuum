@@ -133,7 +133,8 @@ public:
             (N * std::max(t_max, 1e-5));
         res.propagated_active_fraction = static_cast<double>(total_spikes) /
             (N * std::max(t_max, 1e-5));
-        res.rss_bytes = sizeof(float) * N * (max_delay_steps + 1) + graph_.memory_bytes();
+        res.rss_bytes = get_actual_peak_rss_bytes();
+        res.estimated_memory_bytes = sizeof(float) * N * (max_delay_steps + 1) + graph_.memory_bytes();
 
         return res;
     }
@@ -296,7 +297,8 @@ public:
             (N * std::max(t_max, 1e-5));
         res.propagated_active_fraction = static_cast<double>(total_spikes) /
             (N * std::max(t_max, 1e-5));
-        res.rss_bytes = sizeof(float) * N * 3 + graph_.memory_bytes();
+        res.rss_bytes = get_actual_peak_rss_bytes();
+        res.estimated_memory_bytes = sizeof(float) * N * 3 + graph_.memory_bytes();
 
         return res;
     }

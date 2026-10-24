@@ -104,7 +104,8 @@ public:
         res.propagated_active_fraction = static_cast<double>(state.total_spikes) /
             (config_.num_nodes * std::max(t_max, 1e-5));
         res.max_queue_exceeded = capacity_exceeded;
-        res.rss_bytes = state.memory_bytes() + graph_.memory_bytes() + queue.memory_bytes();
+        res.rss_bytes = get_actual_peak_rss_bytes();
+        res.estimated_memory_bytes = state.memory_bytes() + graph_.memory_bytes() + queue.memory_bytes();
 
         return res;
     }

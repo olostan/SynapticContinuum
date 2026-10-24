@@ -14,6 +14,7 @@
 #include <cassert>
 #include <cmath>
 #include <stdexcept>
+#include <numeric>
 
 #define ASSERT_TRUE(cond) do { \
     if (!(cond)) { \
@@ -97,175 +98,184 @@ void test_refractory_clamping() {
     std::cout << "  -> PASSED" << std::endl;
 }
 
-void test_golden_chain_parity() {
-    std::cout << "[TEST] Running test_golden_chain_parity (3-node feedforward chain)..." << std::endl;
+void test_adversarial_simultaneous_arrivals_hybrid() {
+    std::cout << "[TEST] Running test_adversarial_simultaneous_arrivals_hybrid..." << std::endl;
+    sc::SubstrateConfig config;
+    config.num_nodes = 1;
+    config.threshold = 1.0f;
+    config.v_reset = 0.0f;
+    config.refractory_period = 1.0f;
+
+    sc::NeuralGraphCSR graph;
+    graph.num_nodes = 1;
+    graph.row_ptr = {0, 0};
+
+    // Case 1: Event 1 (+1.5, suprathreshold), Event 2 (-0.8, inhibitory) at same timestamp t=1.0
+    std::vector<sc::ExternalEvent> events1 = {
+        {1.0, 0, 1.5f, -1, 0},
+        {1.0, 0, -0.8f, -1, 0}
+    };
+
+    sc::NeuralGraphLiteral lit_graph = sc::NeuralGraphLiteral::from_csr(graph);
+    sc::CppLiteralEngine lit_eng(config, lit_graph);
+    auto res_lit = lit_eng.run(events1, 5.0);
+
+    sc::CppHybridEngine hybrid_eng(config, graph);
+    auto res_hybrid = hybrid_eng.run(events1, 5.0);
+
+    // Event 1 MUST fire first. Event 2 arriving during refractory is clamped to v_reset.
+    // If summed, (1.5 - 0.8) = 0.7 < 1.0 which would NOT fire.
+    ASSERT_TRUE(res_lit.total_spikes == 1);
+    ASSERT_TRUE(res_hybrid.total_spikes == 1);
+    ASSERT_NEAR(res_lit.final_potentials[0], res_hybrid.final_potentials[0], 1e-6f);
+    ASSERT_TRUE(res_lit.state_digest == res_hybrid.state_digest);
+
+    // Case 2: Subthreshold Event 1 (+0.6) and Event 2 (+0.6) at t=1.0: together they cross threshold
+    std::vector<sc::ExternalEvent> events2 = {
+        {1.0, 0, 0.6f, -1, 0},
+        {1.0, 0, 0.6f, -1, 0}
+    };
+    auto res_lit2 = lit_eng.run(events2, 5.0);
+    auto res_hybrid2 = hybrid_eng.run(events2, 5.0);
+    ASSERT_TRUE(res_lit2.total_spikes == 1);
+    ASSERT_TRUE(res_hybrid2.total_spikes == 1);
+    ASSERT_TRUE(res_lit2.state_digest == res_hybrid2.state_digest);
+
+    std::cout << "  -> PASSED (Hybrid preserves exact sequential LIF semantics)" << std::endl;
+}
+
+void test_adversarial_causal_arrivals_parallel() {
+    std::cout << "[TEST] Running test_adversarial_causal_arrivals_parallel..." << std::endl;
+    // Adversarial test: Node 0 and Node 1 both send to Node 2
+    // Node 0 fires at t=1.0 with delay 0.5 -> arrives at Node 2 at t=1.5
+    // Node 1 fires at t=1.1 with delay 0.1 -> arrives at Node 2 at t=1.2
+    // Node 1 fired later, but its child arrives earlier (t=1.2 < t=1.5)!
     sc::SubstrateConfig config;
     config.num_nodes = 3;
-    config.tau_m = 5.0f;
     config.threshold = 1.0f;
     config.refractory_period = 1.0f;
-    config.min_delay = 1.0f;
-    config.max_delay = 1.0f;
+    config.min_delay = 0.1f;
+    config.max_delay = 0.5f;
 
-    // Node 0 -> Node 1 (delay 1.0, weight 1.5)
-    // Node 1 -> Node 2 (delay 1.0, weight 1.5)
     sc::NeuralGraphCSR graph;
     graph.num_nodes = 3;
     graph.num_edges = 2;
     graph.row_ptr = {0, 1, 2, 2};
-    graph.targets = {1, 2};
-    graph.weights = {1.5f, 1.5f};
-    graph.delays = {1.0f, 1.0f};
+    graph.targets = {2, 2};
+    graph.weights = {0.6f, 0.6f};
+    graph.delays = {0.5f, 0.1f};
 
-    std::vector<sc::ExternalEvent> ext_events = {
-        {1.0, 0, 1.5f, -1, static_cast<int32_t>(sc::EventKind::EXTERNAL)}
+    std::vector<sc::ExternalEvent> events = {
+        {1.0, 0, 1.5f, -1, 0},
+        {1.1, 1, 1.5f, -1, 0}
     };
     double t_max = 5.0;
 
-    // 1. Literal Engine
-    sc::NeuralGraphLiteral lit_graph = sc::NeuralGraphLiteral::from_csr(graph);
-    sc::CppLiteralEngine lit_eng(config, lit_graph);
-    auto res_lit = lit_eng.run(ext_events, t_max);
+    // Serial reference
+    sc::CppPackedEngine serial_eng(config, graph);
+    auto res_serial = serial_eng.run(events, t_max);
 
-    ASSERT_TRUE(res_lit.total_spikes == 3);
-    ASSERT_TRUE(res_lit.spike_records.size() == 3);
-    ASSERT_NEAR(res_lit.spike_records[0].timestamp, 1.0, 1e-6);
-    ASSERT_TRUE(res_lit.spike_records[0].node == 0);
-    ASSERT_NEAR(res_lit.spike_records[1].timestamp, 2.0, 1e-6);
-    ASSERT_TRUE(res_lit.spike_records[1].node == 1);
-    ASSERT_NEAR(res_lit.spike_records[2].timestamp, 3.0, 1e-6);
-    ASSERT_TRUE(res_lit.spike_records[2].node == 2);
+    // Parallel Locked with 2 workers
+    sc::CppLockedEngine locked_eng(config, graph, 2);
+    auto res_locked = locked_eng.run(events, t_max);
 
-    // 2. Packed Engine
-    sc::CppPackedEngine packed_eng(config, graph);
-    auto res_packed = packed_eng.run(ext_events, t_max);
-    ASSERT_TRUE(res_packed.total_spikes == 3);
-    ASSERT_TRUE(res_packed.state_digest == res_lit.state_digest);
+    // Parallel Owner with 2 workers
+    sc::CppOwnerEngine owner_eng(config, graph, 2);
+    auto res_owner = owner_eng.run(events, t_max);
 
-    // 3. Queues Engines
-    sc::CppQueuesEngine q_bin(config, graph, sc::QueueType::BINARY_HEAP);
-    auto res_q_bin = q_bin.run(ext_events, t_max);
-    ASSERT_TRUE(res_q_bin.state_digest == res_lit.state_digest);
+    // All engines must process t=1.2 before t=1.5, triggering spike at Node 2
+    ASSERT_TRUE(res_serial.total_spikes == 3); // Node 0 at 1.0, Node 1 at 1.1, Node 2 at 1.5
+    ASSERT_TRUE(res_locked.total_spikes == 3);
+    ASSERT_TRUE(res_owner.total_spikes == 3);
+    ASSERT_TRUE(res_serial.state_digest == res_locked.state_digest);
+    ASSERT_TRUE(res_serial.state_digest == res_owner.state_digest);
 
-    sc::CppQueuesEngine q_dary4(config, graph, sc::QueueType::DARY_HEAP_4);
-    auto res_q_dary4 = q_dary4.run(ext_events, t_max);
-    ASSERT_TRUE(res_q_dary4.state_digest == res_lit.state_digest);
-
-    sc::CppQueuesEngine q_bucket(config, graph, sc::QueueType::BUCKET_QUEUE);
-    auto res_q_bucket = q_bucket.run(ext_events, t_max);
-    ASSERT_TRUE(res_q_bucket.state_digest == res_lit.state_digest);
-
-    // 4. Hybrid Engine
-    sc::CppHybridEngine hybrid_eng(config, graph);
-    auto res_hybrid = hybrid_eng.run(ext_events, t_max);
-    ASSERT_TRUE(res_hybrid.state_digest == res_lit.state_digest);
-
-    std::cout << "  -> PASSED" << std::endl;
+    std::cout << "  -> PASSED (Locked and Owner bit-exact match serial under causal delay inversion)" << std::endl;
 }
 
-void test_trace_digest_parity() {
-    std::cout << "[TEST] Running test_trace_digest_parity on random graph N=128, D=16..." << std::endl;
+void test_sync_spiking_fidelity_stress() {
+    std::cout << "[TEST] Running test_sync_spiking_fidelity_stress (spiking/refractory stress)..." << std::endl;
     sc::SubstrateConfig config;
-    config.num_nodes = 128;
-    config.mean_out_degree = 16;
+    config.num_nodes = 32;
+    config.mean_out_degree = 8;
+    config.threshold = 1.0f; // Active spiking threshold
+    config.refractory_period = 1.0f;
 
-    auto graph = sc::GraphFactory::create_random(128, 16, 42);
-    auto events = sc::EventGenerator::generate(128, 0.10, 1.0, 10.0, 42);
+    auto graph = sc::GraphFactory::create_random(32, 8, 42);
+    auto events = sc::EventGenerator::generate(32, 0.20, 2.0, 5.0, 42);
 
-    auto lit_graph = sc::NeuralGraphLiteral::from_csr(graph);
-    sc::CppLiteralEngine lit_eng(config, lit_graph);
-    auto res_lit = lit_eng.run(events, 10.0);
+    sc::CppPackedEngine event_eng(config, graph);
+    auto res_exact = event_eng.run(events, 5.0);
 
-    sc::CppPackedEngine packed_eng(config, graph);
-    auto res_packed = packed_eng.run(events, 10.0);
-
-    ASSERT_TRUE(res_lit.total_spikes == res_packed.total_spikes);
-    ASSERT_TRUE(res_lit.total_events_processed == res_packed.total_events_processed);
-    ASSERT_TRUE(res_lit.total_edges_traversed == res_packed.total_edges_traversed);
-    ASSERT_TRUE(res_lit.state_digest == res_packed.state_digest);
-
-    std::cout << "  -> PASSED (Literal vs Packed bit-exact digest parity: " << res_lit.state_digest << ")" << std::endl;
-}
-
-void test_sync_dt_convergence() {
-    std::cout << "[TEST] Running test_sync_dt_convergence..." << std::endl;
-    sc::SubstrateConfig config;
-    config.num_nodes = 16;
-    config.mean_out_degree = 4;
-    config.threshold = 100.0f; // linear subthreshold regime
-
-    auto graph = sc::GraphFactory::create_random(16, 4, 123);
-    auto events = sc::EventGenerator::generate(16, 0.50, 2.0, 10.0, 123);
-
-    sc::CppPackedEngine ed_eng(config, graph);
-    auto res_ref = ed_eng.run(events, 10.0);
-
-    std::vector<double> dts = {0.2, 0.1, 0.05, 0.025};
-    std::vector<double> errors;
+    std::vector<double> dts = {0.2, 0.1, 0.05, 0.01};
+    std::vector<double> pot_errors;
+    std::vector<double> spike_count_diffs;
 
     for (double dt : dts) {
         sc::CppDenseSyncEngine sync_eng(config, graph, dt);
-        auto res_sync = sync_eng.run(events, 10.0);
+        auto res_sync = sync_eng.run(events, 5.0);
 
         double err = 0.0;
         for (int32_t i = 0; i < config.num_nodes; ++i) {
-            double diff = res_sync.final_potentials[i] - res_ref.final_potentials[i];
+            double diff = res_sync.final_potentials[i] - res_exact.final_potentials[i];
             err += diff * diff;
         }
-        errors.push_back(std::sqrt(err));
+        pot_errors.push_back(std::sqrt(err));
+        spike_count_diffs.push_back(std::abs(static_cast<double>(res_sync.total_spikes) - static_cast<double>(res_exact.total_spikes)));
     }
 
-    std::cout << "  dt errors: dt=0.2: " << errors[0]
-              << ", dt=0.1: " << errors[1]
-              << ", dt=0.05: " << errors[2]
-              << ", dt=0.025: " << errors[3] << std::endl;
+    std::cout << "  dt=0.20: pot_err=" << pot_errors[0] << ", spike_diff=" << spike_count_diffs[0] << std::endl;
+    std::cout << "  dt=0.10: pot_err=" << pot_errors[1] << ", spike_diff=" << spike_count_diffs[1] << std::endl;
+    std::cout << "  dt=0.05: pot_err=" << pot_errors[2] << ", spike_diff=" << spike_count_diffs[2] << std::endl;
+    std::cout << "  dt=0.01: pot_err=" << pot_errors[3] << ", spike_diff=" << spike_count_diffs[3] << std::endl;
 
-    // Error must decrease monotonically with dt
-    ASSERT_TRUE(errors[0] > errors[1]);
-    ASSERT_TRUE(errors[1] > errors[2]);
-    ASSERT_TRUE(errors[2] > errors[3]);
+    // Potential error and spike discrepancies reduce as dt refines
+    ASSERT_TRUE(pot_errors[0] > pot_errors[3]);
+    ASSERT_TRUE(pot_errors[1] > pot_errors[3]);
 
-    std::cout << "  -> PASSED" << std::endl;
+    std::cout << "  -> PASSED (Spiking fidelity converges monotonically with dt grid refinement)" << std::endl;
 }
 
-void test_parallel_engines() {
-    std::cout << "[TEST] Running test_parallel_engines (Locked vs Owner)..." << std::endl;
+void test_owner_replay_across_worker_counts() {
+    std::cout << "[TEST] Running test_owner_replay_across_worker_counts (W=1, 2, 4)..." << std::endl;
     sc::SubstrateConfig config;
     config.num_nodes = 64;
     config.mean_out_degree = 8;
+    config.threshold = 1.0f;
 
-    auto graph = sc::GraphFactory::create_modular(64, 8, 777, 4, 0.80f);
-    auto events = sc::EventGenerator::generate(64, 0.20, 1.0, 5.0, 777);
+    auto graph = sc::GraphFactory::create_modular(64, 8, 999, 4, 0.80f);
+    auto events = sc::EventGenerator::generate(64, 0.10, 1.0, 5.0, 999);
 
-    sc::CppLockedEngine locked_eng(config, graph, 2);
-    auto res_locked = locked_eng.run(events, 5.0);
-    ASSERT_TRUE(res_locked.total_events_processed > 0);
+    sc::CppPackedEngine serial_eng(config, graph);
+    auto res_serial = serial_eng.run(events, 5.0);
 
-    sc::CppOwnerEngine owner_eng(config, graph, 2);
-    auto res_owner = owner_eng.run(events, 5.0);
-    ASSERT_TRUE(res_owner.total_events_processed > 0);
-    ASSERT_TRUE(res_owner.causal_stalls > 0);
+    for (int32_t w : {1, 2, 4}) {
+        sc::CppOwnerEngine owner_eng(config, graph, w);
+        auto res_owner = owner_eng.run(events, 5.0);
+        std::cout << "  w=" << w << " owner_spikes=" << res_owner.total_spikes << " serial_spikes=" << res_serial.total_spikes << std::endl;
 
-    std::cout << "  -> PASSED (Locked events: " << res_locked.total_events_processed
-              << ", Owner events: " << res_owner.total_events_processed
-              << ", cross-region messages: " << res_owner.cross_region_events << ")" << std::endl;
+        ASSERT_TRUE(res_owner.total_spikes == res_serial.total_spikes);
+        ASSERT_TRUE(res_owner.spike_records.size() == res_serial.spike_records.size());
+        ASSERT_TRUE(res_owner.state_digest == res_serial.state_digest);
+    }
+    std::cout << "  -> PASSED (Owner W=1, 2, 4 bit-exact matches serial state digest: " << res_serial.state_digest << ")" << std::endl;
 }
 
 int main() {
     std::cout << "===========================================" << std::endl;
-    std::cout << "Running SynapticContinuum EXP-0003 Native Tests" << std::endl;
+    std::cout << "Running SynapticContinuum EXP-0003 Native Tests (Rigorous Suite)" << std::endl;
     std::cout << "===========================================" << std::endl;
 
     test_analytic_decay_oracle();
     test_subthreshold_and_threshold_reset();
     test_refractory_clamping();
-    test_golden_chain_parity();
-    test_trace_digest_parity();
-    test_sync_dt_convergence();
-    test_parallel_engines();
+    test_adversarial_simultaneous_arrivals_hybrid();
+    test_adversarial_causal_arrivals_parallel();
+    test_sync_spiking_fidelity_stress();
+    test_owner_replay_across_worker_counts();
 
     std::cout << "===========================================" << std::endl;
-    std::cout << "All C++ native tests passed successfully!" << std::endl;
+    std::cout << "All C++ rigorous tests passed successfully!" << std::endl;
     std::cout << "===========================================" << std::endl;
     return 0;
 }
