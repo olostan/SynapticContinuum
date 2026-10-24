@@ -1,0 +1,102 @@
+schema_version: 1
+experiment_id: EXP-0006
+name: persistent-adaptive-microcosm
+state: design_only_not_run
+design_date: 2026-10-24
+governing_protocol: ../../EXPERIMENTATION.md
+scientific_goal: persistent_adaptive_internal_representation_and_teacher_free_transfer
+primary_phenomenon: autonomous_experience_dependent_state_development
+not_goals: [world_emulation_quality, pretty_animations, language_generation, neuron_count, evidence_of_consciousness]
+reference_experiments:
+  - ../EXP-0001-temporal-memory/REPORT.md
+  - ../EXP-0002-event-driven-dynamics/REPORT.md
+  - ../EXP-0003-native-engine-scaling/REPORT.md
+  - ../EXP-0004-topology-adaptive-scheduling/REPORT.md
+  - ../EXP-0005-scientific-simulation-substrates/SPEC.md
+hardware:
+  linux: {cpu: Ryzen_5_PRO_5650GE, physical_cores: 6, ram_gib_approx: 16, max_incremental_rss_gib: 6, max_memavailable_fraction: 0.60}
+  mac: {cpu: Apple_M4_Pro, unified_ram_gib_approx: 48, optional: true}
+  ollama: {installed_reported_by_owner: true, model_tag_and_digest_must_be_discovered: true, inference_sequential_default: true}
+execution:
+  initial_pilot_wall_seconds: 300
+  long_run_requires_approval: true
+  initial_student_backend: cpu_reference
+  hardware_acceleration: optional_only_after_validation
+  primary_student_seeds: [11, 23, 37, 41, 53]
+  tuning_student_seeds: [101, 103]
+  heldout_world_seeds: [211, 223, 227, 229, 233]
+  no_heldout_label_access_for_teacher: true
+  per_trajectory_reporting: true
+world:
+  rooms: 2
+  cells_per_room: 4
+  types: [movable, container, scripted_actor]
+  pilot_entities: 5
+  pilot_container_max_depth: 2
+  initial_rules: [put, take, move, open, close, wait]
+  fixed_hidden_ground_truth: true
+  observation_partial: true
+  student_input_language_tokens: false
+  primary_train_templates: train_only
+  validation_templates: disjoint_from_train
+  heldout_templates: disjoint_from_train_and_validation
+student:
+  h_dimensions_screen: [64, 128, 256]
+  pilot_h_dimensions: 128
+  fast_slow_timescale_ratios: [4, 16, 64]
+  pilot_ratio: 16
+  eligibility_history_depths: [0, 8, 32]
+  adaptive_learning: tested_separately
+  fixed_capacity_id_lookup_disallowed_for_growth_claim: true
+comparison_modes:
+  - memoryless
+  - honest_symbolic_belief_tracker
+  - time_aware_gru_or_ssm
+  - persistent_student_no_teacher
+  - persistent_student_oracle_feedback
+  - persistent_student_llm_feedback
+  - frozen_noise_replay_equal_compute_controls
+matrix:
+  episodes_screen: [100, 500, 2000]
+  learning_curve_checkpoints: [0, 10, 25, 50, 100, 250, 500, 1000, 2000]
+  observation_gap_ticks: [0, 8, 32, 128]
+  internal_update_counts: [0, 1, 8, 32, 128]
+  student_update_modes: [event_only, every_tick, every_4_ticks]
+  object_counts_pilot: [3, 5, 8]
+  object_counts_gated: [12, 24]
+  relation_depths_pilot: [1, 2]
+  relation_depths_gated: [3, 4]
+  observation_dropouts: [0.0, 0.25, 0.50]
+  teacher_modes: [absent, random_shuffled, fixed_curriculum, oracle_feedback, llm_curriculum, llm_validated_feedback]
+  teacher_calls_per_1000_episodes: [0, 4, 8]
+  teacher_withdrawal_fraction: [0.25, 0.50, 0.75]
+  delayed_feedback_ticks: [0, 8, 32]
+  checkpoint_intervals_episodes: [1, 10, 50]
+  scan_rule: sequential_factor_screen_not_full_cartesian
+teacher:
+  optional_not_initial: true
+  endpoint: local_ollama
+  max_calls_per_primary_seed_pilot: 16
+  max_input_tokens_per_call_pilot: 4096
+  max_output_tokens_per_call_pilot: 256
+  fixed_prompt_and_model_digest: required
+  cache_raw_responses: true
+  human_review_of_training_feedback_sample: required
+  no_source_or_arbitrary_weight_editing: true
+evidence:
+  report_status: NOT_RUN
+  measured_behavioral_transfer_required: true
+  causal_intervention_required: true
+  independent_oracle: required
+  saved_hidden_world_state_hidden_from_student: true
+  teacher_free_heldout_evaluation: true
+  all_failures_and_negative_runs: true
+  archived_checkpoints_outside_git: true
+  hash_state_and_world_and_teacher_io: true
+acceptance:
+  G0_design_review: pending
+  G1_world_correctness_and_baselines: pending
+  G2_student_dynamics_and_interruption: pending
+  G3_teacher_eval_and_ablation: pending
+  G4_growth_and_independent_synthesis: pending
+  no_auto_merge: true
