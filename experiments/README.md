@@ -11,3 +11,12 @@ Experiments here are **proposals**, not claims of executed research. Start with 
 - [E006 — Live delayed feedback](E006-live-feedback.md) — test event-associated modulation and independent regression guardrails without whole-state snapshots.
 
 For each executed test, save the revision, model and dataset provenance, commands, training configuration, seeds, matched compute, all outcomes including failures, and environment constraints. Summaries go to [results/](../results/). Large checkpoints do not belong in Git.
+
+
+## Executable research series (EXP-####)
+
+- [EXP-0001 — Temporal memory](EXP-0001-temporal-memory/REPORT.md)
+- [EXP-0002 — Event-driven dynamics](EXP-0002-event-driven-dynamics/REPORT.md)
+- [EXP-0003 — Native engine scaling](EXP-0003-native-engine-scaling/REPORT.md)
+- [EXP-0004 — Topology and adaptive scheduling](EXP-0004-topology-adaptive-scheduling/REPORT.md) — completed Linux report, [benchmark catalog](EXP-0004-topology-adaptive-scheduling/BENCHMARK_CATALOG.md).
+- [EXP-0005 — Scientific simulation substrates](EXP-0005-scientific-simulation-substrates/SPEC.md) — DESIGN ONLY, NOT RUN; [work packages](EXP-0005-scientific-simulation-substrates/WORKPACKAGES.md), [external architecture analysis](EXP-0005-scientific-simulation-substrates/ARCHITECTURES.md). Scientific claims and code from past experiments are not automatically transferred; EXP-0005 remains subject to independent review.

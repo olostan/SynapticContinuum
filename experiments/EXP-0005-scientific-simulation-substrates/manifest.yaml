@@ -1,0 +1,81 @@
+schema_version: 1
+id: EXP-0005
+name: scientific-simulation-substrates
+status: planned_not_run
+design_date: 2026-10-24
+governing: ../../EXPERIMENTATION.md
+prerequisite: [EXP-0001, EXP-0002, EXP-0003, EXP-0004]
+historical_baseline:
+  catalog: ../EXP-0004-topology-adaptive-scheduling/BENCHMARK_CATALOG.md
+  schema: ../EXP-0004-topology-adaptive-scheduling/schemas/benchmark_schema.json
+  read_only: true
+hardware:
+  linux:
+    cpu: AMD Ryzen 5 PRO 5650GE
+    cores: 6
+    smt: 12
+    ram_gb_nominal: 16
+    detect_actual_memory_each_run: true
+    safe_incremental_rss_gib_cap: 6
+    max_available_memory_fraction: 0.60
+    no_ram_upgrade_assumption: true
+  mac:
+    cpu: Apple M4 Pro
+    unified_ram_gb: 48
+    optional_post_portable_cpp: true
+    gpu_required: false
+execution:
+  compile_flags_portable: "-O3 -DNDEBUG"
+  seeds: [11, 23, 37, 41, 53]
+  smoke_seeds: [11, 23]
+  warmup_repetitions: 2
+  measured_repetitions_primary: 5
+  wall_limit_seconds_pilot: 300
+  wall_limit_seconds_expanded_per_cell: 3600
+  expanded_requires_owner_approval: true
+  work_packages: [WP-00, WP-01, WP-02, WP-03, WP-04, WP-05]
+  parallel_workers_primary: [1, 2, 4, 6]
+  smt_diagnostic: [12]
+  staged_not_full_cartesian: true
+matrix:
+  neuronal_scales: [128, 1024, 10000]
+  optional_scales: [100000, 1000000]
+  out_degrees: [4, 16, 64]
+  initial_out_degree: 16
+  topologies: [disconnected, random_fixed_degree, directed_small_world, modular_sbm, hierarchical_modular]
+  activity: [quiet_allocation_only, sparse, moderate, dense, burst, recurrent_sustained]
+  plasticity: [off, native_stdp_where_supported]
+  history_depths: [0, 8, 64]
+  simulated_horizon_ms: [100, 10000, 100000]
+  optional_simulated_horizon_ms: [3600000]
+  dt_ms_where_supported: [0.1, 0.05, 0.01]
+  semantics: [analytic_oracle, grid_lif, precise_lif, native_plasticity, multicompartment, reversible_lp]
+backend_tracks:
+  NEST: {native: true, initial_implementation: WP-01}
+  brian2: {native_cpp_standalone: true, initial_implementation: WP-02}
+  arbor: {native_cell_groups: true, initial_implementation: WP-03}
+  ROSS: {requires_verified_optimistic_rollback: true, initial_implementation: WP-04}
+  coreneuron: {status: deferred}
+  genn: {status: deferred}
+constraints:
+  cpu_first: true
+  owner_approval_before_expansion: true
+  independent_oracle_required: true
+  preserve_exp0004_artifacts: true
+  no_unbacked_exact_parity: true
+  no_mislabeled_allocation_as_activity: true
+  no_fabricated_data: true
+  raw_large_artifacts_outside_git: true
+evidence:
+  planned_schema: "2.0.0-sc05-proposal"
+  proposed_record_contract: EVIDENCE.md
+  required_run_manifest: true
+  sha256_provenance: true
+  measured_peak_rss: true
+  record_committed_vs_rolled_back: true
+  report_all_failures: true
+review:
+  stage: design
+  independent_review_before_execution: true
+  implementation_prs_separate: true
+  merge_automatic: false
