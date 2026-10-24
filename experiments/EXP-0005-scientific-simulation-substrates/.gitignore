@@ -1,0 +1,31 @@
+# EXP-0005 Small-Git / Large-Local Ignore Policy
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.venv/
+venv/
+build/
+dist/
+*.egg-info/
+
+# Exclude large generated datasets, checkpoints, binaries, and logs (>1 MiB)
+*.pt
+*.pth
+*.ckpt
+*.safetensors
+*.onnx
+*.npz
+*.bin
+*.so
+*.o
+*.a
+*.log
+*.prof
+*.trace
+fixtures/external_large/
+runs/large_artifacts/
+
+# Allow small compact JSON evidence in runs/
+!runs/
+!runs/**/*.json
