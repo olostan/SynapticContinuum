@@ -1,0 +1,27 @@
+{
+  "benchmark_id": "cfg_mod_n100k_d16_c005_s777",
+  "workload_name": "Modular SBM 100k",
+  "semantic_class": "exact",
+  "graph": {
+    "num_nodes": 100000,
+    "degree": 16,
+    "topology_type": "modular_sbm",
+    "num_modules": 24,
+    "cross_module_ratio": 0.05,
+    "seed": 777
+  },
+  "stimulus": {
+    "num_events": 20000,
+    "time_horizon": 5.0,
+    "active_fraction": 0.01,
+    "min_delay": 0.2,
+    "max_delay": 1.0,
+    "tau_m": 5.0,
+    "threshold": 1.0
+  },
+  "execution": {
+    "num_workers_ladder": [1, 2, 4, 6],
+    "logical_regions": 24,
+    "partitioner": "planted_oracle"
+  }
+}

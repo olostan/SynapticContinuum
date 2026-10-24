@@ -1,0 +1,25 @@
+{
+  "benchmark_id": "cfg_celegans_multiplex_n279",
+  "workload_name": "C. elegans Multiplex Connectome (CoMuNeLab)",
+  "semantic_class": "exact",
+  "graph": {
+    "num_nodes": 279,
+    "topology_type": "biological_multiplex_connectome",
+    "source": "CoMuNeLab / De Domenico et al.",
+    "layers": ["chemical_monadic", "chemical_polyadic", "gap_junction"]
+  },
+  "stimulus": {
+    "num_events": 500,
+    "time_horizon": 2.0,
+    "active_fraction": 0.20,
+    "min_delay": 0.2,
+    "max_delay": 1.0,
+    "tau_m": 5.0,
+    "threshold": 1.0
+  },
+  "execution": {
+    "num_workers_ladder": [1, 2, 4, 6],
+    "logical_regions": 6,
+    "partitioner": "community_aware"
+  }
+}
