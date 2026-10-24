@@ -30,6 +30,12 @@
       "path": "fixtures/golden_c_tie_adversarial_events.csv",
       "sha256": "531f8a3c9d3973783804780dc11ea70dc4e63e0d1d4cb1051b84f84e28d9c3a6"
     },
+    "pilot_disconnected_localized_n128_d4_s11_events.csv": {
+      "byte_count": 2052,
+      "description": "Pilot disconnected localized-activity control external stimulus (all 64 events in Module 0 [0..31], seed=11)",
+      "path": "fixtures/pilot_disconnected_localized_n128_d4_s11_events.csv",
+      "sha256": "d086ad6cb8a32738a1db9375d022c3737efb801a18d1e4fd99049bbdd04e8a0c"
+    },
     "pilot_disconnected_n128_d4_s11_edges.csv": {
       "byte_count": 14600,
       "description": "Pilot disconnected 4-module graph fixture (N=128, D=4, 512 directed edges, seed=11)",
@@ -37,10 +43,10 @@
       "sha256": "88ab14d356a2cf40def0d18cdaab7154aabf24d30300473aeed17f507ee77462"
     },
     "pilot_disconnected_n128_d4_s11_events.csv": {
-      "byte_count": 2052,
-      "description": "Pilot disconnected external stimulus fixture (64 events over 100 ms, seed=11)",
+      "byte_count": 2065,
+      "description": "Pilot disconnected stratified external stimulus (64 events, 16 per module across 4 modules, seed=11)",
       "path": "fixtures/pilot_disconnected_n128_d4_s11_events.csv",
-      "sha256": "d086ad6cb8a32738a1db9375d022c3737efb801a18d1e4fd99049bbdd04e8a0c"
+      "sha256": "27eace633b48892f9170c69f232c9a8321e06818ca8bb93f9fbcdded32fa0103"
     },
     "pilot_modular_n128_d4_s11_edges.csv": {
       "byte_count": 14589,
@@ -49,10 +55,10 @@
       "sha256": "3d96a5e32e198bc0f7d24d33ac526bd3ac2c8482b23d93de4409effbde940bbc"
     },
     "pilot_modular_n128_d4_s11_events.csv": {
-      "byte_count": 2052,
-      "description": "Pilot modular SBM external stimulus fixture (64 events over 100 ms, seed=11)",
+      "byte_count": 2065,
+      "description": "Pilot modular SBM stratified external stimulus (64 events, 16 per module across 4 modules, seed=11)",
       "path": "fixtures/pilot_modular_n128_d4_s11_events.csv",
-      "sha256": "d086ad6cb8a32738a1db9375d022c3737efb801a18d1e4fd99049bbdd04e8a0c"
+      "sha256": "27eace633b48892f9170c69f232c9a8321e06818ca8bb93f9fbcdded32fa0103"
     }
   },
   "generator": "experiments/EXP-0005-scientific-simulation-substrates/scripts/fixture_generator.py",
@@ -98,6 +104,17 @@
   },
   "workloads": {
     "golden_a_passive_leak": {
+      "config": {
+        "e_l_mv": 0.0,
+        "num_nodes": 1,
+        "refractory_ms": 2.0,
+        "tau_ms": 10.0,
+        "v_init_mv": [
+          0.8
+        ],
+        "v_reset_mv": 0.0,
+        "v_th_mv": 1.0
+      },
       "files": [
         "golden_a_passive_leak.json"
       ],
@@ -106,6 +123,19 @@
       "workload_instance_id": "2fe8e6307ef227c0e34dda216087f705ecd5e8c83ed71522bae7e99b854cff1b"
     },
     "golden_b_threshold_reset": {
+      "config": {
+        "e_l_mv": 0.0,
+        "num_nodes": 1,
+        "refractory_boundary_policy": "half_open_strict_less_than",
+        "refractory_ms": 2.0,
+        "tau_ms": 10.0,
+        "threshold_tolerance_mv": 1e-10,
+        "v_init_mv": [
+          0.0
+        ],
+        "v_reset_mv": 0.0,
+        "v_th_mv": 1.0
+      },
       "files": [
         "golden_b_threshold_reset.json"
       ],
@@ -114,6 +144,12 @@
       "workload_instance_id": "3031bb9966626a2c90453f4ff423c1c9257daac240ba68f670ceb825299384fd"
     },
     "golden_c_causal_chain": {
+      "config": {
+        "num_nodes": 3,
+        "refractory_ms": 2.0,
+        "tau_ms": 10.0,
+        "v_th_mv": 1.0
+      },
       "files": [
         "golden_c_causal_chain_edges.csv",
         "golden_c_causal_chain_events.csv"
@@ -123,6 +159,13 @@
       "workload_instance_id": "6f75dfae643845fa845d3d80c398c2dd7f23811d81df1856c4d6dff655e1460d"
     },
     "golden_c_tie_adversarial": {
+      "config": {
+        "num_nodes": 1,
+        "refractory_ms": 2.0,
+        "tau_ms": 10.0,
+        "tie_policy": "(t_ms,target_id,src_id,ordinal)",
+        "v_th_mv": 1.0
+      },
       "files": [
         "golden_c_tie_adversarial_events.csv"
       ],
@@ -130,14 +173,39 @@
       "workload_id": "sc05/replay/v1",
       "workload_instance_id": "29148f0bb3b589e038f4f068f03a132a2ce956633254af4590ff09feef7e5685"
     },
-    "pilot_disconnected_n128_d4_s11": {
+    "pilot_disconnected_localized_n128_d4_s11": {
       "config": {
+        "active_fraction": 0.25,
         "cross_module_ratio": 0.0,
         "horizon_ms": 100.0,
         "num_modules": 4,
         "num_nodes": 128,
         "out_degree": 4,
         "refractory_ms": 2.0,
+        "stimulus_distribution": "localized_first_module",
+        "tau_ms": 10.0,
+        "topology": "disconnected",
+        "v_reset_mv": 0.0,
+        "v_th_mv": 1.0
+      },
+      "files": [
+        "pilot_disconnected_n128_d4_s11_edges.csv",
+        "pilot_disconnected_localized_n128_d4_s11_events.csv"
+      ],
+      "seed": 11,
+      "workload_id": "sc05/disconnected/v1",
+      "workload_instance_id": "9835409c686ec997741257b2e8fac60bf2d244de04154594d123f5d49797af4a"
+    },
+    "pilot_disconnected_n128_d4_s11": {
+      "config": {
+        "active_fraction": 0.25,
+        "cross_module_ratio": 0.0,
+        "horizon_ms": 100.0,
+        "num_modules": 4,
+        "num_nodes": 128,
+        "out_degree": 4,
+        "refractory_ms": 2.0,
+        "stimulus_distribution": "stratified_modules",
         "tau_ms": 10.0,
         "topology": "disconnected",
         "v_reset_mv": 0.0,
@@ -149,16 +217,18 @@
       ],
       "seed": 11,
       "workload_id": "sc05/disconnected/v1",
-      "workload_instance_id": "658b3f1a3f35821fd7c15ac09f65560ece2e2c1429d62138efa04dde460413cc"
+      "workload_instance_id": "3673c2f0835d4a0e78dc23e88b528eb00b967428dc215e8ffebfdf761f63aa2d"
     },
     "pilot_modular_n128_d4_s11": {
       "config": {
+        "active_fraction": 0.25,
         "cross_module_ratio": 0.05,
         "horizon_ms": 100.0,
         "num_modules": 4,
         "num_nodes": 128,
         "out_degree": 4,
         "refractory_ms": 2.0,
+        "stimulus_distribution": "stratified_modules",
         "tau_ms": 10.0,
         "topology": "modular_sbm",
         "v_reset_mv": 0.0,
@@ -170,7 +240,7 @@
       ],
       "seed": 11,
       "workload_id": "sc05/modular/v1",
-      "workload_instance_id": "a79c8da56042f05f08454e693725051e9ab78631f1c05c4c0d65c84fe6b461e6"
+      "workload_instance_id": "423fa2f37fc9f22d982b12640c31322f83db3e599419c77bc50eb8a0f24b637b"
     }
   }
 }

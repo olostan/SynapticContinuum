@@ -1,14 +1,16 @@
 {
   "exp0004_v1_schema_sha256_verified": "902952859c911a20d7c455a30be60a9bd96c9476222021541f165cec657bf968",
   "input_file": "experiments/EXP-0005-scientific-simulation-substrates/schemas/synthetic_validation_sample_NOT_A_RUN.json",
-  "input_sha256": "fbfd5c797f71565f7c6d3ced07a7509c105134be64afd2786d13ea7db6930ac5",
+  "input_sha256": "2097f8bd78bf10cf389838d8ec1cfeebd7a733422cd3308789a68f76d02495c3",
   "jsonschema_version": "4.19.2",
   "null_fields_documented_count": 12,
+  "recomputed_workload_instance_id": "3673c2f0835d4a0e78dc23e88b528eb00b967428dc215e8ffebfdf761f63aa2d",
   "run_id": "SYNTHETIC-SAMPLE-20261024T175000Z-lenobox-s11-sc05_oracle",
   "schema_version": "2.0.0-sc05-proposal",
   "semantic_classification": "equivalent-exact",
   "synthetic_validation_sample": true,
   "valid": true,
+  "verified_fixture_files_count": 2,
   "workload_id": "sc05/disconnected/v1",
-  "workload_instance_id": "658b3f1a3f35821fd7c15ac09f65560ece2e2c1429d62138efa04dde460413cc"
+  "workload_instance_id": "3673c2f0835d4a0e78dc23e88b528eb00b967428dc215e8ffebfdf761f63aa2d"
 }

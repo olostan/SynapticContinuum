@@ -4,20 +4,23 @@ EXP-0005 WP-00: Golden A, B, C1, C2 Hand-Verified Mathematical Oracle Unit Tests
 Verifies:
   1. Golden A (`sc05/analytic-leak/v1`): V(t) = 0.8 * exp(-t/10) at t=0, 10, 20 ms to <= 1e-12 mV.
   2. Golden B (`sc05/analytic-threshold/v1`): 3 arrivals at 1, 3, 4 ms (w=0.4 mV);
-     V(3+) ≈ 0.727492301231 mV (no spike); V_pre(4+) ≈ 1.058262171219 mV -> exactly 1 spike at 4.0 ms,
+     V(3+) ≈ 0.727492301231 mV (no spike); V_pre(4+) ≈ 1.058262255487 mV -> exactly 1 spike at 4.0 ms,
      reset to 0.0 mV, refractory until 6.0 ms; verified to <= 1e-10 mV.
   3. Golden C1 (`sc05/replay/v1`): causal chain A->B->C (0->1->2) with delay 2.0 ms per link;
      external input at 1.0 ms produces earliest deliveries at B (3.0 ms) and C (5.0 ms).
   4. Golden C2 (`sc05/replay/v1`): simultaneous arrivals at t=2.0 ms sorted by
      (t_ms, target_id, src_id, ordinal), refractory clamping inside [2.0, 4.0) ms,
      and exact boundary release at t = 4.0 ms.
-  5. Pilot disconnected and modular N=128, D=4 fixtures execute deterministically on the oracle.
+  5. Near-simultaneous timestamps (`dt < 1e-12 ms`) and same-time independent input/source tie-breaking
+     order on unrounded IEEE-754 float64 timestamps without causality violation.
+  6. Stratified pilot disconnected fixture (`pilot_disconnected_n128_d4_s11`) produces observed active
+     neurons and committed events in ALL 4 disconnected modules, whereas the localized control
+     (`pilot_disconnected_localized_n128_d4_s11`) produces activity only in Module 0.
 """
 
 from __future__ import annotations
 
 import json
-import math
 import unittest
 
 from helper_imports import EXP0005_ROOT, load_oracle_module
@@ -49,7 +52,6 @@ class TestGoldenOracle(unittest.TestCase):
         oracle = self.oracle_mod.AnalyticLIFOracle(params=params)
         res = oracle.run(external_events=[], horizon_ms=20.0, sample_times_ms=[0.0, 10.0, 20.0])
 
-        # Hand-derived closed-form values
         hand_v0 = 0.8
         hand_v10 = 0.29430355293715387
         hand_v20 = 0.10826822658929016
@@ -90,16 +92,9 @@ class TestGoldenOracle(unittest.TestCase):
         oracle = self.oracle_mod.AnalyticLIFOracle(params=params)
         res = oracle.run(external_events=events, horizon_ms=10.0)
 
-        # Verify exactly one spike at t = 4.0 ms
         self.assertEqual(res.spikes, [(4.0, 0)])
         self.assertEqual(len(res.event_log), 3)
 
-        # Hand-calculated intermediate values (IEEE-754 64-bit):
-        # V(1+) = 0.4
-        # V(3-) = 0.4 * exp(-0.2) = 0.32749230123119274
-        # V(3+) = 0.7274923012311927
-        # V(4-) = V(3+) * exp(-0.1) = 0.6582622554870710
-        # V_pre(4+) = V(4-) + 0.4 = 1.0582622554870710
         hand_v1_plus = 0.4
         hand_v3_minus = 0.32749230123119274
         hand_v3_plus = 0.7274923012311927
@@ -133,7 +128,6 @@ class TestGoldenOracle(unittest.TestCase):
         oracle = self.oracle_mod.AnalyticLIFOracle(params=params, edges=edges)
         res = oracle.run(external_events=events, horizon_ms=10.0)
 
-        # A (0) spikes at 1.0 ms -> B (1) receives & spikes at 3.0 ms -> C (2) receives & spikes at 5.0 ms
         self.assertEqual(res.spikes, [(1.0, 0), (3.0, 1), (5.0, 2)])
         self.assertEqual(res.external_events_injected, 1)
         self.assertEqual(res.synapse_deliveries, 2)
@@ -148,11 +142,6 @@ class TestGoldenOracle(unittest.TestCase):
         oracle = self.oracle_mod.AnalyticLIFOracle(params=params)
         res = oracle.run(external_events=events, horizon_ms=6.0)
 
-        # Event 0: (t=2.0, src=1, ord=0, w=0.6) -> V(2.0+) = 0.6 mV, no spike
-        # Event 1: (t=2.0, src=2, ord=1, w=0.5) -> V_pre = 1.1 mV -> SPIKE at 2.0 ms, V(2.0+) = 0.0, ref until 4.0 ms
-        # Event 2: (t=2.0, src=3, ord=2, w=1.5) -> arrives during refractory [2.0, 4.0) -> clamped to 0.0 mV, no second spike
-        # Event 3: (t=3.5, src=-1, ord=3, w=0.9) -> arrives during refractory (3.5 < 4.0) -> clamped to 0.0 mV
-        # Event 4: (t=4.0, src=-1, ord=4, w=0.5) -> arrives on boundary t == 4.0 ms -> active! V(4.0+) = 0.5 mV
         self.assertEqual(res.spikes, [(2.0, 0)])
         self.assertEqual([e.src_id for e in res.event_log[:3]], [1, 2, 3])
         self.assertFalse(res.event_log[0].was_refractory)
@@ -164,26 +153,98 @@ class TestGoldenOracle(unittest.TestCase):
         self.assertFalse(res.event_log[4].was_refractory)
         self.assertAlmostEqual(res.event_log[4].v_plus_mv, 0.5, delta=1e-12)
 
-    def test_pilot_fixtures_deterministic_oracle_execution(self) -> None:
-        for prefix in ("pilot_disconnected_n128_d4_s11", "pilot_modular_n128_d4_s11"):
-            edges_f = f"{prefix}_edges.csv"
-            events_f = f"{prefix}_events.csv"
-            edges = self.oracle_mod.load_edges_csv(
-                self.fixtures_dir / edges_f, self.manifest["files"][edges_f]["sha256"]
-            )
-            events = self.oracle_mod.load_events_csv(
-                self.fixtures_dir / events_f, self.manifest["files"][events_f]["sha256"]
-            )
-            params = self.oracle_mod.AnalyticLIFParams(num_nodes=128, tau_ms=10.0, v_th_mv=1.0, refractory_ms=2.0)
-            oracle1 = self.oracle_mod.AnalyticLIFOracle(params=params, edges=edges)
-            res1 = oracle1.run(external_events=events, horizon_ms=100.0)
+    def test_near_simultaneous_sub_1e12_timestamps_and_same_time_source_tie_order(self) -> None:
+        """
+        Verify that two events separated by < 1e-12 ms (e.g. 2.0 ms and 2.0 + 3e-13 ms)
+        are ordered by their exact unrounded IEEE-754 float64 timestamps even when the
+        earlier event has a larger target_id/src_id, preventing any spurious backward-time
+        causality error that `round(t_ms, 12)` would have induced.
+        Also verify that exact same-time arrivals from external (`src_id=-1`) and internal
+        (`src_id >= 0`) sources execute in strict `(t_ms, target_id, src_id, ordinal)` order.
+        """
+        params = self.oracle_mod.AnalyticLIFParams(num_nodes=3, tau_ms=10.0, v_th_mv=1.0, refractory_ms=2.0)
+        # Edge 0 -> 1 with delay 1.0 + 3e-13 ms: when node 0 spikes at 1.0 ms, child arrives at 2.0 + 3e-13 ms
+        edges = [
+            self.oracle_mod.DirectedEdge(src_id=0, dst_id=1, delay_ms=1.0 + 3e-13, weight_mv=0.3),
+        ]
+        oracle = self.oracle_mod.AnalyticLIFOracle(params=params, edges=edges)
+        external_events = [
+            # Triggers spike on node 0 at t=1.0 ms -> schedules synaptic arrival at node 1 at t = 2.0 + 3e-13 ms
+            self.oracle_mod.ImpulseEvent(t_ms=1.0, target_id=0, src_id=-1, ordinal=0, weight_mv=1.2),
+            # Exact same time t=2.0 ms on node 1 from two sources (src=-1 vs src=2)
+            self.oracle_mod.ImpulseEvent(t_ms=2.0, target_id=1, src_id=2, ordinal=2, weight_mv=0.25),
+            self.oracle_mod.ImpulseEvent(t_ms=2.0, target_id=1, src_id=-1, ordinal=1, weight_mv=0.20),
+            # External arrival on node 2 at t=2.0 ms (higher target_id=2, but strictly earlier than 2.0 + 3e-13 ms!)
+            self.oracle_mod.ImpulseEvent(t_ms=2.0, target_id=2, src_id=-1, ordinal=3, weight_mv=0.40),
+        ]
+        # Sort external events by canonical sort_key before passing
+        external_events.sort(key=lambda e: e.sort_key())
+        res = oracle.run(external_events=external_events, horizon_ms=5.0)
 
-            oracle2 = self.oracle_mod.AnalyticLIFOracle(params=params, edges=edges)
-            res2 = oracle2.run(external_events=events, horizon_ms=100.0)
+        committed_keys = [(step.t_ms, step.target_id, step.src_id, step.ordinal) for step in res.event_log]
+        # 1. t=1.0 on node 0
+        # 2. t=2.0 on node 1, src=-1 (external comes before src=2 at exact same timestamp & target)
+        # 3. t=2.0 on node 1, src=2
+        # 4. t=2.0 on node 2, src=-1 (processed BEFORE t=2.0 + 3e-13 on node 1 because unrounded 2.0 < 2.0 + 3e-13)
+        # 5. t=2.0 + 3e-13 on node 1, src=0
+        self.assertEqual(len(committed_keys), 5)
+        self.assertEqual(committed_keys[1][:3], (2.0, 1, -1))
+        self.assertEqual(committed_keys[2][:3], (2.0, 1, 2))
+        self.assertEqual(committed_keys[3][:3], (2.0, 2, -1))
+        self.assertEqual(committed_keys[4][1:3], (1, 0))
+        self.assertGreater(committed_keys[4][0], 2.0)
 
-            self.assertEqual(res1.output_trace_sha256, res2.output_trace_sha256)
-            self.assertGreater(res1.committed_events, 0)
-            self.assertGreater(res1.active_neurons_count, 0)
+    def test_pilot_stratified_vs_localized_per_module_activity(self) -> None:
+        """
+        Verify that on the 4-module disconnected graph (N=128, 32 nodes/module):
+          - `pilot_disconnected_n128_d4_s11` (stratified_modules) produces active neurons and
+            committed events in ALL 4 modules.
+          - `pilot_disconnected_localized_n128_d4_s11` (localized_first_module) produces active
+            neurons and committed events ONLY in Module 0 (`[0, 32)`), with 0 events in Modules 1..3.
+        """
+        edges = self.oracle_mod.load_edges_csv(
+            self.fixtures_dir / "pilot_disconnected_n128_d4_s11_edges.csv",
+            self.manifest["files"]["pilot_disconnected_n128_d4_s11_edges.csv"]["sha256"],
+        )
+        strat_events = self.oracle_mod.load_events_csv(
+            self.fixtures_dir / "pilot_disconnected_n128_d4_s11_events.csv",
+            self.manifest["files"]["pilot_disconnected_n128_d4_s11_events.csv"]["sha256"],
+        )
+        loc_events = self.oracle_mod.load_events_csv(
+            self.fixtures_dir / "pilot_disconnected_localized_n128_d4_s11_events.csv",
+            self.manifest["files"]["pilot_disconnected_localized_n128_d4_s11_events.csv"]["sha256"],
+        )
+
+        params = self.oracle_mod.AnalyticLIFParams(num_nodes=128, tau_ms=10.0, v_th_mv=1.0, refractory_ms=2.0)
+        strat_res = self.oracle_mod.AnalyticLIFOracle(params=params, edges=edges).run(
+            external_events=strat_events, horizon_ms=100.0
+        )
+        loc_res = self.oracle_mod.AnalyticLIFOracle(params=params, edges=edges).run(
+            external_events=loc_events, horizon_ms=100.0
+        )
+
+        strat_mod_events = {0: 0, 1: 0, 2: 0, 3: 0}
+        strat_mod_active_nodes: Dict[int, set[int]] = {0: set(), 1: set(), 2: set(), 3: set()}
+        for step in strat_res.event_log:
+            m = step.target_id // 32
+            strat_mod_events[m] += 1
+            strat_mod_active_nodes[m].add(step.target_id)
+
+        for m in range(4):
+            self.assertGreaterEqual(
+                strat_mod_events[m], 16, f"Module {m} must have >=16 committed events in stratified fixture"
+            )
+            self.assertGreater(
+                len(strat_mod_active_nodes[m]), 0, f"Module {m} must have active neurons in stratified fixture"
+            )
+
+        loc_mod_events = {0: 0, 1: 0, 2: 0, 3: 0}
+        for step in loc_res.event_log:
+            loc_mod_events[step.target_id // 32] += 1
+        self.assertGreater(loc_mod_events[0], 64)
+        self.assertEqual(loc_mod_events[1], 0)
+        self.assertEqual(loc_mod_events[2], 0)
+        self.assertEqual(loc_mod_events[3], 0)
 
 
 if __name__ == "__main__":

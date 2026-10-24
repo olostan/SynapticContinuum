@@ -7,8 +7,12 @@ Verifies:
   3. Directed edges have no self-loops, no duplicate (src_id, dst_id) pairs, strictly positive
      delays (`delay_ms > 0`), and deterministic `(src_id, dst_id, delay_ms, weight_mV)` sort order.
   4. External events are sorted by `(t_ms, target_id, src_id, ordinal)` with `t_ms >= 0`.
-  5. Total checked-in fixture footprint is strictly <= 1 MiB.
-  6. Historical EXP-0004 config SHA-256 provenance is recorded accurately without mutating EXP-0004.
+  5. Multi-module stratified stimulus (`pilot_disconnected_n128_d4_s11` and `pilot_modular_n128_d4_s11`)
+     delivers exactly 16 external events to each of the 4 contiguous 32-node modules, while
+     the localized control (`pilot_disconnected_localized_n128_d4_s11`) restricts all 64 external
+     events to Module 0 (`[0, 32)`).
+  6. Total checked-in fixture footprint is strictly <= 1 MiB.
+  7. Historical EXP-0004 config SHA-256 provenance is recorded accurately without mutating EXP-0004.
 """
 
 from __future__ import annotations
@@ -102,6 +106,7 @@ class TestFixtureReproducibility(unittest.TestCase):
             "golden_c_causal_chain_events.csv",
             "golden_c_tie_adversarial_events.csv",
             "pilot_disconnected_n128_d4_s11_events.csv",
+            "pilot_disconnected_localized_n128_d4_s11_events.csv",
             "pilot_modular_n128_d4_s11_events.csv",
         ]
         for fname in event_files:
@@ -124,6 +129,30 @@ class TestFixtureReproducibility(unittest.TestCase):
                         self.assertGreater(key, prev_key, f"Events not strictly sorted by tie key in {fname}")
                     prev_key = key
 
+    def test_stratified_vs_localized_module_stimulus_distribution(self) -> None:
+        # Stratified pilot fixtures must stimulate all 4 modules equally (16 external events per 32-node module)
+        for fname in ("pilot_disconnected_n128_d4_s11_events.csv", "pilot_modular_n128_d4_s11_events.csv"):
+            mod_counts = {0: 0, 1: 0, 2: 0, 3: 0}
+            with (self.fixtures_dir / fname).open("r", encoding="utf-8", newline="") as f:
+                for row in csv.DictReader(f):
+                    tgt = int(row["target_id"])
+                    mod_counts[tgt // 32] += 1
+            self.assertEqual(
+                mod_counts,
+                {0: 16, 1: 16, 2: 16, 3: 16},
+                f"Expected equal 16-event stratification across 4 modules in {fname}, got {mod_counts}",
+            )
+
+        # Localized control must stimulate only Module 0 (all 64 external events in [0, 32))
+        loc_counts = {0: 0, 1: 0, 2: 0, 3: 0}
+        with (self.fixtures_dir / "pilot_disconnected_localized_n128_d4_s11_events.csv").open(
+            "r", encoding="utf-8", newline=""
+        ) as f:
+            for row in csv.DictReader(f):
+                tgt = int(row["target_id"])
+                loc_counts[tgt // 32] += 1
+        self.assertEqual(loc_counts, {0: 64, 1: 0, 2: 0, 3: 0})
+
     def test_exp0004_read_only_provenance_hashes(self) -> None:
         manifest = json.loads(self.manifest_path.read_text(encoding="utf-8"))
         prov = manifest["historical_exp0004_provenance"]
@@ -141,6 +170,28 @@ class TestFixtureReproducibility(unittest.TestCase):
             prov["files"]["benchmark_schema_v1.json"]["sha256"],
             "902952859c911a20d7c455a30be60a9bd96c9476222021541f165cec657bf968",
         )
+
+    def test_report_md_byte_counts_and_hashes_match_manifest(self) -> None:
+        manifest = json.loads(self.manifest_path.read_text(encoding="utf-8"))
+        report_text = (EXP0005_ROOT / "REPORT.md").read_text(encoding="utf-8")
+
+        for fname, meta in manifest["files"].items():
+            expected_bytes_str = f"{meta['byte_count']:,}"
+            expected_sha = meta["sha256"]
+            self.assertIn(fname, report_text, f"REPORT.md missing fixture filename {fname}")
+            self.assertIn(expected_sha, report_text, f"REPORT.md missing exact SHA-256 for {fname}")
+            self.assertIn(
+                f"| [`fixtures/{fname}`](fixtures/{fname}) | {expected_bytes_str} | `{expected_sha}` |",
+                report_text,
+                f"REPORT.md byte count or SHA-256 table row mismatch for {fname}",
+            )
+
+        for wkey, wmeta in manifest["workloads"].items():
+            self.assertIn(
+                wmeta["workload_instance_id"],
+                report_text,
+                f"REPORT.md missing workload_instance_id for {wkey}",
+            )
 
 
 if __name__ == "__main__":

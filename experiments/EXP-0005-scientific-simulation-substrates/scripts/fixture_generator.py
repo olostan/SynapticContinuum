@@ -7,8 +7,9 @@ Generates backend-neutral, deterministic CSV and JSON fixtures for:
   - Golden B: sc05/analytic-threshold/v1
   - Golden C1: sc05/replay/v1 (causal chain A->B->C with d=2 ms)
   - Golden C2: sc05/replay/v1 (simultaneous arrivals & refractory clamp)
-  - Pilot Disconnected (sc05/disconnected/v1, N=128, D=4)
-  - Pilot Modular SBM (sc05/modular/v1, N=128, D=4)
+  - Pilot Disconnected (sc05/disconnected/v1, N=128, D=4, stratified_modules)
+  - Pilot Disconnected Localized Control (sc05/disconnected/v1, N=128, D=4, localized_first_module)
+  - Pilot Modular SBM (sc05/modular/v1, N=128, D=4, stratified_modules)
   - Historical EXP-0004 Config Provenance Map (read-only SHA-256 & unit translation)
 
 All generated CSVs use LF line endings, explicit physical units (ms, mV),
@@ -17,7 +18,9 @@ strictly positive axonal delays (delay_ms > 0), and deterministic sorting:
   - External events sorted by: (t_ms, target_id, src_id, ordinal)
 
 Supports `--seed` and `--output` for writing large scale fixtures (e.g. N=10k, 100k)
-outside Git (`$SC_ARTIFACT_ROOT/EXP-0005/fixtures/`).
+outside Git (`$SC_ARTIFACT_ROOT/EXP-0005/fixtures/`) using the unified
+`sc05-fixture-manifest-v1` schema so custom exports round-trip directly through
+`scripts/validate_sc05_v2.py`.
 """
 
 from __future__ import annotations
@@ -35,6 +38,15 @@ from typing import Any, Dict, List, Tuple
 EXP0005_ROOT = Path(__file__).resolve().parent.parent
 REPO_ROOT = EXP0005_ROOT.parent.parent
 EXP0004_ROOT = REPO_ROOT / "experiments" / "EXP-0004-topology-adaptive-scheduling"
+
+TOPOLOGY_TO_WORKLOAD_ID: Dict[str, str] = {
+    "disconnected": "sc05/disconnected/v1",
+    "modular_sbm": "sc05/modular/v1",
+    "modular": "sc05/modular/v1",
+    "random": "sc05/random/v1",
+    "smallworld": "sc05/smallworld/v1",
+    "hierarchical": "sc05/hierarchical/v1",
+}
 
 
 class SplitMix64:
@@ -166,7 +178,7 @@ def generate_Topology_edges(
         while len(targets_set) < k:
             if topology == "disconnected":
                 cand = mod_start + rng.uniform_uint(max(1, mod_end - mod_start))
-            elif topology == "modular_sbm":
+            elif topology in ("modular_sbm", "modular"):
                 if rng.uniform_float(0.0, 1.0) < cross_module_ratio:
                     cand = rng.uniform_uint(num_nodes)
                 else:
@@ -195,18 +207,41 @@ def generate_external_events(
     horizon_ms: float,
     seed: int,
     active_fraction: float = 0.25,
+    num_modules: int = 4,
+    stimulus_distribution: str = "stratified_modules",
     min_weight_mv: float = 0.55,
     max_weight_mv: float = 1.15,
 ) -> List[Tuple[float, int, int, int, float]]:
     """
     Generate deterministic external stimulus pulses (t_ms, target_id, src_id=-1, ordinal, weight_mV).
+
+    Supported `stimulus_distribution` modes:
+      - `"stratified_modules"`: distributes external events evenly across all `num_modules`
+        contiguous modules (`i % num_modules`), sampling targets within the active subset
+        `[mod_start, mod_start + active_per_mod)` of each module. Ensures multi-module and
+        disconnected parallel ceiling controls stimulate all modules reproducibly.
+      - `"localized_first_module"`: intentionally restricts external stimulus to the active
+        subset of Module 0 (`[0, round(N * active_fraction))`) as a localized-activity control.
     """
     rng = SplitMix64(seed ^ 0xA5A5A5A55A5A5A5A)
-    active_limit = max(1, int(round(num_nodes * active_fraction)))
+    nodes_per_mod = max(1, num_nodes // max(1, num_modules))
     raw_events: List[Tuple[float, int, float]] = []
-    for _ in range(num_events):
+
+    for i in range(num_events):
         t_ms = round(rng.uniform_float(0.5, horizon_ms), 6)
-        target_id = rng.uniform_uint(active_limit)
+        if stimulus_distribution == "stratified_modules" and num_modules > 1:
+            mod_idx = i % num_modules
+            mod_start = mod_idx * nodes_per_mod
+            mod_end = num_nodes if mod_idx == num_modules - 1 else (mod_idx + 1) * nodes_per_mod
+            mod_size = max(1, mod_end - mod_start)
+            active_in_mod = max(1, int(round(mod_size * active_fraction)))
+            target_id = mod_start + rng.uniform_uint(active_in_mod)
+        elif stimulus_distribution == "localized_first_module":
+            active_limit = max(1, int(round(num_nodes * active_fraction)))
+            target_id = rng.uniform_uint(active_limit)
+        else:
+            raise ValueError(f"Unsupported stimulus_distribution='{stimulus_distribution}'")
+
         w_mv = round(rng.uniform_float(min_weight_mv, max_weight_mv), 6)
         raw_events.append((t_ms, target_id, w_mv))
 
@@ -237,10 +272,21 @@ def compute_workload_instance_id(
     return sha256_bytes(canonical_json_bytes(payload))
 
 
+def _default_manifest_policies() -> Dict[str, Any]:
+    return {
+        "edge_direction": "directed_src_to_dst",
+        "self_edges": "forbidden",
+        "duplicate_edges": "forbidden_per_src_dst_pair",
+        "delay_constraint": "strictly_positive_delay_ms_gt_0",
+        "event_tie_break_order": ["t_ms", "target_id", "src_id", "ordinal"],
+        "refractory_interval": "half_open_[t_spike, t_spike + refractory_ms)",
+    }
+
+
 def build_default_wp00_fixtures(output_dir: Path) -> Dict[str, Any]:
     """
     Build all committed WP-00 Golden and Pilot fixtures in `output_dir` and return
-    the complete manifest dictionary.
+    the complete manifest dictionary (`sc05-fixture-manifest-v1`).
     """
     output_dir.mkdir(parents=True, exist_ok=True)
     files_manifest: Dict[str, Dict[str, Any]] = {}
@@ -291,6 +337,7 @@ def build_default_wp00_fixtures(output_dir: Path) -> Dict[str, Any]:
     workloads_manifest["golden_a_passive_leak"] = {
         "workload_id": "sc05/analytic-leak/v1",
         "seed": 0,
+        "config": golden_a_cfg["neuron_parameters"],
         "workload_instance_id": compute_workload_instance_id(
             "sc05/analytic-leak/v1", 0, golden_a_cfg["neuron_parameters"], {"golden_a_passive_leak.json": ga_sha}
         ),
@@ -343,6 +390,7 @@ def build_default_wp00_fixtures(output_dir: Path) -> Dict[str, Any]:
     workloads_manifest["golden_b_threshold_reset"] = {
         "workload_id": "sc05/analytic-threshold/v1",
         "seed": 0,
+        "config": golden_b_cfg["neuron_parameters"],
         "workload_instance_id": compute_workload_instance_id(
             "sc05/analytic-threshold/v1", 0, golden_b_cfg["neuron_parameters"], {"golden_b_threshold_reset.json": gb_sha}
         ),
@@ -379,13 +427,15 @@ def build_default_wp00_fixtures(output_dir: Path) -> Dict[str, Any]:
         serialize_events_csv(gc_tie_events),
         "Golden C2 simultaneous arrival tie-break and refractory clamp boundary test events",
     )
+    gc1_cfg = {"num_nodes": 3, "tau_ms": 10.0, "v_th_mv": 1.0, "refractory_ms": 2.0}
     workloads_manifest["golden_c_causal_chain"] = {
         "workload_id": "sc05/replay/v1",
         "seed": 0,
+        "config": gc1_cfg,
         "workload_instance_id": compute_workload_instance_id(
             "sc05/replay/v1",
             0,
-            {"num_nodes": 3, "tau_ms": 10.0, "v_th_mv": 1.0, "refractory_ms": 2.0},
+            gc1_cfg,
             {
                 "golden_c_causal_chain_edges.csv": gc_edges_sha,
                 "golden_c_causal_chain_events.csv": gc_events_sha,
@@ -393,19 +443,27 @@ def build_default_wp00_fixtures(output_dir: Path) -> Dict[str, Any]:
         ),
         "files": ["golden_c_causal_chain_edges.csv", "golden_c_causal_chain_events.csv"],
     }
+    gc2_cfg = {
+        "num_nodes": 1,
+        "tau_ms": 10.0,
+        "v_th_mv": 1.0,
+        "refractory_ms": 2.0,
+        "tie_policy": "(t_ms,target_id,src_id,ordinal)",
+    }
     workloads_manifest["golden_c_tie_adversarial"] = {
         "workload_id": "sc05/replay/v1",
         "seed": 0,
+        "config": gc2_cfg,
         "workload_instance_id": compute_workload_instance_id(
             "sc05/replay/v1",
             0,
-            {"num_nodes": 1, "tau_ms": 10.0, "v_th_mv": 1.0, "refractory_ms": 2.0, "tie_policy": "(t_ms,target_id,src_id,ordinal)"},
+            gc2_cfg,
             {"golden_c_tie_adversarial_events.csv": gc_tie_sha},
         ),
         "files": ["golden_c_tie_adversarial_events.csv"],
     }
 
-    # 4. Pilot Disconnected Fixture (sc05/disconnected/v1, N=128, D=4, seed=11)
+    # 4. Pilot Disconnected Fixture — Stratified Across All 4 Modules (sc05/disconnected/v1, N=128, D=4, seed=11)
     disc_edges = generate_Topology_edges(
         topology="disconnected",
         num_nodes=128,
@@ -419,6 +477,9 @@ def build_default_wp00_fixtures(output_dir: Path) -> Dict[str, Any]:
         num_events=64,
         horizon_ms=100.0,
         seed=11,
+        active_fraction=0.25,
+        num_modules=4,
+        stimulus_distribution="stratified_modules",
     )
     disc_edges_sha = _write_and_record(
         "pilot_disconnected_n128_d4_s11_edges.csv",
@@ -428,7 +489,7 @@ def build_default_wp00_fixtures(output_dir: Path) -> Dict[str, Any]:
     disc_events_sha = _write_and_record(
         "pilot_disconnected_n128_d4_s11_events.csv",
         serialize_events_csv(disc_events),
-        "Pilot disconnected external stimulus fixture (64 events over 100 ms, seed=11)",
+        "Pilot disconnected stratified external stimulus (64 events, 16 per module across 4 modules, seed=11)",
     )
     disc_cfg = {
         "topology": "disconnected",
@@ -436,6 +497,8 @@ def build_default_wp00_fixtures(output_dir: Path) -> Dict[str, Any]:
         "out_degree": 4,
         "num_modules": 4,
         "cross_module_ratio": 0.0,
+        "active_fraction": 0.25,
+        "stimulus_distribution": "stratified_modules",
         "horizon_ms": 100.0,
         "tau_ms": 10.0,
         "v_th_mv": 1.0,
@@ -461,7 +524,55 @@ def build_default_wp00_fixtures(output_dir: Path) -> Dict[str, Any]:
         ],
     }
 
-    # 5. Pilot Modular SBM Fixture (sc05/modular/v1, N=128, D=4, seed=11)
+    # 4b. Pilot Disconnected Localized-Activity Control (Module 0 only, N=128, D=4, seed=11)
+    disc_loc_events = generate_external_events(
+        num_nodes=128,
+        num_events=64,
+        horizon_ms=100.0,
+        seed=11,
+        active_fraction=0.25,
+        num_modules=4,
+        stimulus_distribution="localized_first_module",
+    )
+    disc_loc_events_sha = _write_and_record(
+        "pilot_disconnected_localized_n128_d4_s11_events.csv",
+        serialize_events_csv(disc_loc_events),
+        "Pilot disconnected localized-activity control external stimulus (all 64 events in Module 0 [0..31], seed=11)",
+    )
+    disc_loc_cfg = {
+        "topology": "disconnected",
+        "num_nodes": 128,
+        "out_degree": 4,
+        "num_modules": 4,
+        "cross_module_ratio": 0.0,
+        "active_fraction": 0.25,
+        "stimulus_distribution": "localized_first_module",
+        "horizon_ms": 100.0,
+        "tau_ms": 10.0,
+        "v_th_mv": 1.0,
+        "v_reset_mv": 0.0,
+        "refractory_ms": 2.0,
+    }
+    workloads_manifest["pilot_disconnected_localized_n128_d4_s11"] = {
+        "workload_id": "sc05/disconnected/v1",
+        "seed": 11,
+        "config": disc_loc_cfg,
+        "workload_instance_id": compute_workload_instance_id(
+            "sc05/disconnected/v1",
+            11,
+            disc_loc_cfg,
+            {
+                "pilot_disconnected_n128_d4_s11_edges.csv": disc_edges_sha,
+                "pilot_disconnected_localized_n128_d4_s11_events.csv": disc_loc_events_sha,
+            },
+        ),
+        "files": [
+            "pilot_disconnected_n128_d4_s11_edges.csv",
+            "pilot_disconnected_localized_n128_d4_s11_events.csv",
+        ],
+    }
+
+    # 5. Pilot Modular SBM Fixture — Stratified Across All 4 Modules (sc05/modular/v1, N=128, D=4, seed=11)
     mod_edges = generate_Topology_edges(
         topology="modular_sbm",
         num_nodes=128,
@@ -475,6 +586,9 @@ def build_default_wp00_fixtures(output_dir: Path) -> Dict[str, Any]:
         num_events=64,
         horizon_ms=100.0,
         seed=11,
+        active_fraction=0.25,
+        num_modules=4,
+        stimulus_distribution="stratified_modules",
     )
     mod_edges_sha = _write_and_record(
         "pilot_modular_n128_d4_s11_edges.csv",
@@ -484,7 +598,7 @@ def build_default_wp00_fixtures(output_dir: Path) -> Dict[str, Any]:
     mod_events_sha = _write_and_record(
         "pilot_modular_n128_d4_s11_events.csv",
         serialize_events_csv(mod_events),
-        "Pilot modular SBM external stimulus fixture (64 events over 100 ms, seed=11)",
+        "Pilot modular SBM stratified external stimulus (64 events, 16 per module across 4 modules, seed=11)",
     )
     mod_cfg = {
         "topology": "modular_sbm",
@@ -492,6 +606,8 @@ def build_default_wp00_fixtures(output_dir: Path) -> Dict[str, Any]:
         "out_degree": 4,
         "num_modules": 4,
         "cross_module_ratio": 0.05,
+        "active_fraction": 0.25,
+        "stimulus_distribution": "stratified_modules",
         "horizon_ms": 100.0,
         "tau_ms": 10.0,
         "v_th_mv": 1.0,
@@ -556,14 +672,7 @@ def build_default_wp00_fixtures(output_dir: Path) -> Dict[str, Any]:
             "weight": "mV",
             "delay": "ms",
         },
-        "policies": {
-            "edge_direction": "directed_src_to_dst",
-            "self_edges": "forbidden",
-            "duplicate_edges": "forbidden_per_src_dst_pair",
-            "delay_constraint": "strictly_positive_delay_ms_gt_0",
-            "event_tie_break_order": ["t_ms", "target_id", "src_id", "ordinal"],
-            "refractory_interval": "half_open_[t_spike, t_spike + refractory_ms)",
-        },
+        "policies": _default_manifest_policies(),
         "files": files_manifest,
         "workloads": workloads_manifest,
         "historical_exp0004_provenance": historical_exp0004_refs,
@@ -582,21 +691,38 @@ def generate_custom_fixture_cli(
     num_events: int,
     horizon_ms: float,
     seed: int,
+    num_modules: int = 4,
+    active_fraction: float = 0.25,
+    stimulus_distribution: str = "stratified_modules",
 ) -> Dict[str, Any]:
-    """Generate an on-demand fixture (e.g. outside Git for large scales) with SHA-256 manifest."""
+    """
+    Generate an on-demand fixture (e.g. outside Git for large scales) using the exact same
+    `sc05-fixture-manifest-v1` structure (`files` + `workloads`) and canonical `sc05/*/v1`
+    workload IDs so it validates directly via `scripts/validate_sc05_v2.py`.
+    """
+    if topology not in TOPOLOGY_TO_WORKLOAD_ID:
+        raise ValueError(f"Unsupported topology '{topology}'; must be one of {sorted(TOPOLOGY_TO_WORKLOAD_ID)}")
+
     output_dir.mkdir(parents=True, exist_ok=True)
-    prefix = f"{topology}_n{num_nodes}_d{out_degree}_s{seed}"
+    workload_id = TOPOLOGY_TO_WORKLOAD_ID[topology]
+    canonical_topo = "modular_sbm" if topology == "modular" else topology
+    prefix = f"custom_{canonical_topo}_n{num_nodes}_d{out_degree}_s{seed}"
+
     edges = generate_Topology_edges(
-        topology=topology,
+        topology=canonical_topo,
         num_nodes=num_nodes,
         out_degree=out_degree,
         seed=seed,
+        num_modules=num_modules,
     )
     events = generate_external_events(
         num_nodes=num_nodes,
         num_events=num_events,
         horizon_ms=horizon_ms,
         seed=seed,
+        active_fraction=active_fraction,
+        num_modules=num_modules,
+        stimulus_distribution=stimulus_distribution,
     )
     edges_bytes = serialize_edges_csv(edges)
     events_bytes = serialize_events_csv(events)
@@ -608,13 +734,20 @@ def generate_custom_fixture_cli(
 
     edges_sha = sha256_bytes(edges_bytes)
     events_sha = sha256_bytes(events_bytes)
-    workload_id = f"sc05/{topology}/v1"
+
     cfg = {
-        "topology": topology,
+        "topology": canonical_topo,
         "num_nodes": num_nodes,
         "out_degree": out_degree,
+        "num_modules": num_modules,
+        "active_fraction": active_fraction,
+        "stimulus_distribution": stimulus_distribution,
         "num_events": num_events,
         "horizon_ms": horizon_ms,
+        "tau_ms": 10.0,
+        "v_th_mv": 1.0,
+        "v_reset_mv": 0.0,
+        "refractory_ms": 2.0,
     }
     w_instance_id = compute_workload_instance_id(
         workload_id,
@@ -622,18 +755,45 @@ def generate_custom_fixture_cli(
         cfg,
         {edges_file: edges_sha, events_file: events_sha},
     )
-    summary = {
+
+    manifest_path = output_dir / "manifest_sha256.json"
+    if manifest_path.exists():
+        manifest_obj = json.loads(manifest_path.read_text(encoding="utf-8"))
+    else:
+        manifest_obj = {
+            "schema_version": "sc05-fixture-manifest-v1",
+            "generator": "experiments/EXP-0005-scientific-simulation-substrates/scripts/fixture_generator.py",
+            "rng_algorithm": "SplitMix64-deterministic-v1",
+            "units": {"time": "ms", "voltage": "mV", "weight": "mV", "delay": "ms"},
+            "policies": _default_manifest_policies(),
+            "files": {},
+            "workloads": {},
+        }
+
+    manifest_obj["files"][edges_file] = {
+        "path": edges_file,
+        "byte_count": len(edges_bytes),
+        "sha256": edges_sha,
+        "description": f"Custom {canonical_topo} graph edges (N={num_nodes}, D={out_degree}, seed={seed})",
+    }
+    manifest_obj["files"][events_file] = {
+        "path": events_file,
+        "byte_count": len(events_bytes),
+        "sha256": events_sha,
+        "description": f"Custom {canonical_topo} stimulus events ({num_events} events, {stimulus_distribution}, seed={seed})",
+    }
+    manifest_obj["workloads"][prefix] = {
         "workload_id": workload_id,
-        "workload_instance_id": w_instance_id,
         "seed": seed,
         "config": cfg,
-        "files": {
-            edges_file: {"byte_count": len(edges_bytes), "sha256": edges_sha},
-            events_file: {"byte_count": len(events_bytes), "sha256": events_sha},
-        },
+        "workload_instance_id": w_instance_id,
+        "files": [edges_file, events_file],
     }
-    (output_dir / f"{prefix}_manifest.json").write_bytes(canonical_json_bytes(summary))
-    return summary
+
+    manifest_bytes = canonical_json_bytes(manifest_obj)
+    manifest_path.write_bytes(manifest_bytes)
+    (output_dir / f"{prefix}_manifest.json").write_bytes(manifest_bytes)
+    return manifest_obj["workloads"][prefix]
 
 
 def main() -> int:
@@ -652,11 +812,21 @@ def main() -> int:
         default=str(EXP0005_ROOT / "fixtures"),
         help="Output directory for generated fixtures",
     )
-    parser.add_argument("--topology", choices=["disconnected", "modular_sbm", "random"], default="modular_sbm")
+    parser.add_argument(
+        "--topology",
+        choices=["disconnected", "modular_sbm", "modular", "random"],
+        default="modular_sbm",
+    )
     parser.add_argument("--nodes", type=int, default=128)
     parser.add_argument("--degree", type=int, default=4)
+    parser.add_argument("--modules", type=int, default=4)
     parser.add_argument("--events", type=int, default=64)
     parser.add_argument("--horizon-ms", type=float, default=100.0)
+    parser.add_argument(
+        "--stimulus-distribution",
+        choices=["stratified_modules", "localized_first_module"],
+        default="stratified_modules",
+    )
     parser.add_argument("--seed", type=int, default=11)
     args = parser.parse_args()
 
@@ -677,8 +847,13 @@ def main() -> int:
             num_events=args.events,
             horizon_ms=args.horizon_ms,
             seed=args.seed,
+            num_modules=args.modules,
+            stimulus_distribution=args.stimulus_distribution,
         )
-        print(f"[WP-00] Generated custom fixture {summary['workload_instance_id']} in {out_path}")
+        print(
+            f"[WP-00] Generated custom fixture {summary['workload_id']} "
+            f"(instance={summary['workload_instance_id']}) in {out_path}"
+        )
     return 0
 
 

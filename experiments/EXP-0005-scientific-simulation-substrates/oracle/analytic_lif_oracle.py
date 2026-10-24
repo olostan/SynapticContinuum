@@ -14,8 +14,11 @@ Canonical Equations & Semantics (SPEC.md & WORKLOADS.md):
   - Subthreshold evolution outside refractory:
       dV/dt = -(V - E_L) / tau_ms
       V(t^-) = E_L + (V(t_last^+) - E_L) * exp(-(t - t_last) / tau_ms)
-  - Event tie-breaking priority key:
-      (round(t_ms, 12), target_id, src_id, ordinal)
+  - Event tie-breaking priority key (exact unrounded IEEE-754 float64 timestamp):
+      (float(t_ms), target_id, src_id, ordinal)
+    Because heap ordering uses the exact unrounded `float(t_ms)`, heap priority
+    order and causality monotonicity checks (`dt >= 0`, `t_committed >= last_committed_t`)
+    are 100% consistent even for near-simultaneous events separated by `< 1e-12 ms`.
   - Refractory interval policy (half-open):
       [t_spike, t_spike + refractory_ms)
       An arrival at `t < refractory_until_ms` is clamped to `v_reset_mv` and cannot fire.
@@ -33,9 +36,9 @@ import hashlib
 import heapq
 import json
 import math
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 
 class OracleContractError(ValueError):
@@ -71,7 +74,8 @@ class ImpulseEvent:
     weight_mv: float
 
     def sort_key(self) -> Tuple[float, int, int, int]:
-        return (round(self.t_ms, 12), self.target_id, self.src_id, self.ordinal)
+        """Exact unrounded IEEE-754 float64 timestamp + deterministic tie-break tuple."""
+        return (float(self.t_ms), int(self.target_id), int(self.src_id), int(self.ordinal))
 
 
 @dataclass
@@ -196,7 +200,7 @@ def load_events_csv(path: Path, expected_sha256: Optional[str] = None) -> List[I
         weight = float(row["weight_mV"])
         if t_ms < 0.0 or not math.isfinite(t_ms):
             raise CausalityViolationError(f"Negative or non-finite event timestamp t_ms={t_ms}")
-        if t_ms + 1e-15 < prev_time:
+        if t_ms < prev_time:
             raise CausalityViolationError(
                 f"Backward event timestamp order in input stream: {t_ms} < {prev_time}"
             )
@@ -219,8 +223,8 @@ def compute_trace_sha256(
 ) -> str:
     """Compute canonical UTF-8 JSON SHA-256 digest of committed spikes and final potentials."""
     payload = {
-        "spikes": [[round(t, 10), int(node)] for t, node in spikes],
-        "final_potentials_mv": [round(v, 10) for v in final_potentials_mv],
+        "spikes": [[round(t, 12), int(node)] for t, node in spikes],
+        "final_potentials_mv": [round(v, 12) for v in final_potentials_mv],
     }
     encoded = (json.dumps(payload, sort_keys=True, separators=(",", ":")) + "\n").encode("utf-8")
     return hashlib.sha256(encoded).hexdigest()
@@ -255,16 +259,16 @@ class AnalyticLIFOracle:
             self.adj[e.src_id].append(e)
 
         for u in self.adj:
-            self.adj[u].sort(key=lambda e: (e.dst_id, round(e.delay_ms, 12), round(e.weight_mv, 12)))
+            self.adj[u].sort(key=lambda e: (e.dst_id, float(e.delay_ms), float(e.weight_mv)))
 
     def closed_form_decay(self, v_start_mv: float, dt_ms: float) -> float:
         """
         Analytic passive leak:
           V(t + dt) = E_L + (V(t) - E_L) * exp(-dt / tau_ms)
         """
-        if dt_ms < -1e-15:
+        if dt_ms < 0.0:
             raise CausalityViolationError(f"Cannot extrapolate backward in time: dt_ms={dt_ms}")
-        if dt_ms <= 0.0:
+        if dt_ms == 0.0:
             return float(v_start_mv)
         e_l = self.params.e_l_mv
         return float(e_l + (v_start_mv - e_l) * math.exp(-dt_ms / self.params.tau_ms))
@@ -292,7 +296,7 @@ class AnalyticLIFOracle:
         for ev in external_events:
             if ev.t_ms < 0.0 or not math.isfinite(ev.t_ms):
                 raise CausalityViolationError(f"Invalid negative/non-finite event timestamp t_ms={ev.t_ms}")
-            if ev.t_ms + 1e-15 < prev_in_t:
+            if ev.t_ms < prev_in_t:
                 raise CausalityViolationError(
                     f"Input event stream violates timestamp monotonicity: {ev.t_ms} < {prev_in_t}"
                 )
@@ -304,14 +308,14 @@ class AnalyticLIFOracle:
         next_ordinal = 0
         external_injected = 0
         for ev in external_events:
-            if ev.t_ms <= horizon_ms + 1e-12:
+            if ev.t_ms <= horizon_ms:
                 heapq.heappush(heap, (ev.sort_key(), ev))
                 external_injected += 1
             next_ordinal = max(next_ordinal, ev.ordinal + 1)
 
         sorted_samples: List[float] = sorted(sample_times_ms) if sample_times_ms else []
         for st in sorted_samples:
-            if st < 0.0 or st > horizon_ms + 1e-12:
+            if st < 0.0 or st > horizon_ms:
                 raise CausalityViolationError(f"Sample time {st} ms outside [0, {horizon_ms}]")
         sample_idx = 0
         sampled_potentials: Dict[float, List[float]] = {}
@@ -319,7 +323,7 @@ class AnalyticLIFOracle:
         def _advance_all_to(t_target: float) -> None:
             for i in range(n):
                 dt = t_target - last_t_ms[i]
-                if dt < -1e-15:
+                if dt < 0.0:
                     raise CausalityViolationError(
                         f"Backward state advance on node {i}: {t_target} < {last_t_ms[i]}"
                     )
@@ -327,7 +331,6 @@ class AnalyticLIFOracle:
                     if t_target < refractory_until_ms[i]:
                         v_mv[i] = self.params.v_reset_mv
                     elif last_t_ms[i] < refractory_until_ms[i] <= t_target:
-                        # Node exited refractory at refractory_until_ms[i] with V = v_reset_mv
                         dt_active = t_target - refractory_until_ms[i]
                         v_mv[i] = self.closed_form_decay(self.params.v_reset_mv, dt_active)
                     else:
@@ -343,17 +346,17 @@ class AnalyticLIFOracle:
 
         while heap:
             _, ev = heapq.heappop(heap)
-            if ev.t_ms > horizon_ms + 1e-12:
+            if ev.t_ms > horizon_ms:
                 continue
 
             # Capture any requested sample times strictly before this event timestamp
-            while sample_idx < len(sorted_samples) and sorted_samples[sample_idx] < ev.t_ms - 1e-12:
+            while sample_idx < len(sorted_samples) and sorted_samples[sample_idx] < ev.t_ms:
                 st = sorted_samples[sample_idx]
                 _advance_all_to(st)
                 sampled_potentials[st] = list(v_mv)
                 sample_idx += 1
 
-            if ev.t_ms + 1e-15 < last_committed_t:
+            if ev.t_ms < last_committed_t:
                 raise CausalityViolationError(
                     f"Committed event out of causal order: {ev.t_ms} < {last_committed_t}"
                 )
@@ -364,7 +367,7 @@ class AnalyticLIFOracle:
 
             u = ev.target_id
             dt = ev.t_ms - last_t_ms[u]
-            if dt < -1e-15:
+            if dt < 0.0:
                 raise CausalityViolationError(f"Negative dt={dt} on neuron {u}")
 
             # Advance target neuron u to ev.t_ms
@@ -396,7 +399,7 @@ class AnalyticLIFOracle:
                     spikes.append((ev.t_ms, u))
                     for edge in self.adj[u]:
                         arr_t = ev.t_ms + edge.delay_ms
-                        if arr_t <= horizon_ms + 1e-12:
+                        if arr_t <= horizon_ms:
                             child = ImpulseEvent(
                                 t_ms=arr_t,
                                 target_id=edge.dst_id,
