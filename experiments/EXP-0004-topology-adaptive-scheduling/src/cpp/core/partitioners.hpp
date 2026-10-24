@@ -57,7 +57,13 @@ public:
         return partition_contiguous(num_nodes, num_regions);
     }
 
-    static std::vector<int32_t> partition_greedy_mincut(
+    /**
+     * Greedy Boundary Swap Heuristic (formerly partition_greedy_mincut)
+     * NOTE: This is a greedy local-boundary improvement heuristic, NOT an exact mincut algorithm
+     * or multilevel spectral/Kernighan-Lin/METIS partitioner. It evaluates outgoing edges and swaps
+     * boundary nodes to reduce local cut while respecting soft capacity balance.
+     */
+    static std::vector<int32_t> partition_greedy_boundary_heuristic(
         const NeuralGraphCSR& g,
         int32_t num_regions,
         int32_t max_passes = 5
@@ -123,6 +129,15 @@ public:
         }
 
         return part;
+    }
+
+    // Backward-compatibility alias for partition_greedy_boundary_heuristic
+    static std::vector<int32_t> partition_greedy_mincut(
+        const NeuralGraphCSR& g,
+        int32_t num_regions,
+        int32_t max_passes = 5
+    ) {
+        return partition_greedy_boundary_heuristic(g, num_regions, max_passes);
     }
 
     struct PairwiseEventRecord {

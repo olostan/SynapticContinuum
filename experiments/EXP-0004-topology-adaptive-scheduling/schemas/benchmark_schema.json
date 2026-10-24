@@ -1,0 +1,178 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SynapticContinuum Benchmark Result Schema",
+  "version": "1.0.0",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "benchmark_id",
+    "semantic_class",
+    "hardware_environment",
+    "graph_configuration",
+    "execution_configuration",
+    "workload_metrics",
+    "timing_breakdown",
+    "resource_metrics",
+    "validation"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0.0"
+    },
+    "benchmark_id": {
+      "type": "string",
+      "description": "Deterministic SHA256 or canonical identifier of the workload parameters and graph seed"
+    },
+    "workload_name": {
+      "type": "string"
+    },
+    "semantic_class": {
+      "type": "string",
+      "enum": [
+        "exact",
+        "fixed-dt-approx",
+        "relaxed-model",
+        "trace-replay-only"
+      ]
+    },
+    "hardware_environment": {
+      "type": "object",
+      "required": [
+        "os",
+        "cpu_model",
+        "physical_cores",
+        "logical_threads",
+        "total_ram_bytes",
+        "compiler",
+        "compiler_flags"
+      ],
+      "properties": {
+        "os": { "type": "string" },
+        "cpu_model": { "type": "string" },
+        "physical_cores": { "type": "integer", "minimum": 1 },
+        "logical_threads": { "type": "integer", "minimum": 1 },
+        "l3_cache_bytes": { "type": "integer" },
+        "total_ram_bytes": { "type": "integer" },
+        "available_ram_bytes": { "type": "integer" },
+        "compiler": { "type": "string" },
+        "compiler_flags": { "type": "string" }
+      }
+    },
+    "graph_configuration": {
+      "type": "object",
+      "required": [
+        "num_nodes",
+        "num_edges",
+        "topology_type"
+      ],
+      "properties": {
+        "num_nodes": { "type": "integer", "minimum": 1 },
+        "num_edges": { "type": "integer", "minimum": 0 },
+        "topology_type": { "type": "string" },
+        "clustering_coefficient": { "type": "number" },
+        "characteristic_path_length": { "type": "number" },
+        "modularity": { "type": "number" },
+        "edge_cut_fraction": { "type": "number" }
+      }
+    },
+    "execution_configuration": {
+      "type": "object",
+      "required": [
+        "engine_id",
+        "algorithm_family",
+        "num_workers",
+        "num_regions"
+      ],
+      "properties": {
+        "engine_id": { "type": "string" },
+        "algorithm_family": { "type": "string" },
+        "num_workers": { "type": "integer", "minimum": 1 },
+        "num_regions": { "type": "integer", "minimum": 1 },
+        "t_max": { "type": "number" },
+        "min_delay": { "type": "number" },
+        "max_delay": { "type": "number" },
+        "order_relaxation_epsilon": { "type": "number" }
+      }
+    },
+    "workload_metrics": {
+      "type": "object",
+      "required": [
+        "total_events_processed",
+        "total_spikes",
+        "total_edges_traversed"
+      ],
+      "properties": {
+        "active_fraction": { "type": "number" },
+        "external_events": { "type": "integer" },
+        "total_events_processed": { "type": "integer" },
+        "total_edges_traversed": { "type": "integer" },
+        "total_spikes": { "type": "integer" },
+        "cross_region_events": { "type": "integer" },
+        "cross_region_event_fraction": { "type": "number" },
+        "total_migrations": { "type": "integer" },
+        "migration_pause_sec": { "type": "number" }
+      }
+    },
+    "timing_breakdown": {
+      "type": "object",
+      "required": [
+        "wall_time_sim_sec",
+        "wall_time_total_sec",
+        "events_per_sec"
+      ],
+      "properties": {
+        "wall_time_sim_sec": { "type": "number", "minimum": 0.0 },
+        "wall_time_total_sec": { "type": "number", "minimum": 0.0 },
+        "thread_spawn_join_overhead_sec": { "type": "number" },
+        "events_per_sec": { "type": "number" },
+        "worker_active_sec": {
+          "type": "array",
+          "items": { "type": "number" }
+        },
+        "worker_barrier1_sec": {
+          "type": "array",
+          "items": { "type": "number" }
+        },
+        "worker_mailbox_sec": {
+          "type": "array",
+          "items": { "type": "number" }
+        },
+        "worker_barrier2_sec": {
+          "type": "array",
+          "items": { "type": "number" }
+        }
+      }
+    },
+    "resource_metrics": {
+      "type": "object",
+      "required": [
+        "peak_rss_bytes",
+        "hardware_perf_counters_available"
+      ],
+      "properties": {
+        "peak_rss_bytes": { "type": "integer" },
+        "minor_page_faults": { "type": "integer" },
+        "major_page_faults": { "type": "integer" },
+        "voluntary_context_switches": { "type": "integer" },
+        "involuntary_context_switches": { "type": "integer" },
+        "hardware_perf_counters_available": { "type": "boolean" },
+        "perf_notes": { "type": "string" }
+      }
+    },
+    "validation": {
+      "type": "object",
+      "required": [
+        "state_digest",
+        "parity_with_serial"
+      ],
+      "properties": {
+        "state_digest": { "type": "string" },
+        "parity_with_serial": { "type": "boolean" },
+        "spike_count_error": { "type": "integer" },
+        "potential_rmse": { "type": "number" },
+        "temporal_discrimination_passed": { "type": "boolean" }
+      }
+    }
+  }
+}

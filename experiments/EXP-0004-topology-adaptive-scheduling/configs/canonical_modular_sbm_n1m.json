@@ -1,0 +1,27 @@
+{
+  "benchmark_id": "cfg_mod_n1m_d16_c005_s999",
+  "workload_name": "Modular SBM 1M Sustained Activity",
+  "semantic_class": "exact",
+  "graph": {
+    "num_nodes": 1000000,
+    "degree": 16,
+    "topology_type": "modular_sbm",
+    "num_modules": 48,
+    "cross_module_ratio": 0.05,
+    "seed": 999
+  },
+  "stimulus": {
+    "num_events": 100000,
+    "time_horizon": 5.0,
+    "active_fraction": 0.005,
+    "min_delay": 0.2,
+    "max_delay": 1.0,
+    "tau_m": 5.0,
+    "threshold": 1.0
+  },
+  "execution": {
+    "num_workers_ladder": [1, 2, 4, 6],
+    "logical_regions": 48,
+    "partitioner": "planted_oracle"
+  }
+}

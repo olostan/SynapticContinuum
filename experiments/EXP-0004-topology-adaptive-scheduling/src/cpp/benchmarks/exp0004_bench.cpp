@@ -7,6 +7,7 @@
 #include "../engines/cpp_persistent_pool.hpp"
 #include "../engines/cpp_adaptive.hpp"
 #include "../engines/cpp_relaxed.hpp"
+#include "../engines/cpp_barrier_free_independent.hpp"
 
 #include <iostream>
 #include <fstream>
@@ -33,6 +34,23 @@ struct BenchmarkConfig {
 std::string get_host_json() {
     struct utsname uts;
     uname(&uts);
+    uint64_t total_ram_bytes = 0;
+    uint64_t avail_ram_bytes = 0;
+    std::ifstream meminfo("/proc/meminfo");
+    if (meminfo) {
+        std::string line;
+        while (std::getline(meminfo, line)) {
+            if (line.rfind("MemTotal:", 0) == 0) {
+                uint64_t kb = 0;
+                std::sscanf(line.c_str(), "MemTotal: %lu kB", &kb);
+                total_ram_bytes = kb * 1024;
+            } else if (line.rfind("MemAvailable:", 0) == 0) {
+                uint64_t kb = 0;
+                std::sscanf(line.c_str(), "MemAvailable: %lu kB", &kb);
+                avail_ram_bytes = kb * 1024;
+            }
+        }
+    }
     std::ostringstream ss;
     ss << "{\n"
        << "    \"sysname\": \"" << uts.sysname << "\",\n"
@@ -40,7 +58,12 @@ std::string get_host_json() {
        << "    \"release\": \"" << uts.release << "\",\n"
        << "    \"machine\": \"" << uts.machine << "\",\n"
        << "    \"cpu\": \"AMD Ryzen 5 PRO 5650GE (6 physical cores, 12 SMT threads)\",\n"
-       << "    \"compiler\": \"g++ (Ubuntu 15.2.0-16ubuntu1) 15.2.0, C++20\"\n"
+       << "    \"physical_cores\": 6,\n"
+       << "    \"logical_threads\": 12,\n"
+       << "    \"total_ram_bytes\": " << total_ram_bytes << ",\n"
+       << "    \"available_ram_bytes\": " << avail_ram_bytes << ",\n"
+       << "    \"compiler\": \"g++ 15.2.0, C++20\",\n"
+       << "    \"compiler_flags\": \"-O3 -march=znver3 -mtune=znver3 -DNDEBUG -pthread\"\n"
        << "  }";
     return ss.str();
 }
@@ -121,7 +144,52 @@ int main(int argc, char** argv) {
             }
         }
 
-        // Benchmark Disconnected Modules across W
+        // 1. Benchmark Disconnected Barrier-Free Control across W
+        double t_bf_w1 = 0.0;
+        for (int32_t W : bcfg.worker_counts) {
+            std::vector<int32_t> node_to_w(N_phaseA);
+            int32_t mod_per_w = (6 + W - 1) / W;
+            for (int32_t u = 0; u < N_phaseA; ++u) {
+                int32_t m = g_disc.planted_labels[u];
+                int32_t w = m / mod_per_w;
+                node_to_w[u] = (w < W) ? w : (W - 1);
+            }
+
+            sc::Exp4BarrierFreeIndependentEngine bf_engine(cfg, g_disc.graph, W, node_to_w);
+            for (int w = 0; w < bcfg.warmups; ++w) bf_engine.run(inputs, t_max_phaseA);
+
+            double total_sim_time = 0.0;
+            sc::Exp4ProfilingStats last_stats;
+            for (int r = 0; r < bcfg.repetitions; ++r) {
+                last_stats = bf_engine.run(inputs, t_max_phaseA);
+                total_sim_time += last_stats.wall_time_sim_sec;
+            }
+            double mean_sim_time = total_sim_time / bcfg.repetitions;
+            if (W == 1) t_bf_w1 = mean_sim_time;
+            double speedup = (t_bf_w1 > 0) ? (t_bf_w1 / mean_sim_time) : 1.0;
+
+            if (!first_disc) json_out << ",\n";
+            first_disc = false;
+
+            json_out << "    {\n"
+                     << "      \"type\": \"disconnected_barrier_free\",\n"
+                     << "      \"N\": " << N_phaseA << ",\n"
+                     << "      \"W\": " << W << ",\n"
+                     << "      \"seed\": " << seed << ",\n"
+                     << "      \"mean_sim_sec\": " << mean_sim_time << ",\n"
+                     << "      \"self_speedup\": " << speedup << ",\n"
+                     << "      \"events\": " << last_stats.total_events_processed << ",\n"
+                     << "      \"spikes\": " << last_stats.total_spikes << ",\n"
+                     << "      \"cross_events\": 0,\n"
+                     << "      \"peak_rss_mb\": " << (last_stats.peak_rss_bytes / (1024.0 * 1024.0)) << "\n"
+                     << "    }";
+
+            std::cout << "  [Barrier-Free Control| Seed " << seed << "] W=" << W << " | Sim: "
+                      << std::fixed << std::setprecision(3) << (mean_sim_time * 1000.0)
+                      << " ms | Speedup: " << speedup << "x | Spikes: " << last_stats.total_spikes << std::endl;
+        }
+
+        // 2. Benchmark Disconnected Modules Persistent Pool (with barriers) across W
         double t_disc_w1 = 0.0;
         for (int32_t W : bcfg.worker_counts) {
             sc::Exp4PersistentPoolEngine pool(cfg, g_disc.graph, W, 6, g_disc.planted_labels);
@@ -508,6 +576,57 @@ int main(int argc, char** argv) {
     json_out << "\n  ],\n";
 
     // -------------------------------------------------------------
+    // STAGE 3C: 1,000,000 Neuron Scale Benchmark with Sustained Load
+    // -------------------------------------------------------------
+    if (bcfg.profile != "smoke") {
+        std::cout << "\n[Stage 3C] 1,000,000 Neuron Sustained Scaling Benchmark (N = 1,000,000, E = 16,000,000)..." << std::endl;
+        json_out << "  \"stage3c_high_scale_1m\": [\n";
+
+        int32_t N_1m = 1000000;
+        sc::SubstrateConfig cfg_1m;
+        cfg_1m.num_nodes = N_1m;
+        cfg_1m.mean_out_degree = 16;
+
+        auto g_1m = sc::Exp4GraphGenerators::create_disconnected_modules(N_1m, 16, 6, seed_topo);
+        std::vector<sc::ExternalEvent> inputs_1m;
+        inputs_1m.reserve(12000);
+        for (int32_t m = 0; m < 6; ++m) {
+            int32_t start_n = m * (N_1m / 6);
+            for (int32_t s = 0; s < 2000; ++s) {
+                inputs_1m.push_back({0.005 * s, start_n + (s % 500), 1.5f});
+            }
+        }
+
+        double t_1m_w1 = 0.0;
+        bool first_1m = true;
+        for (int32_t W : bcfg.worker_counts) {
+            sc::Exp4PersistentPoolEngine pool_1m(cfg_1m, g_1m.graph, W, 6, g_1m.planted_labels);
+            auto stats_1m = pool_1m.run(inputs_1m, 10.0);
+            if (W == 1) t_1m_w1 = stats_1m.wall_time_sim_sec;
+            double speedup = (t_1m_w1 > 0) ? (t_1m_w1 / stats_1m.wall_time_sim_sec) : 1.0;
+
+            if (!first_1m) json_out << ",\n";
+            first_1m = false;
+
+            json_out << "    {\n"
+                     << "      \"N\": " << N_1m << ",\n"
+                     << "      \"W\": " << W << ",\n"
+                     << "      \"wall_sim_sec\": " << stats_1m.wall_time_sim_sec << ",\n"
+                     << "      \"self_speedup\": " << speedup << ",\n"
+                     << "      \"events\": " << stats_1m.total_events_processed << ",\n"
+                     << "      \"spikes\": " << stats_1m.total_spikes << ",\n"
+                     << "      \"peak_rss_mb\": " << (stats_1m.peak_rss_bytes / (1024.0 * 1024.0)) << "\n"
+                     << "    }";
+
+            std::cout << "  [1M Scale  ] W=" << W << " | Sim: "
+                      << std::fixed << std::setprecision(3) << (stats_1m.wall_time_sim_sec * 1000.0)
+                      << " ms | Speedup: " << speedup << "x | Events: " << stats_1m.total_events_processed
+                      << " | RSS: " << (stats_1m.peak_rss_bytes / (1024.0 * 1024.0)) << " MB" << std::endl;
+        }
+        json_out << "\n  ],\n";
+    }
+
+    // -------------------------------------------------------------
     // STAGE 4: Order Relaxation as Alternative Dynamic Model
     // -------------------------------------------------------------
     std::cout << "\n[Stage 4] Order Relaxation as Alternative Neural Model..." << std::endl;
@@ -518,7 +637,7 @@ int main(int argc, char** argv) {
     auto exact_ref = exact_serial.run(heldout_inputs, 6.0);
 
     bool first_rel = true;
-    for (double eps : {0.0, 0.001, 0.010, 0.100}) {
+    for (double eps : {0.0, 0.001, 0.010, 0.100, 0.500, 1.000}) {
         sc::Exp4RelaxedEngine relaxed(cfg_topo, g_eval.graph, 6, 24, eps);
         auto div = relaxed.evaluate_divergence_vs_reference(heldout_inputs, 6.0, exact_ref);
 

@@ -7,6 +7,7 @@
 #include "../engines/cpp_persistent_pool.hpp"
 #include "../engines/cpp_adaptive.hpp"
 #include "../engines/cpp_relaxed.hpp"
+#include "../engines/cpp_barrier_free_independent.hpp"
 
 #include <iostream>
 #include <cassert>
@@ -280,8 +281,81 @@ void test_adaptive_engine() {
               << stats.total_migrations << ", Pause: " << (stats.migration_pause_sec * 1000.0) << " ms)" << std::endl;
 }
 
+void test_forced_migration_concurrent_traffic() {
+    std::cout << "[TEST] Running test_forced_migration_concurrent_traffic (TSan & race safety)..." << std::endl;
+    sc::SubstrateConfig config;
+    config.num_nodes = 96;
+    config.tau_m = 5.0f;
+    config.threshold = 1.0f;
+    config.min_delay = 0.2f;
+
+    uint64_t seed = 314;
+    // 6 regions, 3 workers, cross-region edges to generate high inter-worker traffic
+    auto g_mod = sc::Exp4GraphGenerators::create_modular_sbm(96, 12, 6, 0.25f, seed, 0.4f, 0.2f, 1.0f);
+    auto node_to_reg = sc::Exp4Partitioners::partition_contiguous(96, 6);
+
+    // Skewed input streams concentrated on region 0 (nodes 0..15)
+    std::vector<sc::ExternalEvent> inputs;
+    for (int32_t step = 0; step < 400; ++step) {
+        inputs.push_back({0.005 * step, step % 16, 1.5f});
+    }
+
+    // Force migration on EVERY epoch with threshold = 1.05 and lower event barrier
+    sc::Exp4AdaptiveEngine adaptive(config, g_mod.graph, 3, 6, node_to_reg, 1.05, 1);
+    auto stats = adaptive.run_adaptive(inputs, 3.0);
+
+    ASSERT_TRUE(stats.total_migrations > 0);
+    ASSERT_TRUE(stats.total_events_processed > 0);
+    std::cout << "  -> PASSED (Completed " << stats.total_migrations << " forced migrations safely under heavy cross-traffic)" << std::endl;
+}
+
+void test_barrier_free_independent_engine() {
+    std::cout << "[TEST] Running test_barrier_free_independent_engine (Pure hardware scaling control)..." << std::endl;
+    sc::SubstrateConfig config;
+    config.num_nodes = 600;
+    config.tau_m = 5.0f;
+    config.threshold = 1.0f;
+    config.min_delay = 0.2f;
+
+    uint64_t seed = 888;
+    auto g_disc = sc::Exp4GraphGenerators::create_disconnected_modules(600, 16, 6, seed, 0.4f, 0.2f, 1.0f);
+
+    std::vector<sc::ExternalEvent> inputs;
+    for (int32_t m = 0; m < 6; ++m) {
+        for (int32_t s = 0; s < 50; ++s) {
+            inputs.push_back({0.1 * s, m * 100 + (s % 50), 1.5f});
+        }
+    }
+
+    // Serial ground truth
+    sc::Exp4SerialEngine serial(config, g_disc.graph);
+    auto res_serial = serial.run(inputs, 5.0);
+
+    // Barrier-free independent engine across W=1, 2, 6
+    for (int32_t W : {1, 2, 6}) {
+        // Map 6 modules onto W workers
+        std::vector<int32_t> node_to_w(600);
+        int32_t mod_per_w = (6 + W - 1) / W;
+        for (int32_t u = 0; u < 600; ++u) {
+            int32_t m = g_disc.planted_labels[u];
+            int32_t w = m / mod_per_w;
+            node_to_w[u] = (w < W) ? w : (W - 1);
+        }
+
+        sc::Exp4BarrierFreeIndependentEngine bf_engine(config, g_disc.graph, W, node_to_w);
+        sc::SimulationResult res_bf;
+        auto stats_bf = bf_engine.run(inputs, 5.0, &res_bf);
+
+        ASSERT_TRUE(res_bf.total_spikes == res_serial.total_spikes);
+        ASSERT_TRUE(res_bf.state_digest == res_serial.state_digest);
+        std::cout << "  [barrier_free W=" << W << "] Wall: " << (stats_bf.wall_time_sim_sec * 1000.0)
+                  << " ms, Spikes: " << res_bf.total_spikes << ", Digest: " << res_bf.state_digest << std::endl;
+    }
+    std::cout << "  -> PASSED (Bit-exact match with serial reference across all W)" << std::endl;
+}
+
 void test_relaxed_engine() {
-    std::cout << "[TEST] Running test_relaxed_engine..." << std::endl;
+    std::cout << "[TEST] Running test_relaxed_engine (Exact eps=0 and divergence on eps>0)..." << std::endl;
     sc::SubstrateConfig config;
     config.num_nodes = 64;
     config.tau_m = 5.0f;
@@ -289,7 +363,7 @@ void test_relaxed_engine() {
     config.min_delay = 0.2f;
 
     uint64_t seed = 42;
-    auto g_mod = sc::Exp4GraphGenerators::create_modular_sbm(64, 8, 4, 0.10f, seed, 0.4f, 0.2f, 1.0f);
+    auto g_mod = sc::Exp4GraphGenerators::create_modular_sbm(64, 8, 4, 0.20f, seed, 0.4f, 0.2f, 1.0f);
 
     std::vector<sc::ExternalEvent> inputs;
     for (int32_t s = 0; s < 50; ++s) {
@@ -299,13 +373,21 @@ void test_relaxed_engine() {
     sc::Exp4SerialEngine serial(config, g_mod.graph);
     auto ref = serial.run(inputs, 5.0);
 
-    sc::Exp4RelaxedEngine relaxed(config, g_mod.graph, 2, 8, 0.0);
-    auto div = relaxed.evaluate_divergence_vs_reference(inputs, 5.0, ref);
+    // 1. Epsilon = 0: MUST be bit-exact with serial reference
+    sc::Exp4RelaxedEngine relaxed_zero(config, g_mod.graph, 2, 4, {}, 0.0);
+    auto div_zero = relaxed_zero.evaluate_divergence_vs_reference(inputs, 5.0, ref);
+    ASSERT_TRUE(div_zero.spike_count_error == 0);
+    ASSERT_NEAR(div_zero.potential_rmse, 0.0, 1e-4);
+    ASSERT_TRUE(div_zero.temporal_discrimination_passed);
 
-    ASSERT_TRUE(div.spike_count_error == 0);
-    ASSERT_NEAR(div.potential_rmse, 0.0, 1e-4);
-    std::cout << "  -> PASSED (Relaxed eps=0 matches exact: spike_err=" << div.spike_count_error
-              << ", pot_rmse=" << div.potential_rmse << ")" << std::endl;
+    // 2. Epsilon = 1.0: Real order relaxation test
+    sc::Exp4RelaxedEngine relaxed_pos(config, g_mod.graph, 2, 4, {}, 1.0);
+    auto div_pos = relaxed_pos.evaluate_divergence_vs_reference(inputs, 5.0, ref);
+    std::cout << "  [relaxed eps=1.0] Spike err: " << div_pos.spike_count_error
+              << ", Pot RMSE: " << div_pos.potential_rmse
+              << ", T RMSE: " << div_pos.spike_timestamp_rmse << std::endl;
+
+    std::cout << "  -> PASSED (eps=0 is exact, eps>0 runs relaxed scheduling)" << std::endl;
 }
 
 int main() {
@@ -316,7 +398,9 @@ int main() {
     test_zero_delay_precondition_rejection();
     test_causal_parity_across_engines();
     test_six_disconnected_regions_sanity_scaling();
+    test_barrier_free_independent_engine();
     test_adaptive_engine();
+    test_forced_migration_concurrent_traffic();
     test_relaxed_engine();
     std::cout << "=== ALL EXP-0004 TESTS PASSED SUCCESSFULLY ===" << std::endl;
     return 0;

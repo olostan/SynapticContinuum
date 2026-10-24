@@ -17,10 +17,12 @@ public:
         int32_t num_regions,
         const std::vector<int32_t>& node_to_region = {},
         double imbalance_threshold = 1.35,
-        int32_t min_migration_interval_epochs = 2
+        int32_t min_migration_interval_epochs = 2,
+        double min_epoch_events = 10.0
     ) : Exp4PersistentPoolEngine(config, graph, num_workers, num_regions, node_to_region),
         imbalance_threshold_(imbalance_threshold),
         min_migration_interval_epochs_(min_migration_interval_epochs),
+        min_epoch_events_(min_epoch_events),
         epoch_counter_(0)
     {
         last_worker_events_.assign(num_workers_, 0);
@@ -77,7 +79,8 @@ protected:
         }
 
         double mean_ev = static_cast<double>(sum_ev) / num_workers_;
-        if (mean_ev > 50.0 && w_heavy != w_light) {
+        // std::cout << "DEBUG: epoch " << epoch_counter_ << " sum_ev=" << sum_ev << " mean=" << mean_ev << " heavy=" << w_heavy << "(" << max_ev << ") light=" << w_light << "(" << min_ev << ")" << std::endl;
+        if (mean_ev >= min_epoch_events_ && w_heavy != w_light) {
             double imbalance = static_cast<double>(max_ev) / mean_ev;
             if (imbalance >= imbalance_threshold_) {
                 // Find a region in w_heavy to migrate to w_light
@@ -92,7 +95,7 @@ protected:
 
                 if (heavy_count >= 2 && candidate_r != -1) {
                     // Migrate candidate_r from w_heavy to w_light:
-                    // Extract events belonging to candidate_r from w_heavy and push to w_light
+                    // 1. Move local queue events belonging to candidate_r from w_heavy to w_light
                     auto& q_heavy = worker_queues_[w_heavy];
                     auto& q_light = worker_queues_[w_light];
 
@@ -113,6 +116,31 @@ protected:
                         q_heavy.push(ev);
                     }
 
+                    // 2. Safely transfer in-flight mailbox events destined for candidate_r
+                    for (int32_t u = 0; u < num_workers_; ++u) {
+                        if (u == w_heavy) continue;
+                        auto& mb = mailboxes_[u][w_heavy];
+                        std::vector<Event> retained_mb;
+                        retained_mb.reserve(mb.size());
+
+                        for (const auto& ev : mb) {
+                            int32_t reg = node_to_region_[ev.target];
+                            if (reg == candidate_r) {
+                                if (u == w_light) {
+                                    // Origin was w_light, destination is now also w_light
+                                    q_light.push(ev);
+                                } else {
+                                    // Move to w_light's incoming mailbox from u
+                                    mailboxes_[u][w_light].push_back(ev);
+                                }
+                            } else {
+                                retained_mb.push_back(ev);
+                            }
+                        }
+                        mb = std::move(retained_mb);
+                    }
+
+                    // 3. Atomically switch ownership
                     region_owner_[candidate_r] = w_light;
                     total_migrations_recorded_++;
                 }
@@ -126,6 +154,7 @@ protected:
 private:
     double imbalance_threshold_;
     int32_t min_migration_interval_epochs_;
+    double min_epoch_events_;
     int32_t epoch_counter_;
     std::vector<uint64_t> last_worker_events_;
 };

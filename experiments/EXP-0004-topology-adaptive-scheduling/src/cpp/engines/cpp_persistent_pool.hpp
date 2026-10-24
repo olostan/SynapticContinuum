@@ -32,6 +32,7 @@ public:
         node_to_region_(node_to_region),
         stop_workers_(false),
         epoch_barrier_(num_workers_ + 1), // Workers + Coordinator
+        migration_barrier_(num_workers_ + 1),
         drain_barrier_(num_workers_ + 1)
     {
         if (node_to_region_.empty()) {
@@ -181,8 +182,11 @@ public:
             // Wait for workers to finish epoch events
             epoch_barrier_.arrive_and_wait();
 
-            // Coordinator hook (can do migration in subclass)
+            // Coordinator migration phase: all workers are parked at migration_barrier_
             on_epoch_boundary(epoch_limit);
+
+            // Release workers to proceed with mailbox draining
+            migration_barrier_.arrive_and_wait();
 
             // Wait for workers to finish mailbox drain
             drain_barrier_.arrive_and_wait();
@@ -368,12 +372,16 @@ protected:
 
                 auto t_act_end = std::chrono::high_resolution_clock::now();
                 worker_active_sec_[w] += std::chrono::duration<double>(t_act_end - t_act_start).count();
+                worker_events_[w] = my_processed;
 
                 // Barrier 1: Arrive and wait for all workers + coordinator
                 auto t_b1_start = std::chrono::high_resolution_clock::now();
                 epoch_barrier_.arrive_and_wait();
                 auto t_b1_end = std::chrono::high_resolution_clock::now();
                 worker_barrier1_sec_[w] += std::chrono::duration<double>(t_b1_end - t_b1_start).count();
+
+                // Barrier 1.5 (Migration Barrier): Park until coordinator finishes migration phase
+                migration_barrier_.arrive_and_wait();
 
                 // Mailbox transfer: pull incoming events from other workers
                 auto t_mb_start = std::chrono::high_resolution_clock::now();
@@ -450,6 +458,7 @@ protected:
     int32_t job_done_count_ = 0;
 
     std::barrier<> epoch_barrier_;
+    std::barrier<> migration_barrier_;
     std::barrier<> drain_barrier_;
 };
 
