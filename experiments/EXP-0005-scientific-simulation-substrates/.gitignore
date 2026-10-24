@@ -25,3 +25,7 @@ dist/
 *.trace
 fixtures/external_large/
 runs/large_artifacts/
+
+# Allow small compact JSON evidence in runs/
+!runs/
+!runs/**/*.json
