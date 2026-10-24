@@ -98,6 +98,11 @@ struct Exp4ProfilingStats {
     std::vector<double> worker_barrier2_sec;
     std::vector<uint64_t> worker_events_processed;
     double thread_spawn_join_overhead_sec = 0.0;
+
+    // Pairwise watermark telemetry
+    uint64_t watermark_monotonicity_violations = 0;
+    uint64_t delayed_channel_deliveries = 0;
+    uint64_t horizon_clamp_events = 0;
 };
 
 // Trace event for replay microbenchmarking

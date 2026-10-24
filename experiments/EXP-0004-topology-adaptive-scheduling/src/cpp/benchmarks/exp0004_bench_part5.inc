@@ -51,6 +51,8 @@
             rp.reps = bcfg.repetitions;
             rp.external_events = heldout_inputs.size();
             rp.graph_payload_bytes = g_eval.graph.memory_bytes();
+            rp.graph_checksum = g_eval_csum;
+            rp.input_events_checksum = heldout_in_csum;
             rp.rep_summary = rsum;
             rp.serial_digest = res_ser_heldout.state_digest;
             rp.serial_spikes = res_ser_heldout.total_spikes;
@@ -74,6 +76,9 @@
                  << "      \"persistent_pool_sec\": " << rep_pool24.mean_sim_sec << ",\n"
                  << "      \"openmp_epoch_sec\": " << rep_omp24.mean_sim_sec << ",\n"
                  << "      \"pairwise_watermark_sec\": " << rep_wm24.mean_sim_sec << ",\n"
+                 << "      \"watermark_monotonicity_violations\": " << rep_wm24.last_stats.watermark_monotonicity_violations << ",\n"
+                 << "      \"delayed_channel_deliveries\": " << rep_wm24.last_stats.delayed_channel_deliveries << ",\n"
+                 << "      \"horizon_clamp_events\": " << rep_wm24.last_stats.horizon_clamp_events << ",\n"
                  << "      \"adaptive_scheduler_sec\": " << rep_adapt.mean_sim_sec << ",\n"
                  << "      \"migrations_count\": " << rep_adapt.last_stats.total_migrations << ",\n"
                  << "      \"migrated_queue_events\": " << rep_adapt.last_stats.migrated_queue_events << ",\n"
@@ -100,7 +105,10 @@
     cfg_100k.num_nodes = N_100k;
     cfg_100k.mean_out_degree = 16;
 
+    uint64_t rss_before_100k = sc::get_current_rss_bytes();
     auto g_100k_disc = sc::Exp4GraphGenerators::create_disconnected_modules(N_100k, 16, 6, seed_topo);
+    uint64_t rss_after_100k = sc::get_current_rss_bytes();
+    uint64_t g_100k_csum = sc::compute_graph_checksum(g_100k_disc.graph);
     std::vector<sc::ExternalEvent> inputs_100k;
     for (int32_t m = 0; m < 6; ++m) {
         int32_t start_n = m * (N_100k / 6);
@@ -108,6 +116,7 @@
             inputs_100k.push_back({0.02 * s, start_n + (s % 100), 1.5f});
         }
     }
+    uint64_t in_100k_csum = sc::compute_inputs_checksum(inputs_100k);
 
     sc::Exp4SerialEngine ser_100k(cfg_100k, g_100k_disc.graph);
     auto rep_ser_100k = sc::execute_with_reps(bcfg.warmups, bcfg.repetitions, [&]() {
@@ -135,6 +144,11 @@
         rp.reps = bcfg.repetitions;
         rp.external_events = inputs_100k.size();
         rp.graph_payload_bytes = g_100k_disc.graph.memory_bytes();
+        rp.rss_before_build_bytes = rss_before_100k;
+        rp.rss_after_build_bytes = rss_after_100k;
+        rp.rss_after_sim_bytes = sc::get_current_rss_bytes();
+        rp.graph_checksum = g_100k_csum;
+        rp.input_events_checksum = in_100k_csum;
         rp.rep_summary = rep_ser_100k;
         rp.serial_digest = rep_ser_100k.last_stats.state_digest;
         rp.serial_spikes = rep_ser_100k.last_stats.total_spikes;
@@ -168,6 +182,11 @@
         rp.reps = bcfg.repetitions;
         rp.external_events = inputs_100k.size();
         rp.graph_payload_bytes = g_100k_disc.graph.memory_bytes();
+        rp.rss_before_build_bytes = rss_before_100k;
+        rp.rss_after_build_bytes = rss_after_100k;
+        rp.rss_after_sim_bytes = sc::get_current_rss_bytes();
+        rp.graph_checksum = g_100k_csum;
+        rp.input_events_checksum = in_100k_csum;
         rp.rep_summary = rep_100k;
         rp.serial_digest = rep_ser_100k.last_stats.state_digest;
         rp.serial_spikes = rep_ser_100k.last_stats.total_spikes;
@@ -207,7 +226,10 @@
         cfg_1m.num_nodes = N_1m;
         cfg_1m.mean_out_degree = 16;
 
+        uint64_t rss_before_1m = sc::get_current_rss_bytes();
         auto g_1m = sc::Exp4GraphGenerators::create_disconnected_modules(N_1m, 16, 6, seed_topo);
+        uint64_t rss_after_1m = sc::get_current_rss_bytes();
+        uint64_t g_1m_csum = sc::compute_graph_checksum(g_1m.graph);
 
         // Workload 1: Original short-horizon stimulus (12,000 external -> 186,881 total events)
         std::vector<sc::ExternalEvent> inputs_1m_short;
@@ -231,6 +253,7 @@
 
         bool first_1m = true;
         auto run_1m_workload = [&](const std::string& w_tag, const std::vector<sc::ExternalEvent>& in_ev, double t_lim) {
+            uint64_t in_1m_csum = sc::compute_inputs_checksum(in_ev);
             sc::Exp4SerialEngine ser_1m(cfg_1m, g_1m.graph);
             auto rep_ser_1m = sc::execute_with_reps(bcfg.warmups, bcfg.repetitions, [&]() {
                 auto t0 = std::chrono::high_resolution_clock::now();
@@ -257,6 +280,11 @@
                 rp.reps = bcfg.repetitions;
                 rp.external_events = in_ev.size();
                 rp.graph_payload_bytes = g_1m.graph.memory_bytes();
+                rp.rss_before_build_bytes = rss_before_1m;
+                rp.rss_after_build_bytes = rss_after_1m;
+                rp.rss_after_sim_bytes = sc::get_current_rss_bytes();
+                rp.graph_checksum = g_1m_csum;
+                rp.input_events_checksum = in_1m_csum;
                 rp.rep_summary = rep_ser_1m;
                 rp.serial_digest = rep_ser_1m.last_stats.state_digest;
                 rp.serial_spikes = rep_ser_1m.last_stats.total_spikes;
@@ -289,6 +317,11 @@
                 rp.reps = bcfg.repetitions;
                 rp.external_events = in_ev.size();
                 rp.graph_payload_bytes = g_1m.graph.memory_bytes();
+                rp.rss_before_build_bytes = rss_before_1m;
+                rp.rss_after_build_bytes = rss_after_1m;
+                rp.rss_after_sim_bytes = sc::get_current_rss_bytes();
+                rp.graph_checksum = g_1m_csum;
+                rp.input_events_checksum = in_1m_csum;
                 rp.rep_summary = rep_1m;
                 rp.serial_digest = rep_ser_1m.last_stats.state_digest;
                 rp.serial_spikes = rep_ser_1m.last_stats.total_spikes;
@@ -311,9 +344,14 @@
                          << "      \"events\": " << rep_1m.last_stats.total_events_processed << ",\n"
                          << "      \"spikes\": " << rep_1m.last_stats.total_spikes << ",\n"
                          << "      \"events_per_sec\": " << std::setprecision(2) << (rep_1m.last_stats.total_events_processed / rep_1m.mean_sim_sec) << ",\n"
+                         << "      \"graph_checksum\": \"" << sc::to_hex_digest(g_1m_csum) << "\",\n"
+                         << "      \"input_events_checksum\": \"" << sc::to_hex_digest(in_1m_csum) << "\",\n"
                          << "      \"state_digest\": \"" << sc::to_hex_digest(rep_1m.last_stats.state_digest) << "\",\n"
+                         << "      \"reference_serial_digest\": \"" << sc::to_hex_digest(rep_ser_1m.last_stats.state_digest) << "\",\n"
                          << "      \"parity_with_serial\": " << ((rep_1m.last_stats.state_digest == rep_ser_1m.last_stats.state_digest) ? "true" : "false") << ",\n"
-                         << "      \"peak_rss_mb\": " << std::setprecision(2) << (rep_1m.last_stats.peak_rss_bytes / (1024.0 * 1024.0)) << "\n"
+                         << "      \"rss_before_build_mb\": " << std::setprecision(2) << (rss_before_1m / (1024.0 * 1024.0)) << ",\n"
+                         << "      \"rss_after_build_mb\": " << (rss_after_1m / (1024.0 * 1024.0)) << ",\n"
+                         << "      \"peak_rss_mb\": " << (rep_1m.last_stats.peak_rss_bytes / (1024.0 * 1024.0)) << "\n"
                          << "    }";
                 std::cout << "  [1M " << w_tag << "] W=" << W << " | Mean: " << (rep_1m.mean_sim_sec * 1000.0)
                           << " ms | Med: " << (rep_1m.median_sim_sec * 1000.0) << " ms | SelfSpeedup: " << speedup

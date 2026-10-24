@@ -54,6 +54,28 @@ def validate_record_strictly(record: Dict[str, Any], schema: Optional[Dict[str, 
                 f"(rel_err={rel_err:.4%})"
             )
 
+    # Proof-chain check for parity_with_serial == True:
+    # A record may only claim parity_with_serial=True if its semantic_class is 'exact' (or 'trace-replay-only')
+    # AND its state_digest strictly matches a non-null reference_serial_digest!
+    val = record["validation"]
+    if val.get("parity_with_serial") is True:
+        s_cls = record.get("semantic_class", "")
+        if s_cls not in ("exact", "trace-replay-only"):
+            raise ValueError(
+                f"Record '{record.get('run_id')}' with approximate semantic_class='{s_cls}' cannot claim parity_with_serial=True"
+            )
+        ref_dig = val.get("reference_serial_digest")
+        st_dig = val.get("state_digest")
+        if not ref_dig or ref_dig != st_dig:
+            raise ValueError(
+                f"Proof-chain violation in record '{record.get('run_id')}': parity_with_serial=True requires "
+                f"state_digest ({st_dig}) == reference_serial_digest ({ref_dig})"
+            )
+        if int(val.get("backward_time_events", 0)) > 0:
+            raise ValueError(
+                f"Proof-chain violation in record '{record.get('run_id')}': parity_with_serial=True with backward_time_events > 0"
+            )
+
 def load_json_records(path: Path, strict: bool = True) -> List[Dict[str, Any]]:
     """
     Loads canonical benchmark records from a JSON file or directory.
@@ -165,12 +187,16 @@ def filter_records(
 
 def compute_pareto_frontier(
     records: List[Dict[str, Any]],
-    require_exact_parity: bool = True
+    require_exact_parity: bool = True,
+    allow_cross_workload: bool = False
 ) -> List[Dict[str, Any]]:
     """
     Computes 2D Pareto frontier: Maximize events_per_sec, Minimize peak_rss_bytes.
-    If `require_exact_parity` is True (default), any record whose `validation.parity_with_serial`
-    is not strictly `True` (or whose `semantic_class == 'exact'` lacks verified parity) is refused.
+    - By default (`allow_cross_workload=False`), Pareto dominance is evaluated ONLY within each
+      shared `(benchmark_id, graph_checksum, input_events_checksum)` workload equivalence group so
+      that a tiny 10k-node graph never prunes a 10M-node graph!
+    - If `require_exact_parity` is True (default), any record whose `validation.parity_with_serial`
+      is not strictly `True` (or whose `semantic_class` is not `'exact'`/`'trace-replay-only'`) is refused.
     """
     schema = get_benchmark_schema()
     valid = []
@@ -178,6 +204,8 @@ def compute_pareto_frontier(
         validate_record_strictly(r, schema)
         if require_exact_parity or r.get("semantic_class") == "exact":
             if r["validation"].get("parity_with_serial") is not True:
+                continue
+            if r["validation"].get("state_digest") != r["validation"].get("reference_serial_digest"):
                 continue
         ev_s = float(r["timing_breakdown"]["events_per_sec"])
         rss = int(r["resource_metrics"]["peak_rss_bytes"])
@@ -187,9 +215,22 @@ def compute_pareto_frontier(
     pareto = []
     for i, (ev_s_a, rss_a, r_a) in enumerate(valid):
         dominated = False
-        for j, (ev_s_b, rss_b, _) in enumerate(valid):
+        key_a = (
+            r_a["benchmark_id"],
+            r_a["graph_configuration"].get("graph_checksum"),
+            r_a["graph_configuration"].get("input_events_checksum"),
+        )
+        for j, (ev_s_b, rss_b, r_b) in enumerate(valid):
             if i == j:
                 continue
+            if not allow_cross_workload:
+                key_b = (
+                    r_b["benchmark_id"],
+                    r_b["graph_configuration"].get("graph_checksum"),
+                    r_b["graph_configuration"].get("input_events_checksum"),
+                )
+                if key_a != key_b:
+                    continue
             if (ev_s_b >= ev_s_a and rss_b <= rss_a) and (ev_s_b > ev_s_a or rss_b < rss_a):
                 dominated = True
                 break
@@ -197,8 +238,7 @@ def compute_pareto_frontier(
             pareto.append(r_a)
 
     pareto.sort(
-        key=lambda x: x["timing_breakdown"]["events_per_sec"],
-        reverse=True
+        key=lambda x: (x["benchmark_id"], -x["timing_breakdown"]["events_per_sec"])
     )
     return pareto
 
@@ -213,6 +253,7 @@ def main():
     parser.add_argument("--build-id", type=str, default=None, help="Filter: portable_o3 or znver3_o3")
     parser.add_argument("--benchmark-id", type=str, default=None, help="Filter: Exact canonical benchmark_id")
     parser.add_argument("--allow-non-parity", action="store_true", help="Include relaxed/unverified records in Pareto frontier")
+    parser.add_argument("--global-cross-workload", action="store_true", help="Allow cross-workload Pareto dominance across different benchmark_ids")
     parser.add_argument("--pareto", action="store_true", help="Output only Pareto-optimal configurations")
     parser.add_argument("--json", action="store_true", help="Output raw JSON instead of table")
 
@@ -231,7 +272,11 @@ def main():
     )
 
     if args.pareto:
-        result = compute_pareto_frontier(filtered, require_exact_parity=not args.allow_non_parity)
+        result = compute_pareto_frontier(
+            filtered,
+            require_exact_parity=not args.allow_non_parity,
+            allow_cross_workload=args.global_cross_workload
+        )
     else:
         result = filtered
 

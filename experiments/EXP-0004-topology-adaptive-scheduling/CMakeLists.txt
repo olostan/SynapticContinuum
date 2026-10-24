@@ -18,14 +18,43 @@ else()
     set(SC_RELEASE_FLAGS -O3 -DNDEBUG)
 endif()
 
-# Check for CPU-specific Zen3 optimization flags
-check_cxx_compiler_flag("-march=znver3 -mtune=znver3" COMPILER_SUPPORTS_ZNVER3)
-if(COMPILER_SUPPORTS_ZNVER3)
-    set(SC_NATIVE_FLAGS -O3 -march=znver3 -mtune=znver3 -DNDEBUG)
-    message(STATUS "Architecture-specific tuning enabled: -march=znver3 -mtune=znver3 supported")
+# Check for CPU-specific optimization flags (Zen3 on x86_64, Apple M-series on Darwin ARM64)
+if(CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|AMD64")
+    check_cxx_compiler_flag("-march=znver3 -mtune=znver3" COMPILER_SUPPORTS_ZNVER3)
+    if(COMPILER_SUPPORTS_ZNVER3)
+        set(SC_NATIVE_FLAGS -O3 -march=znver3 -mtune=znver3 -DNDEBUG)
+        message(STATUS "Architecture-specific tuning enabled: -march=znver3 -mtune=znver3 supported")
+    else()
+        set(SC_NATIVE_FLAGS -O3 -DNDEBUG)
+    endif()
+elseif(APPLE AND CMAKE_SYSTEM_PROCESSOR MATCHES "arm64|aarch64")
+    check_cxx_compiler_flag("-mcpu=apple-m4" COMPILER_SUPPORTS_APPLE_M4)
+    check_cxx_compiler_flag("-mcpu=native" COMPILER_SUPPORTS_MCPU_NATIVE)
+    if(COMPILER_SUPPORTS_APPLE_M4)
+        set(SC_NATIVE_FLAGS -O3 -mcpu=apple-m4 -DNDEBUG)
+        message(STATUS "Architecture-specific tuning enabled: -mcpu=apple-m4 supported")
+    elseif(COMPILER_SUPPORTS_MCPU_NATIVE)
+        set(SC_NATIVE_FLAGS -O3 -mcpu=native -DNDEBUG)
+        message(STATUS "Architecture-specific tuning enabled: -mcpu=native supported")
+    else()
+        set(SC_NATIVE_FLAGS -O3 -DNDEBUG)
+    endif()
 else()
     set(SC_NATIVE_FLAGS -O3 -DNDEBUG)
 endif()
+
+# Pass git commit hash for source provenance
+execute_process(
+    COMMAND git rev-parse --short HEAD
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    OUTPUT_VARIABLE SC_GIT_COMMIT_SHA
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    ERROR_QUIET
+)
+if(NOT SC_GIT_COMMIT_SHA)
+    set(SC_GIT_COMMIT_SHA "unknown")
+endif()
+add_compile_definitions(SC_GIT_COMMIT_SHA="${SC_GIT_COMMIT_SHA}")
 
 # Interface library for shared includes
 add_library(exp0004_common INTERFACE)

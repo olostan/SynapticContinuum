@@ -144,6 +144,9 @@ public:
         std::atomic<uint64_t> total_processed{0};
         std::atomic<uint64_t> total_edges{0};
         std::atomic<uint64_t> cross_worker_events{0};
+        std::atomic<uint64_t> watermark_monotonicity_violations{0};
+        std::atomic<uint64_t> delayed_channel_deliveries{0};
+        std::atomic<uint64_t> horizon_clamp_events{0};
 
         std::vector<std::vector<SpikeRecord>> per_worker_spikes(W);
         std::vector<double> worker_active_sec(W, 0.0);
@@ -165,9 +168,20 @@ public:
 
                 uint64_t my_seq = static_cast<uint64_t>(w) << 48;
                 uint64_t my_processed = 0;
+                double last_popped_t = 0.0;
+                double last_advertised_t = 0.0;
                 auto& my_queue = worker_queues[w];
                 std::vector<std::vector<Event>> local_outbox(W);
                 std::vector<Event> temp_in;
+
+                auto publish_monotonic_watermark = [&](double candidate) {
+                    if (candidate < last_advertised_t - 1e-12) {
+                        watermark_monotonicity_violations.fetch_add(1, std::memory_order_relaxed);
+                    }
+                    double mono = std::max(last_advertised_t, candidate);
+                    last_advertised_t = mono;
+                    worker_watermarks[w].val.store(mono, std::memory_order_release);
+                };
 
                 auto drain_incoming = [&]() {
                     auto t_mb_s = std::chrono::high_resolution_clock::now();
@@ -181,6 +195,7 @@ public:
                             }
                         }
                         if (!temp_in.empty()) {
+                            delayed_channel_deliveries.fetch_add(temp_in.size(), std::memory_order_relaxed);
                             for (const auto& ev : temp_in) {
                                 my_queue.push(ev);
                             }
@@ -225,7 +240,7 @@ public:
                     double my_next = my_queue.empty() ? (t_max + 1.0) : my_queue.peek().timestamp;
 
                     if (my_next > t_max && horizon > t_max) {
-                        worker_watermarks[w].val.store(t_max + 1.0, std::memory_order_release);
+                        publish_monotonic_watermark(t_max + 1.0);
                         break;
                     }
 
@@ -233,9 +248,18 @@ public:
                         auto t_act_s = std::chrono::high_resolution_clock::now();
                         while (!my_queue.empty()) {
                             double ev_t = my_queue.peek().timestamp;
-                            if (ev_t >= horizon || ev_t > t_max) break;
+                            if (ev_t >= horizon || ev_t > t_max) {
+                                if (ev_t >= horizon && ev_t <= t_max) {
+                                    horizon_clamp_events.fetch_add(1, std::memory_order_relaxed);
+                                }
+                                break;
+                            }
 
                             Event ev = my_queue.pop();
+                            if (ev.timestamp < last_popped_t - 1e-12) {
+                                watermark_monotonicity_violations.fetch_add(1, std::memory_order_relaxed);
+                            }
+                            last_popped_t = ev.timestamp;
                             my_processed++;
 
                             bool fired = state.receive_impulse(ev.target, ev.timestamp, ev.amplitude, ev.kind);
@@ -279,11 +303,12 @@ public:
                         drain_incoming();
                         double updated_next = my_queue.empty() ? (t_max + 1.0) : my_queue.peek().timestamp;
                         double advertised = std::min(updated_next, horizon);
-                        worker_watermarks[w].val.store(advertised, std::memory_order_release);
+                        publish_monotonic_watermark(advertised);
                     } else {
                         auto t_wait_s = std::chrono::high_resolution_clock::now();
+                        horizon_clamp_events.fetch_add(1, std::memory_order_relaxed);
                         double advertised = std::min(my_next, horizon);
-                        worker_watermarks[w].val.store(advertised, std::memory_order_release);
+                        publish_monotonic_watermark(advertised);
                         std::this_thread::yield();
                         auto t_wait_e = std::chrono::high_resolution_clock::now();
                         worker_wait_sec[w] += std::chrono::duration<double>(t_wait_e - t_wait_s).count();
@@ -345,6 +370,9 @@ public:
         stats.worker_barrier2_sec = std::vector<double>(W, 0.0);
         stats.worker_events_processed = worker_events;
         stats.thread_spawn_join_overhead_sec = wall_total_sec - wall_sim_sec;
+        stats.watermark_monotonicity_violations = watermark_monotonicity_violations.load();
+        stats.delayed_channel_deliveries = delayed_channel_deliveries.load();
+        stats.horizon_clamp_events = horizon_clamp_events.load();
 
         if (out_sim_result) {
             out_sim_result->scheduler_name = stats.scheduler_name;

@@ -92,6 +92,49 @@ inline std::string to_hex_digest(uint64_t d) {
     return ss.str();
 }
 
+inline uint64_t compute_graph_checksum(const NeuralGraphCSR& g) noexcept {
+    uint64_t h = 14695981039346656037ULL;
+    h = hash_combine64(h, static_cast<uint64_t>(g.num_nodes));
+    h = hash_combine64(h, g.num_edges);
+    size_t step = std::max(size_t{1}, g.num_edges / 65536);
+    for (size_t i = 0; i < g.num_edges; i += step) {
+        h = hash_combine64(h, static_cast<uint64_t>(static_cast<uint32_t>(g.targets[i])));
+        union { float f; uint32_t u; } uw, ud;
+        uw.f = g.weights[i];
+        ud.f = g.delays[i];
+        h = hash_combine64(h, static_cast<uint64_t>(uw.u));
+        h = hash_combine64(h, static_cast<uint64_t>(ud.u));
+    }
+    return h;
+}
+
+inline uint64_t compute_inputs_checksum(const std::vector<ExternalEvent>& evs) noexcept {
+    uint64_t h = 14695981039346656037ULL;
+    h = hash_combine64(h, evs.size());
+    size_t step = std::max(size_t{1}, evs.size() / 65536);
+    for (size_t i = 0; i < evs.size(); i += step) {
+        union { double d; uint64_t u; } ut;
+        ut.d = evs[i].timestamp;
+        h = hash_combine64(h, ut.u);
+        h = hash_combine64(h, static_cast<uint64_t>(static_cast<uint32_t>(evs[i].target)));
+        union { float f; uint32_t u; } ua;
+        ua.f = evs[i].amplitude;
+        h = hash_combine64(h, static_cast<uint64_t>(ua.u));
+    }
+    return h;
+}
+
+inline uint64_t get_current_rss_bytes() noexcept {
+    std::ifstream statm("/proc/self/statm");
+    if (statm) {
+        uint64_t size_pages = 0, resident_pages = 0;
+        if (statm >> size_pages >> resident_pages) {
+            return resident_pages * 4096ULL;
+        }
+    }
+    return get_actual_peak_rss_bytes();
+}
+
 inline std::string format_double_vec(const std::vector<double>& v) {
     std::ostringstream ss;
     ss << "[";
@@ -135,6 +178,11 @@ std::string get_hardware_env_json(const std::string& build_id) {
     std::string flags = (build_id == "znver3_o3")
         ? "-O3 -march=znver3 -mtune=znver3 -DNDEBUG -fopenmp -pthread"
         : "-O3 -DNDEBUG -fopenmp -pthread";
+#ifdef SC_GIT_COMMIT_SHA
+    std::string git_sha = SC_GIT_COMMIT_SHA;
+#else
+    std::string git_sha = "unknown";
+#endif
 
     std::ostringstream ss;
     ss << "{\n"
@@ -146,7 +194,8 @@ std::string get_hardware_env_json(const std::string& build_id) {
        << "        \"total_ram_bytes\": " << mem.total_ram_bytes << ",\n"
        << "        \"available_ram_bytes\": " << mem.available_ram_bytes << ",\n"
        << "        \"compiler\": \"g++ 15.2.0 (C++20)\",\n"
-       << "        \"compiler_flags\": \"" << flags << "\"\n"
+       << "        \"compiler_flags\": \"" << flags << "\",\n"
+       << "        \"git_commit_sha\": \"" << git_sha << "\"\n"
        << "      }";
     return ss.str();
 }
@@ -161,9 +210,15 @@ struct CanonicalRecordParams {
     uint64_t num_edges = 0;
     int32_t mean_out_degree = 16;
     std::string topology_type = "modular_sbm";
+    uint64_t graph_checksum = 0x1469598103934665ULL;
+    uint64_t input_events_checksum = 0x1469598103934665ULL;
     std::string representation = "csr_direct_flat";
     std::string state_layout = "soa_packed";
     int32_t history_capacity_L = 0;
+    double weight_quant_max_err = 0.0;
+    double weight_quant_rmse = 0.0;
+    double delay_quant_max_err = 0.0;
+    double delay_quant_rmse = 0.0;
     double clustering_coeff = 0.0;
     double path_length = 0.0;
     double modularity_q = 0.0;
@@ -183,6 +238,9 @@ struct CanonicalRecordParams {
     double active_fraction = 0.01;
     uint64_t external_events = 0;
     size_t graph_payload_bytes = 0;
+    uint64_t rss_before_build_bytes = 0;
+    uint64_t rss_after_build_bytes = 0;
+    uint64_t rss_after_sim_bytes = 0;
     RepStatsSummary rep_summary;
     bool has_serial_ref = true;
     uint64_t serial_digest = 0;
@@ -211,7 +269,8 @@ std::string build_canonical_record_json(const CanonicalRecordParams& p) {
     std::string ref_digest_str = "null";
     if (p.has_serial_ref) {
         ref_digest_str = "\"" + to_hex_digest(p.serial_digest) + "\"";
-        bool exact_match = (st.state_digest == p.serial_digest) &&
+        bool exact_match = (p.semantic_class == "exact" || p.semantic_class == "trace-replay-only") &&
+                           (st.state_digest == p.serial_digest) &&
                            (st.total_spikes == p.serial_spikes) &&
                            (st.total_events_processed == p.serial_events) &&
                            (p.backward_time_events == 0);
@@ -232,9 +291,15 @@ std::string build_canonical_record_json(const CanonicalRecordParams& p) {
        << "        \"num_edges\": " << p.num_edges << ",\n"
        << "        \"mean_out_degree\": " << p.mean_out_degree << ",\n"
        << "        \"topology_type\": \"" << p.topology_type << "\",\n"
+       << "        \"graph_checksum\": \"" << to_hex_digest(p.graph_checksum) << "\",\n"
+       << "        \"input_events_checksum\": \"" << to_hex_digest(p.input_events_checksum) << "\",\n"
        << "        \"representation\": \"" << p.representation << "\",\n"
        << "        \"state_layout\": \"" << p.state_layout << "\",\n"
        << "        \"history_capacity_L\": " << p.history_capacity_L << ",\n"
+       << "        \"weight_quantization_max_abs_err\": " << std::fixed << std::setprecision(7) << p.weight_quant_max_err << ",\n"
+       << "        \"weight_quantization_rmse\": " << p.weight_quant_rmse << ",\n"
+       << "        \"delay_quantization_max_abs_err\": " << p.delay_quant_max_err << ",\n"
+       << "        \"delay_quantization_rmse\": " << p.delay_quant_rmse << ",\n"
        << "        \"clustering_coefficient\": " << std::fixed << std::setprecision(6) << p.clustering_coeff << ",\n"
        << "        \"characteristic_path_length\": " << p.path_length << ",\n"
        << "        \"modularity\": " << p.modularity_q << ",\n"
@@ -282,9 +347,12 @@ std::string build_canonical_record_json(const CanonicalRecordParams& p) {
        << "      },\n"
        << "      \"resource_metrics\": {\n"
        << "        \"peak_rss_bytes\": " << st.peak_rss_bytes << ",\n"
+       << "        \"rss_before_build_bytes\": " << p.rss_before_build_bytes << ",\n"
+       << "        \"rss_after_build_bytes\": " << p.rss_after_build_bytes << ",\n"
+       << "        \"rss_after_sim_bytes\": " << ((p.rss_after_sim_bytes > 0) ? p.rss_after_sim_bytes : get_current_rss_bytes()) << ",\n"
        << "        \"graph_payload_bytes\": " << p.graph_payload_bytes << ",\n"
        << "        \"hardware_perf_counters_available\": false,\n"
-       << "        \"perf_notes\": \"WSL2 hypervisor disables hardware PMU cache-miss counters (perf_event_paranoid=2); only getrusage RSS and wall-clock timers reported.\"\n"
+       << "        \"perf_notes\": \"Bare-metal Linux host (systemd-detect-virt=none) has kernel.perf_event_paranoid=4; hardware PMU counters restricted for unprivileged process. Process peak_rss_bytes (ru_maxrss) and /proc/self/statm resident bytes reported.\"\n"
        << "      },\n"
        << "      \"validation\": {\n"
        << "        \"state_digest\": \"" << to_hex_digest(st.state_digest) << "\",\n"

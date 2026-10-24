@@ -48,7 +48,9 @@
         "exact",
         "fixed-dt-approx",
         "relaxed-model",
-        "trace-replay-only"
+        "trace-replay-only",
+        "quantized-approx",
+        "procedural-synthetic"
       ]
     },
     "hardware_environment": {
@@ -71,7 +73,8 @@
         "total_ram_bytes": { "type": "integer" },
         "available_ram_bytes": { "type": "integer" },
         "compiler": { "type": "string" },
-        "compiler_flags": { "type": "string" }
+        "compiler_flags": { "type": "string" },
+        "git_commit_sha": { "type": "string" }
       }
     },
     "graph_configuration": {
@@ -79,16 +82,24 @@
       "required": [
         "num_nodes",
         "num_edges",
-        "topology_type"
+        "topology_type",
+        "graph_checksum",
+        "input_events_checksum"
       ],
       "properties": {
         "num_nodes": { "type": "integer", "minimum": 1 },
         "num_edges": { "type": "integer", "minimum": 0 },
         "mean_out_degree": { "type": "integer", "minimum": 0 },
         "topology_type": { "type": "string" },
+        "graph_checksum": { "type": "string", "pattern": "^0x[0-9a-fA-F]{16}$" },
+        "input_events_checksum": { "type": "string", "pattern": "^0x[0-9a-fA-F]{16}$" },
         "representation": { "type": "string" },
         "state_layout": { "type": "string" },
         "history_capacity_L": { "type": "integer", "minimum": 0 },
+        "weight_quantization_max_abs_err": { "type": "number", "minimum": 0.0 },
+        "weight_quantization_rmse": { "type": "number", "minimum": 0.0 },
+        "delay_quantization_max_abs_err": { "type": "number", "minimum": 0.0 },
+        "delay_quantization_rmse": { "type": "number", "minimum": 0.0 },
         "clustering_coefficient": { "type": "number" },
         "characteristic_path_length": { "type": "number" },
         "modularity": { "type": "number" },
@@ -183,6 +194,9 @@
       ],
       "properties": {
         "peak_rss_bytes": { "type": "integer", "minimum": 0 },
+        "rss_before_build_bytes": { "type": "integer", "minimum": 0 },
+        "rss_after_build_bytes": { "type": "integer", "minimum": 0 },
+        "rss_after_sim_bytes": { "type": "integer", "minimum": 0 },
         "graph_payload_bytes": { "type": "integer", "minimum": 0 },
         "minor_page_faults": { "type": "integer" },
         "major_page_faults": { "type": "integer" },
@@ -196,6 +210,7 @@
       "type": "object",
       "required": [
         "state_digest",
+        "reference_serial_digest",
         "parity_with_serial"
       ],
       "properties": {

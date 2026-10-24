@@ -21,7 +21,11 @@
             cfg_ext.num_nodes = N_ext;
             cfg_ext.mean_out_degree = D_ext;
 
+            uint64_t rss_before_ext = sc::get_current_rss_bytes();
             auto g_ext = sc::Exp4GraphGenerators::create_disconnected_modules(N_ext, D_ext, 6, seed_topo);
+            uint64_t rss_after_ext = sc::get_current_rss_bytes();
+            uint64_t g_ext_csum = sc::compute_graph_checksum(g_ext.graph);
+
             std::vector<sc::ExternalEvent> in_ext;
             in_ext.reserve(static_cast<size_t>(6 * stim_per_mod));
             int32_t stride = (D_ext == 4) ? 500 : 3000;
@@ -33,6 +37,7 @@
                     in_ext.push_back({dt_stim * s, start_n + (s % stride), amp});
                 }
             }
+            uint64_t in_ext_csum = sc::compute_inputs_checksum(in_ext);
 
             int32_t ext_warmups = 1;
             int32_t ext_reps = 3;
@@ -64,6 +69,11 @@
                 rp.reps = ext_reps;
                 rp.external_events = in_ext.size();
                 rp.graph_payload_bytes = g_ext.graph.memory_bytes();
+                rp.rss_before_build_bytes = rss_before_ext;
+                rp.rss_after_build_bytes = rss_after_ext;
+                rp.rss_after_sim_bytes = sc::get_current_rss_bytes();
+                rp.graph_checksum = g_ext_csum;
+                rp.input_events_checksum = in_ext_csum;
                 rp.rep_summary = rep_ser_ext;
                 rp.serial_digest = rep_ser_ext.last_stats.state_digest;
                 rp.serial_spikes = rep_ser_ext.last_stats.total_spikes;
@@ -79,6 +89,7 @@
                 });
                 if (W == 1) t_w1 = rep_ext.mean_sim_sec;
                 double speedup = (t_w1 > 0) ? (t_w1 / rep_ext.mean_sim_sec) : 1.0;
+                uint64_t rss_after_sim_ext = sc::get_current_rss_bytes();
 
                 sc::CanonicalRecordParams rp;
                 rp.benchmark_id = b_id_ext;
@@ -97,6 +108,11 @@
                 rp.reps = ext_reps;
                 rp.external_events = in_ext.size();
                 rp.graph_payload_bytes = g_ext.graph.memory_bytes();
+                rp.rss_before_build_bytes = rss_before_ext;
+                rp.rss_after_build_bytes = rss_after_ext;
+                rp.rss_after_sim_bytes = rss_after_sim_ext;
+                rp.graph_checksum = g_ext_csum;
+                rp.input_events_checksum = in_ext_csum;
                 rp.rep_summary = rep_ext;
                 rp.serial_digest = rep_ser_ext.last_stats.state_digest;
                 rp.serial_spikes = rep_ser_ext.last_stats.total_spikes;
@@ -110,6 +126,7 @@
                          << "      \"D\": " << D_ext << ",\n"
                          << "      \"W\": " << W << ",\n"
                          << "      \"serial_sim_sec\": " << std::fixed << std::setprecision(7) << rep_ser_ext.mean_sim_sec << ",\n"
+                         << "      \"serial_rep_wall_sim_sec\": " << sc::format_double_vec(rep_ser_ext.rep_sim_sec) << ",\n"
                          << "      \"mean_sim_sec\": " << rep_ext.mean_sim_sec << ",\n"
                          << "      \"median_sim_sec\": " << rep_ext.median_sim_sec << ",\n"
                          << "      \"std_sim_sec\": " << rep_ext.std_sim_sec << ",\n"
@@ -119,9 +136,15 @@
                          << "      \"events\": " << rep_ext.last_stats.total_events_processed << ",\n"
                          << "      \"spikes\": " << rep_ext.last_stats.total_spikes << ",\n"
                          << "      \"events_per_sec\": " << std::setprecision(2) << (rep_ext.last_stats.total_events_processed / rep_ext.mean_sim_sec) << ",\n"
+                         << "      \"graph_checksum\": \"" << sc::to_hex_digest(g_ext_csum) << "\",\n"
+                         << "      \"input_events_checksum\": \"" << sc::to_hex_digest(in_ext_csum) << "\",\n"
                          << "      \"state_digest\": \"" << sc::to_hex_digest(rep_ext.last_stats.state_digest) << "\",\n"
+                         << "      \"reference_serial_digest\": \"" << sc::to_hex_digest(rep_ser_ext.last_stats.state_digest) << "\",\n"
                          << "      \"parity_with_serial\": " << ((rep_ext.last_stats.state_digest == rep_ser_ext.last_stats.state_digest) ? "true" : "false") << ",\n"
                          << "      \"graph_payload_mb\": " << std::setprecision(2) << (g_ext.graph.memory_bytes() / (1024.0 * 1024.0)) << ",\n"
+                         << "      \"rss_before_build_mb\": " << (rss_before_ext / (1024.0 * 1024.0)) << ",\n"
+                         << "      \"rss_after_build_mb\": " << (rss_after_ext / (1024.0 * 1024.0)) << ",\n"
+                         << "      \"rss_after_sim_mb\": " << (rss_after_sim_ext / (1024.0 * 1024.0)) << ",\n"
                          << "      \"peak_rss_mb\": " << (rep_ext.last_stats.peak_rss_bytes / (1024.0 * 1024.0)) << "\n"
                          << "    }";
                 std::cout << "  [Scale N=" << N_ext << " D=" << D_ext << "] W=" << W
@@ -182,6 +205,8 @@
         rp.reps = bcfg.repetitions;
         rp.external_events = heldout_inputs.size();
         rp.graph_payload_bytes = g_eval.graph.memory_bytes();
+        rp.graph_checksum = g_eval_csum;
+        rp.input_events_checksum = heldout_in_csum;
         rp.rep_summary = rep_rel;
         rp.serial_digest = exact_ref.state_digest;
         rp.serial_spikes = exact_ref.total_spikes;
@@ -214,7 +239,7 @@
                  << "      \"potential_rmse\": " << div.potential_rmse << ",\n"
                  << "      \"state_digest\": \"" << sc::to_hex_digest(div.state_digest) << "\",\n"
                  << "      \"reference_digest\": \"" << sc::to_hex_digest(div.reference_digest) << "\",\n"
-                 << "      \"parity_with_serial\": " << ((div.state_digest == div.reference_digest && div.backward_time_events == 0) ? "true" : "false") << ",\n"
+                 << "      \"parity_with_serial\": " << ((eps == 0.0 && div.state_digest == div.reference_digest && div.backward_time_events == 0) ? "true" : "false") << ",\n"
                  << "      \"temporal_discrimination_trials\": " << div.temporal_discrimination_trials << ",\n"
                  << "      \"temporal_discrimination_correct\": " << div.temporal_discrimination_correct << ",\n"
                  << "      \"temporal_discrimination_accuracy\": " << std::setprecision(4) << div.temporal_discrimination_accuracy << ",\n"

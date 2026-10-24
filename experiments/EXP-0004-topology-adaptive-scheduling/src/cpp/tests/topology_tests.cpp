@@ -453,6 +453,113 @@ void test_relaxed_engine() {
     std::cout << "  -> PASSED (eps=0 is exact, eps>0 runs relaxed scheduling with measured violations)" << std::endl;
 }
 
+void test_pairwise_watermark_adversarial_stress() {
+    std::cout << "[TEST] Running test_pairwise_watermark_adversarial_stress (Adversarial asymmetric delays, cyclic ring, dense random, TSan)..." << std::endl;
+    sc::SubstrateConfig cfg;
+    cfg.num_nodes = 48;
+    cfg.tau_m = 5.0f;
+    cfg.threshold = 1.0f;
+    cfg.min_delay = 0.05f;
+    cfg.max_delay = 2.50f;
+
+    // Case A: Adversarial directed cyclic ring with 50x asymmetric cross-worker delays
+    // Worker 0 -> Worker 1 has tiny delay (0.05s); Worker 1 -> Worker 2 has medium delay (0.40s);
+    // Worker 2 -> Worker 3 has large delay (2.00s); Worker 3 -> Worker 0 has tiny delay (0.06s),
+    // plus cross-chords (0 -> 2 delay 1.50s, 2 -> 0 delay 0.07s).
+    sc::NeuralGraphCSR g_adv;
+    g_adv.num_nodes = 48;
+    std::vector<int32_t> part48(48);
+    for (int32_t u = 0; u < 48; ++u) {
+        part48[u] = u / 8; // 6 regions of 8 nodes
+    }
+
+    g_adv.row_ptr.resize(49, 0);
+    std::vector<std::vector<std::tuple<int32_t, float, float>>> adj(48);
+    for (int32_t u = 0; u < 48; ++u) {
+        int32_t r_u = part48[u];
+        // Intra-region dense recurrent excitation
+        for (int32_t k = 1; k <= 3; ++k) {
+            int32_t v = (r_u * 8) + ((u + k) % 8);
+            adj[u].emplace_back(v, 0.55f, 0.05f + 0.01f * k);
+        }
+        // Directed cyclic ring + asymmetric chords across regions
+        int32_t r_next = (r_u + 1) % 6;
+        float d_ring = (r_u % 2 == 0) ? 0.05f : 1.75f; // 35x asymmetry!
+        adj[u].emplace_back(r_next * 8 + (u % 8), 0.65f, d_ring);
+
+        int32_t r_opp = (r_u + 3) % 6;
+        float d_chord = (r_u < 3) ? 0.06f : 0.95f;
+        adj[u].emplace_back(r_opp * 8 + ((u * 3) % 8), 0.45f, d_chord);
+    }
+
+    for (int32_t u = 0; u < 48; ++u) {
+        g_adv.row_ptr[u + 1] = g_adv.row_ptr[u] + adj[u].size();
+        for (const auto& [v, w, d] : adj[u]) {
+            g_adv.targets.push_back(v);
+            g_adv.weights.push_back(w);
+            g_adv.delays.push_back(d);
+        }
+    }
+    g_adv.num_edges = g_adv.targets.size();
+
+    // Starved / bursty stimulus: only Region 0 and Region 3 receive external pulses,
+    // forcing other workers to advance watermarks while empty and wait on asymmetric incoming channels!
+    std::vector<sc::ExternalEvent> adv_inputs;
+    for (int32_t s = 0; s < 120; ++s) {
+        adv_inputs.push_back({0.02 * s, s % 8, 1.45f});
+        if (s % 5 == 0) {
+            adv_inputs.push_back({0.02 * s + 0.003, 24 + (s % 8), 1.55f});
+        }
+    }
+
+    sc::Exp4SerialEngine ser_adv(cfg, g_adv);
+    auto res_ser_adv = ser_adv.run(adv_inputs, 6.0);
+    ASSERT_TRUE(res_ser_adv.total_spikes > 50);
+
+    for (int32_t W : {2, 4, 6}) {
+        sc::Exp4PairwiseWatermarkEngine wm_adv(cfg, g_adv, W, 6, part48);
+        sc::SimulationResult res_wm;
+        auto st = wm_adv.run(adv_inputs, 6.0, &res_wm);
+
+        ASSERT_TRUE(st.watermark_monotonicity_violations == 0);
+        ASSERT_TRUE(st.delayed_channel_deliveries > 0);
+        ASSERT_TRUE(st.horizon_clamp_events > 0);
+        ASSERT_TRUE(res_wm.total_events_processed == res_ser_adv.total_events_processed);
+        ASSERT_TRUE(res_wm.total_spikes == res_ser_adv.total_spikes);
+        ASSERT_TRUE(res_wm.state_digest == res_ser_adv.state_digest);
+    }
+
+    // Case B: Dense Uniform Random Graph (80%+ cross-worker traffic) across W=2, 4, 6
+    sc::SubstrateConfig cfg_rand;
+    cfg_rand.num_nodes = 96;
+    cfg_rand.mean_out_degree = 12;
+    cfg_rand.min_delay = 0.10f;
+    cfg_rand.max_delay = 1.50f;
+    auto g_rand = sc::Exp4GraphGenerators::create_uniform_random(96, 12, 2026, 0.45f, 0.10f, 1.50f);
+    auto part96 = sc::Exp4Partitioners::partition_random_hash(96, 12, 2026);
+
+    std::vector<sc::ExternalEvent> rand_inputs;
+    for (int32_t s = 0; s < 150; ++s) {
+        rand_inputs.push_back({0.015 * s, (s * 19) % 96, 1.5f});
+    }
+    sc::Exp4SerialEngine ser_rand(cfg_rand, g_rand);
+    auto res_ser_rand = ser_rand.run(rand_inputs, 4.0);
+
+    for (int32_t W : {2, 4, 6}) {
+        sc::Exp4PairwiseWatermarkEngine wm_rand(cfg_rand, g_rand, W, 12, part96);
+        sc::SimulationResult res_wm;
+        auto st = wm_rand.run(rand_inputs, 4.0, &res_wm);
+
+        ASSERT_TRUE(st.watermark_monotonicity_violations == 0);
+        ASSERT_TRUE(st.delayed_channel_deliveries > 0);
+        ASSERT_TRUE(res_wm.total_events_processed == res_ser_rand.total_events_processed);
+        ASSERT_TRUE(res_wm.total_spikes == res_ser_rand.total_spikes);
+        ASSERT_TRUE(res_wm.state_digest == res_ser_rand.state_digest);
+    }
+
+    std::cout << "  -> PASSED (0 watermark monotonicity violations, exact spike/event/digest parity on cyclic asymmetric + dense random graphs)" << std::endl;
+}
+
 int main() {
     std::cout << "=== Running SynapticContinuum EXP-0004 C++ Test Suite ===" << std::endl;
     test_graph_generators();
@@ -465,6 +572,7 @@ int main() {
     test_adaptive_engine();
     test_forced_migration_concurrent_traffic();
     test_relaxed_engine();
+    test_pairwise_watermark_adversarial_stress();
     std::cout << "=== ALL EXP-0004 TESTS PASSED SUCCESSFULLY ===" << std::endl;
     return 0;
 }

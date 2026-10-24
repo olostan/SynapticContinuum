@@ -63,6 +63,8 @@
 
     sc::Exp4SerialEngine serial_heldout(cfg_topo, g_eval.graph);
     auto res_ser_heldout = serial_heldout.run(heldout_inputs, 6.0);
+    uint64_t g_eval_csum = sc::compute_graph_checksum(g_eval.graph);
+    uint64_t heldout_in_csum = sc::compute_inputs_checksum(heldout_inputs);
 
     std::string b_id_part = "exp0004_stage2_partition_eval_N" + std::to_string(N_topo) + "_D16_c0.10";
     bool first_part = true;
@@ -89,6 +91,8 @@
         rp.num_nodes = N_topo;
         rp.num_edges = g_eval.graph.num_edges;
         rp.topology_type = "modular_sbm_c0.10";
+        rp.graph_checksum = g_eval_csum;
+        rp.input_events_checksum = heldout_in_csum;
         rp.modularity_q = modularity;
         rp.edge_cut_fraction = edge_cut;
         rp.engine_id = "cpp_persistent_pool";
@@ -146,6 +150,8 @@
             rp.num_nodes = N_topo;
             rp.num_edges = g_eval.graph.num_edges;
             rp.topology_type = "modular_sbm_c0.10";
+            rp.graph_checksum = g_eval_csum;
+            rp.input_events_checksum = heldout_in_csum;
             rp.engine_id = "cpp_persistent_pool";
             rp.queue_family = qname;
             rp.partitioner = "planted_oracle";
@@ -209,12 +215,38 @@
     auto g_rep_compact = sc::NeuralGraphCompactCSR::from_standard_csr(g_rep_flat.graph);
     double build_compact_sec = std::chrono::duration<double>(std::chrono::high_resolution_clock::now() - t_comp0).count();
 
+    // Measure quantization rounding error of NeuralGraphCompactCSR vs unquantized NeuralGraphCSR
+    double w_max_err = 0.0, w_sq_err = 0.0;
+    double d_max_err = 0.0, d_sq_err = 0.0;
+    uint64_t q_edges = g_rep_flat.graph.num_edges;
+    uint64_t q_compact_csum = 14695981039346656037ULL;
+    q_compact_csum = sc::hash_combine64(q_compact_csum, static_cast<uint64_t>(N_rep));
+    q_compact_csum = sc::hash_combine64(q_compact_csum, q_edges);
+    for (uint64_t i = 0; i < q_edges; ++i) {
+        float w_deq = static_cast<float>(g_rep_compact.weights_q16[i]) * sc::NeuralGraphCompactCSR::WEIGHT_SCALE;
+        float d_deq = static_cast<float>(g_rep_compact.delays_q16[i]) * sc::NeuralGraphCompactCSR::DELAY_SCALE;
+        double ew = std::abs(static_cast<double>(g_rep_flat.graph.weights[i]) - static_cast<double>(w_deq));
+        double ed = std::abs(static_cast<double>(g_rep_flat.graph.delays[i]) - static_cast<double>(d_deq));
+        if (ew > w_max_err) w_max_err = ew;
+        if (ed > d_max_err) d_max_err = ed;
+        w_sq_err += ew * ew;
+        d_sq_err += ed * ed;
+        if (i % std::max(uint64_t{1}, q_edges / 65536) == 0) {
+            q_compact_csum = sc::hash_combine64(q_compact_csum, static_cast<uint64_t>(g_rep_compact.targets[i]));
+            q_compact_csum = sc::hash_combine64(q_compact_csum, static_cast<uint64_t>(static_cast<uint16_t>(g_rep_compact.weights_q16[i])));
+            q_compact_csum = sc::hash_combine64(q_compact_csum, static_cast<uint64_t>(g_rep_compact.delays_q16[i]));
+        }
+    }
+    double w_rmse = (q_edges > 0) ? std::sqrt(w_sq_err / q_edges) : 0.0;
+    double d_rmse = (q_edges > 0) ? std::sqrt(d_sq_err / q_edges) : 0.0;
+
     sc::NeuralGraphProceduralSBM g_rep_proc;
     g_rep_proc.num_nodes = N_rep;
     g_rep_proc.out_degree = 16;
     g_rep_proc.num_modules = 6;
     g_rep_proc.cross_ratio_c = 0.05f;
     g_rep_proc.seed = seed_topo;
+    uint64_t proc_csum = sc::NeuralGraphProceduralSBM::splitmix64(seed_topo ^ static_cast<uint64_t>(N_rep));
 
     std::vector<sc::ExternalEvent> inputs_rep;
     for (int32_t s = 0; s < 300; ++s) {
@@ -246,24 +278,33 @@
         return sc::run_serial_custom_graph<sc::SubstrateStatePacked>(cfg_L64, &g_rep_flat.graph, nullptr, nullptr, inputs_rep, 6.0);
     });
 
+    uint64_t g_rep_flat_csum = sc::compute_graph_checksum(g_rep_flat.graph);
+    uint64_t inputs_rep_csum = sc::compute_inputs_checksum(inputs_rep);
+
     struct RepRow {
         std::string label;
         std::string repr;
         std::string layout;
+        std::string sem_class;
         int32_t L;
         double build_sec;
         size_t payload_bytes;
+        uint64_t g_csum;
+        double w_max_e;
+        double w_rmse_e;
+        double d_max_e;
+        double d_rmse_e;
         sc::RepStatsSummary stats;
         bool exact_same_graph;
     };
     std::vector<RepRow> rep_rows = {
-        {"csr_vec_of_vec_soa_L0", "csr_vec_of_vec", "soa_packed", 0, build_vov_sec, g_rep_vov.graph.memory_bytes(), rep_ser_vov, true},
-        {"csr_direct_flat_soa_L0", "csr_direct_flat", "soa_packed", 0, build_flat_sec, g_rep_flat.graph.memory_bytes(), rep_ser_flat, true},
-        {"csr_direct_flat_aos_L0", "csr_direct_flat", "aos_record", 0, build_flat_sec, g_rep_flat.graph.memory_bytes(), rep_ser_aos, true},
-        {"csr_direct_flat_soa_L16", "csr_direct_flat", "soa_packed", 16, build_flat_sec, g_rep_flat.graph.memory_bytes() + static_cast<size_t>(N_rep) * 16 * 9, rep_ser_L16, true},
-        {"csr_direct_flat_soa_L64", "csr_direct_flat", "soa_packed", 64, build_flat_sec, g_rep_flat.graph.memory_bytes() + static_cast<size_t>(N_rep) * 64 * 9, rep_ser_L64, true},
-        {"csr_compact_q16_soa_L0", "csr_compact_quantized_8B", "soa_packed", 0, build_compact_sec, g_rep_compact.memory_footprint_bytes(), rep_ser_compact, false},
-        {"procedural_implicit_soa_L0", "procedural_on_the_fly_0B", "soa_packed", 0, 0.0, g_rep_proc.memory_footprint_bytes(), rep_ser_proc, false}
+        {"csr_vec_of_vec_soa_L0", "csr_vec_of_vec", "soa_packed", "exact", 0, build_vov_sec, g_rep_vov.graph.memory_bytes(), g_rep_flat_csum, 0.0, 0.0, 0.0, 0.0, rep_ser_vov, true},
+        {"csr_direct_flat_soa_L0", "csr_direct_flat", "soa_packed", "exact", 0, build_flat_sec, g_rep_flat.graph.memory_bytes(), g_rep_flat_csum, 0.0, 0.0, 0.0, 0.0, rep_ser_flat, true},
+        {"csr_direct_flat_aos_L0", "csr_direct_flat", "aos_record", "exact", 0, build_flat_sec, g_rep_flat.graph.memory_bytes(), g_rep_flat_csum, 0.0, 0.0, 0.0, 0.0, rep_ser_aos, true},
+        {"csr_direct_flat_soa_L16", "csr_direct_flat", "soa_packed", "exact", 16, build_flat_sec, g_rep_flat.graph.memory_bytes() + static_cast<size_t>(N_rep) * 16 * 9, g_rep_flat_csum, 0.0, 0.0, 0.0, 0.0, rep_ser_L16, true},
+        {"csr_direct_flat_soa_L64", "csr_direct_flat", "soa_packed", "exact", 64, build_flat_sec, g_rep_flat.graph.memory_bytes() + static_cast<size_t>(N_rep) * 64 * 9, g_rep_flat_csum, 0.0, 0.0, 0.0, 0.0, rep_ser_L64, true},
+        {"csr_compact_q16_soa_L0", "csr_compact_quantized_8B", "soa_packed", "quantized-approx", 0, build_compact_sec, g_rep_compact.memory_footprint_bytes(), q_compact_csum, w_max_err, w_rmse, d_max_err, d_rmse, rep_ser_compact, false},
+        {"procedural_implicit_soa_L0", "procedural_on_the_fly_0B", "soa_packed", "procedural-synthetic", 0, 0.0, g_rep_proc.memory_footprint_bytes(), proc_csum, 0.0, 0.0, 0.0, 0.0, rep_ser_proc, false}
     };
 
     bool first_rep = true;
@@ -276,13 +317,19 @@
         rp.run_id = b_id_r + "_" + bcfg.build_id + "_" + rr.label;
         rp.build_id = bcfg.build_id;
         rp.workload_name = "stage2c_representation_sweep";
-        rp.semantic_class = rr.exact_same_graph ? "exact" : "relaxed-model";
+        rp.semantic_class = rr.sem_class;
         rp.num_nodes = N_rep;
         rp.num_edges = (rr.repr == "procedural_on_the_fly_0B") ? (static_cast<uint64_t>(N_rep) * 16) : g_rep_flat.graph.num_edges;
         rp.topology_type = "modular_sbm_c0.05";
+        rp.graph_checksum = rr.g_csum;
+        rp.input_events_checksum = inputs_rep_csum;
         rp.representation = rr.repr;
         rp.state_layout = rr.layout;
         rp.history_capacity_L = rr.L;
+        rp.weight_quant_max_err = rr.w_max_e;
+        rp.weight_quant_rmse = rr.w_rmse_e;
+        rp.delay_quant_max_err = rr.d_max_e;
+        rp.delay_quant_rmse = rr.d_rmse_e;
         rp.engine_id = "cpp_serial";
         rp.num_workers = 1;
         rp.num_regions = 1;
@@ -292,27 +339,34 @@
         rp.external_events = inputs_rep.size();
         rp.graph_payload_bytes = rr.payload_bytes;
         rp.rep_summary = rr.stats;
-        rp.has_serial_ref = rr.exact_same_graph;
+        rp.has_serial_ref = true;
         rp.serial_digest = rep_ser_flat.last_stats.state_digest;
         rp.serial_spikes = rep_ser_flat.last_stats.total_spikes;
         rp.serial_events = rep_ser_flat.last_stats.total_events_processed;
         append_record(rp);
 
+        bool is_exact_parity = rr.exact_same_graph && (rr.stats.last_stats.state_digest == rep_ser_flat.last_stats.state_digest);
         if (!first_rep) json_out << ",\n";
         first_rep = false;
         json_out << "    {\n"
                  << "      \"label\": \"" << rr.label << "\",\n"
+                 << "      \"semantic_class\": \"" << rr.sem_class << "\",\n"
                  << "      \"representation\": \"" << rr.repr << "\",\n"
                  << "      \"state_layout\": \"" << rr.layout << "\",\n"
                  << "      \"history_L\": " << rr.L << ",\n"
                  << "      \"build_sec\": " << std::fixed << std::setprecision(7) << rr.build_sec << ",\n"
                  << "      \"payload_mb\": " << std::setprecision(3) << (rr.payload_bytes / (1024.0 * 1024.0)) << ",\n"
+                 << "      \"weight_quant_rmse\": " << std::setprecision(7) << rr.w_rmse_e << ",\n"
+                 << "      \"delay_quant_rmse\": " << rr.d_rmse_e << ",\n"
                  << "      \"mean_sim_sec\": " << std::setprecision(7) << rr.stats.mean_sim_sec << ",\n"
                  << "      \"median_sim_sec\": " << rr.stats.median_sim_sec << ",\n"
                  << "      \"std_sim_sec\": " << rr.stats.std_sim_sec << ",\n"
                  << "      \"events\": " << rr.stats.last_stats.total_events_processed << ",\n"
+                 << "      \"spikes\": " << rr.stats.last_stats.total_spikes << ",\n"
                  << "      \"events_per_sec\": " << std::setprecision(2) << (rr.stats.last_stats.total_events_processed / rr.stats.mean_sim_sec) << ",\n"
-                 << "      \"state_digest\": \"" << sc::to_hex_digest(rr.stats.last_stats.state_digest) << "\"\n"
+                 << "      \"state_digest\": \"" << sc::to_hex_digest(rr.stats.last_stats.state_digest) << "\",\n"
+                 << "      \"reference_serial_digest\": \"" << sc::to_hex_digest(rep_ser_flat.last_stats.state_digest) << "\",\n"
+                 << "      \"parity_with_serial\": " << (is_exact_parity ? "true" : "false") << "\n"
                  << "    }";
     }
     json_out << "\n  ],\n";

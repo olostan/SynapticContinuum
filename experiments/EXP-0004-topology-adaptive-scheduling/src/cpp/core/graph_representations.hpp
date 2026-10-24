@@ -158,12 +158,12 @@ public:
     explicit SubstrateStateAoS(const SubstrateConfig& cfg)
         : config(cfg), neurons(cfg.num_nodes) {}
 
-    bool receive_impulse(int32_t target, double timestamp, float weight, int32_t kind) noexcept {
+    bool receive_impulse(int32_t target, double timestamp, float weight, int32_t kind = 1) noexcept {
         (void)kind;
         auto& n = neurons[target];
         double dt = timestamp - n.last_update_time;
         if (dt > 0.0) {
-            n.potential *= std::exp(-static_cast<float>(dt) / config.tau_m);
+            n.potential *= std::exp(static_cast<float>(-dt / config.tau_m));
             n.last_update_time = timestamp;
         }
 
@@ -186,7 +186,7 @@ public:
         for (int32_t i = 0; i < config.num_nodes; ++i) {
             double dt = final_time - neurons[i].last_update_time;
             if (dt > 0.0) {
-                neurons[i].potential *= std::exp(-static_cast<float>(dt) / config.tau_m);
+                neurons[i].potential *= std::exp(static_cast<float>(-dt / config.tau_m));
                 neurons[i].last_update_time = final_time;
             }
         }

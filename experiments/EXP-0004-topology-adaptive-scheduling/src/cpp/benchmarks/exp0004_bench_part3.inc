@@ -78,6 +78,10 @@ int main(int argc, char** argv) {
             }
         }
 
+        uint64_t g_disc_csum = sc::compute_graph_checksum(g_disc.graph);
+        uint64_t g_rand_csum = sc::compute_graph_checksum(g_rand);
+        uint64_t inputs_csum = sc::compute_inputs_checksum(inputs);
+
         // Serial ground truth for Disconnected 6-Modules
         sc::Exp4SerialEngine serial_disc(cfg, g_disc.graph);
         auto rep_serial_disc = sc::execute_with_reps(bcfg.warmups, bcfg.repetitions, [&]() {
@@ -96,6 +100,8 @@ int main(int argc, char** argv) {
             rp.num_nodes = N_phaseA;
             rp.num_edges = g_disc.graph.num_edges;
             rp.topology_type = "disconnected_modules";
+            rp.graph_checksum = g_disc_csum;
+            rp.input_events_checksum = inputs_csum;
             rp.engine_id = "cpp_serial";
             rp.num_workers = 1;
             rp.num_regions = 6;
@@ -137,6 +143,8 @@ int main(int argc, char** argv) {
             rp.num_nodes = N_phaseA;
             rp.num_edges = g_disc.graph.num_edges;
             rp.topology_type = "disconnected_modules";
+            rp.graph_checksum = g_disc_csum;
+            rp.input_events_checksum = inputs_csum;
             rp.engine_id = "cpp_barrier_free_independent";
             rp.num_workers = W;
             rp.num_regions = 6;
@@ -189,6 +197,8 @@ int main(int argc, char** argv) {
             rp.num_nodes = N_phaseA;
             rp.num_edges = g_disc.graph.num_edges;
             rp.topology_type = "disconnected_modules";
+            rp.graph_checksum = g_disc_csum;
+            rp.input_events_checksum = inputs_csum;
             rp.engine_id = "cpp_persistent_pool";
             rp.num_workers = W;
             rp.num_regions = 6;
@@ -239,6 +249,8 @@ int main(int argc, char** argv) {
             rp.num_nodes = N_phaseA;
             rp.num_edges = g_rand.num_edges;
             rp.topology_type = "uniform_random";
+            rp.graph_checksum = g_rand_csum;
+            rp.input_events_checksum = inputs_csum;
             rp.engine_id = "cpp_serial";
             rp.partitioner = "contiguous";
             rp.num_workers = 1;
@@ -273,6 +285,8 @@ int main(int argc, char** argv) {
             rp.num_nodes = N_phaseA;
             rp.num_edges = g_rand.num_edges;
             rp.topology_type = "uniform_random";
+            rp.graph_checksum = g_rand_csum;
+            rp.input_events_checksum = inputs_csum;
             rp.engine_id = "cpp_persistent_pool";
             rp.partitioner = "contiguous";
             rp.num_workers = W;
@@ -350,6 +364,8 @@ int main(int argc, char** argv) {
 
         double speedup = (rep_w6.mean_sim_sec > 0) ? (rep_w1.mean_sim_sec / rep_w6.mean_sim_sec) : 1.0;
         std::string b_id = "exp0004_stage1_" + name + "_" + extra_param + "_N" + std::to_string(N_topo);
+        uint64_t g_csum = sc::compute_graph_checksum(g);
+        uint64_t in_csum = sc::compute_inputs_checksum(inputs);
 
         for (int32_t W_val : {1, 6}) {
             sc::CanonicalRecordParams rp;
@@ -360,6 +376,8 @@ int main(int argc, char** argv) {
             rp.num_nodes = N_topo;
             rp.num_edges = g.num_edges;
             rp.topology_type = name + "_" + extra_param;
+            rp.graph_checksum = g_csum;
+            rp.input_events_checksum = in_csum;
             rp.clustering_coeff = m.clustering_coefficient;
             rp.path_length = m.characteristic_path_length;
             rp.modularity_q = m.modularity_q;
@@ -459,6 +477,8 @@ int main(int argc, char** argv) {
     auto res_replay_ser = replay_serial.run(replay_inputs, 15.0);
 
     std::string b_id_tr = "exp0004_stage1b_trace_replay_N" + std::to_string(N_topo) + "_ev" + std::to_string(replay_inputs.size());
+    uint64_t empty_g_csum = sc::compute_graph_checksum(empty_graph);
+    uint64_t replay_in_csum = sc::compute_inputs_checksum(replay_inputs);
     bool first_tr = true;
     double t_tr_w1 = 0.0;
     for (int32_t W : bcfg.worker_counts) {
@@ -479,6 +499,8 @@ int main(int argc, char** argv) {
         rp.num_nodes = N_topo;
         rp.num_edges = 0;
         rp.topology_type = "empty_replay_graph";
+        rp.graph_checksum = empty_g_csum;
+        rp.input_events_checksum = replay_in_csum;
         rp.engine_id = "cpp_persistent_pool";
         rp.num_workers = W;
         rp.num_regions = 6;

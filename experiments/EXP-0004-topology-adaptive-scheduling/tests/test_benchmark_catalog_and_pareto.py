@@ -42,6 +42,8 @@ def make_valid_record(
             "num_nodes": num_nodes,
             "num_edges": num_nodes * 16,
             "topology_type": "modular_sbm",
+            "graph_checksum": "0xabcdef0123456789",
+            "input_events_checksum": "0x9876543210fedcba",
         },
         "execution_configuration": {
             "engine_id": engine_id,
@@ -153,3 +155,65 @@ def test_pareto_query_refuses_unverified_records_on_exact_frontier():
     assert "r_valid_lean" in run_ids
     assert "r_valid_dominated" not in run_ids
     assert "r_unverified_cheater" not in run_ids
+
+def test_proof_chain_and_no_cross_workload_pareto_dominance():
+    """Verify:
+    1. Data-layout or quantized/procedural records cannot claim parity_with_serial=True if state_digest != reference_serial_digest or semantic_class != exact.
+    2. Pareto frontier never allows a small 10k-node workload to dominate and prune a large 10M-node workload.
+    """
+    # 1. False parity=True with mismatched digest is rejected
+    bad_digest_claim = make_valid_record(run_id="bad_digest_claim", parity_with_serial=True)
+    bad_digest_claim["validation"]["state_digest"] = "0xdeadbeef00000001"
+    bad_digest_claim["validation"]["reference_serial_digest"] = "0x123456789abcdef0"
+    with pytest.raises(ValueError, match="Proof-chain violation"):
+        validate_record_strictly(bad_digest_claim)
+
+    # 2. Quantized/procedural semantic class claiming parity_with_serial=True is rejected
+    bad_quant_claim = make_valid_record(
+        run_id="bad_quant_claim",
+        semantic_class="quantized-approx",
+        parity_with_serial=True,
+    )
+    with pytest.raises(ValueError, match="cannot claim parity_with_serial=True"):
+        validate_record_strictly(bad_quant_claim)
+
+    # 3. Cross-workload isolation: 10k-node fast/tiny run must NOT dominate 10M-node run
+    r_10k = make_valid_record(
+        benchmark_id="exp0004_stage0_disconnected_N10000_D16_seed11",
+        run_id="r_10k_w6",
+        num_nodes=10000,
+        total_events=32249,
+        wall_sim_sec=0.001, # 32.2M ev/s
+        peak_rss_bytes=46 * 1024 * 1024,
+        parity_with_serial=True,
+    )
+    r_10k["graph_configuration"]["graph_checksum"] = "0x1111111111111111"
+
+    r_10m_w6 = make_valid_record(
+        benchmark_id="exp0004_stage3d_scale_N10000000_D16",
+        run_id="r_10m_w6",
+        num_nodes=10000000,
+        total_events=1572432,
+        wall_sim_sec=0.117, # 13.4M ev/s
+        peak_rss_bytes=6491 * 1024 * 1024,
+        parity_with_serial=True,
+    )
+    r_10m_w6["graph_configuration"]["graph_checksum"] = "0x9999999999999999"
+
+    r_10m_w1_dominated = make_valid_record(
+        benchmark_id="exp0004_stage3d_scale_N10000000_D16",
+        run_id="r_10m_w1",
+        num_nodes=10000000,
+        total_events=1572432,
+        wall_sim_sec=0.727, # 2.16M ev/s
+        peak_rss_bytes=6491 * 1024 * 1024,
+        parity_with_serial=True,
+    )
+    r_10m_w1_dominated["graph_configuration"]["graph_checksum"] = "0x9999999999999999"
+
+    frontier = compute_pareto_frontier([r_10k, r_10m_w6, r_10m_w1_dominated], require_exact_parity=True)
+    frontier_ids = [r["run_id"] for r in frontier]
+    assert "r_10k_w6" in frontier_ids
+    assert "r_10m_w6" in frontier_ids
+    assert "r_10m_w1" not in frontier_ids
+
