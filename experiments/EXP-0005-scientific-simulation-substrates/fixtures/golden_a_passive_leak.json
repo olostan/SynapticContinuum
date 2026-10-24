@@ -1,0 +1,33 @@
+{
+  "description": "Single-neuron passive exponential membrane decay without stimulus",
+  "expected_hand_oracle": {
+    "expected_spikes": [],
+    "potentials_mv_at_samples": [
+      0.8,
+      0.2943035529371539,
+      0.10826822658929017
+    ],
+    "tolerance_mv": 1e-12
+  },
+  "neuron_parameters": {
+    "e_l_mv": 0.0,
+    "num_nodes": 1,
+    "refractory_ms": 2.0,
+    "tau_ms": 10.0,
+    "v_init_mv": [
+      0.8
+    ],
+    "v_reset_mv": 0.0,
+    "v_th_mv": 1.0
+  },
+  "sample_times_ms": [
+    0.0,
+    10.0,
+    20.0
+  ],
+  "units": {
+    "time": "ms",
+    "voltage": "mV"
+  },
+  "workload_id": "sc05/analytic-leak/v1"
+}

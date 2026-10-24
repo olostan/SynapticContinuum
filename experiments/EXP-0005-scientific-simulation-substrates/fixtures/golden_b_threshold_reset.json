@@ -1,0 +1,60 @@
+{
+  "description": "Single-neuron analytic delta-LIF with 3 external arrivals at 1, 3, 4 ms (w=0.4 mV)",
+  "expected_hand_oracle": {
+    "expected_spikes": [
+      {
+        "node_id": 0,
+        "t_ms": 4.0
+      }
+    ],
+    "refractory_until_ms": 6.0,
+    "tolerance_mv": 1e-10,
+    "v_at_1_plus_mv": 0.4,
+    "v_at_3_minus_mv": 0.3274923012311928,
+    "v_at_3_plus_mv": 0.7274923012311928,
+    "v_at_4_minus_mv": 0.658262255487071,
+    "v_at_4_post_reset_mv": 0.0,
+    "v_at_4_pre_reset_mv": 1.058262255487071
+  },
+  "external_events": [
+    {
+      "ordinal": 0,
+      "src_id": -1,
+      "t_ms": 1.0,
+      "target_id": 0,
+      "weight_mV": 0.4
+    },
+    {
+      "ordinal": 1,
+      "src_id": -1,
+      "t_ms": 3.0,
+      "target_id": 0,
+      "weight_mV": 0.4
+    },
+    {
+      "ordinal": 2,
+      "src_id": -1,
+      "t_ms": 4.0,
+      "target_id": 0,
+      "weight_mV": 0.4
+    }
+  ],
+  "neuron_parameters": {
+    "e_l_mv": 0.0,
+    "num_nodes": 1,
+    "refractory_boundary_policy": "half_open_strict_less_than",
+    "refractory_ms": 2.0,
+    "tau_ms": 10.0,
+    "threshold_tolerance_mv": 1e-10,
+    "v_init_mv": [
+      0.0
+    ],
+    "v_reset_mv": 0.0,
+    "v_th_mv": 1.0
+  },
+  "units": {
+    "time": "ms",
+    "voltage": "mV"
+  },
+  "workload_id": "sc05/analytic-threshold/v1"
+}
