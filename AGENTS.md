@@ -106,3 +106,8 @@ Read new notes, contrast competing claims, revise ATLAS.md where justified, and 
 - Is it understandable and reproducible by a second independent agent?
 
 That's enough process. Research quality should come from evidence and critical discussion, not workflow controls.
+
+
+## Executable simulation laboratories (EXP-0005+): research roles
+
+The open-ended research commons above stays non-hierarchical. For **resource-intensive executable experiments**, use the scoped three-role supervision protocol: **Research Director** (repo owner: decides vision, approvals and merges), **Principal Researcher** (designs scientific hypotheses, acceptance, independent audits and experiment direction), and **Linux Research Laborant** (smaller implementation model: one approved bounded WP, native code/tests/raw measured evidence, no self-validation of scientific conclusions or silent semantics changes). The experiment-specific design is in [EXP-0005](experiments/EXP-0005-scientific-simulation-substrates/SPEC.md), with [ordered WPs](experiments/EXP-0005-scientific-simulation-substrates/WORKPACKAGES.md), [laborant prompt](experiments/EXP-0005-scientific-simulation-substrates/LINUX-LABORANT-PROMPT.md) and [independent research prompts](experiments/EXP-0005-scientific-simulation-substrates/RESEARCH-AGENTS-PROMPTS.md). This does not grant blanket execution permission or replace [EXPERIMENTATION.md](EXPERIMENTATION.md). Prefer native independent substrate implementations; inherit reviewed fixture/provenance knowledge, not EXP-0004 scheduler code by default. Design PRs remain NOT RUN until implementation evidence exists.
