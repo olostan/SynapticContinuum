@@ -1,0 +1,37 @@
+# EXP-0006 — Longitudinal observation, interruption and falsification protocol
+
+This experiment cannot be judged from a final-score bar chart. Preserve **trajectory evidence** with timestamps and versioned identities. No current data exist.
+
+## Observation schedule (proposed)
+At training episodes e = [0,10,25,50,100,250,500,1000,2000] measure the same **frozen holdout probe panel** for each independent seed; evaluations do not update student or teacher (read-only snapshot clone; probe state must not write memory). Record teacher-free full panel pre-feedback, immediately post-feedback, after 10/100 additional unsupervised episodes, and after removal of guidance for a prespecified horizon. Different model seeds use same world probe definitions but world seeds are held out from training.
+For every panel compute:
+- accuracy/balanced accuracy by family, cross-entropy/Brier calibration on hidden fact probabilities, chance and symbolic ceiling; report confidence plus every failure;
+- AUC and early-learning slope vs *number of experiences*, not only wall-clock time; per-probe errors and transfer from old to new rule families;
+- old-family retention at exactly matched pre/post learning opportunities; forgetting = performance just before learning new family minus performance after, using same old held-out family without training on those probes;
+- sample-efficiency to attain a **predeclared** threshold 75% balanced accuracy on a nontrivial validation family (if ceiling and class balance support this; not a universal success rule);
+- internal dynamics: event/update counts, h norm/variance/rank, state transition entropy where well-defined, slow-state/eligibility memory occupancy, numerical stability, pauses and restart divergence. These are explanatory, NOT success metrics;
+- causal intervention effect: paired delta in correct prediction and log loss for freeze, shuffle/replay, local silencing, h swap (same world observation), m/eligibility deletion, plus sham copy. Per-trajectory sign consistency; intervention must not modify hidden world truth.
+
+## Interruption matrix
+1. **Observation gap (simulated):** d = [0,8,32,128] world ticks, no sensory events; variants world frozen / unseen world advances (different inferential tasks).
+2. **Student behavior in gap:** continuous local evolution / zero internal updates while time passes / analytical passive decay / noise / cached replay / equal-update GRU or time-aware SSM; independently vary gap d and evolution internal steps k=[0,1,8,32,128] with same pre-readout budget where possible; delta-time is explicit to controls, not accidentally withheld.
+3. **Teacher interruption (wall clock):** checkpoint + 0, short, or observed variable LLM latency. Simulated ticks paused, no decay. With zero accepted feedback compare bit-identical restored trajectory against uninterrupted deterministic reference at 0/8/32/128 subsequent steps.
+4. **Crash and resume:** periodic checkpoints interval=[1,10,50] episodes, restart at predetermined episode+tick, verify all learner/world RNG/optimizer/queue/eligibility state, not just behavior score. Compare single-process uninterrupted vs restored with feed replay equality; record lost work since last checkpoint and separately replay it (or admit lost work).
+5. **Teacher withdrawal/outage:** teacher stops at 25/50/75% training; variants no signal / deterministic-oracle fallback, heldout evaluated without teacher. Additional test teacher message delayed by 0/8/32 simulated ticks: eligibility learning must match declared time semantics.
+6. **Forgetting/transfer:** teach relation family A, then B, then A revisit; expand entity identities / relation depth and change a world rule once. Student weights/config remain unchanged except allowed online learning. Time-to-recover and old accuracy are essential.
+
+## Pre-registered focused parameter screens (not exhaustive Cartesian)
+Pilot: hidden dimension [64,128,256] with matched closest GRU capacities, recurrent state timescale tau_fast/tau_slow ratios [1:4,1:16,1:64], memory update on/off, eligibility trace length [0,8,32], update rate [event_only, every_tick, every_4_ticks]. Measure rate, memory, forgetting. **Change one main axis at a time** while fixing seed/world schedule. Only expand if earlier screen discriminates. Teacher frequency [0,4,8] calls per 1000 train episodes (<=16 calls across 2000 pilot episodes) and feedback type [curriculum_only, oracle_reward, bounded_llm_reward] after T0–T2 gate. Object counts [3,5,8] later [12,24], relation depth [1,2] later [3], observation dropout [0,25%,50%], learning episodes [100,500,2000]; runtime cap no more than approved.
+Recommended primary condition: N=5 objects, two regions, chain length=2, 32 tick gap, 128 hidden, tau ratio=1:16, teacher off; compare to strongest GRU before teacher.
+
+## Analysis & graphical evidence linked to real measurements
+Required visualizations **only after empirical run**: (a) per-seed learning/forgetting curves with teacher start/stop marked; (b) gap length vs held-out accuracy and memory with constant update budgets; (c) intervention effect vs sham; (d) generalized difficulty ladder with unchanged weights/architecture; (e) teacher call budget versus teacher-free gain; (f) example state trajectory with stimulus, checkpoint and feedback timestamps distinguished. Plots should enable diagnosis, not show pretty activity loops with unsupported meaning.
+
+## Resource accounting and provenance
+For each step, record world_tick, student_update_count, training_episode, wall_clock_UTC, pause/restart markers, teacher_messages_applied, simulator/action/observation/checkpoint hash, independent seed streams, student git/source versions, data split ID, trainer/optimizer settings, parameter count, memory RSS for both phases, CPU/GPU time, actual Ollama call token/time/cost (where reported), cache hits, all errors, trace/checkpoint references, numerical fidelity of resume.
+No fixed number of unreported tokens or made-up machine timings. Confidence: 5 independent student initialization/training seeds at primary claims, paired bootstrap over seeds; additionally report task-template variability, model seed x world seed separately, and all hyperparameter selection. Exploratory pilot with 2 seeds explicitly labeled screening; require 5 for confirmatory.
+Store compact per-episode metrics CSV/JSON in Git within global file limits, large checkpoints/outside-Git files with SHA-256 and reproduction instructions.
+
+## Scientific interpretation gates
+GO to implementation after world and oracle correctness + baseline solvability. GO to student evolution after time-aware baseline passes meaningful holdout, not merely task ceiling. GO to local teacher after identical-checkpoint resume and an LLM-free student evaluation. GO to scaling only if a mechanism demonstrates held-out utility with credible uncertainty against baseline, and resource growth remains bounded/characterized. If simple belief-memory or GRU dominates, report and redirect rather than optimizing event scheduling.
+An observed advantage on teacher-provided probes is not success; only untouched teacher-free holdout counts. Correlation between hidden neuron activations and facts is not causality unless intervention shows appropriate effect. Repeated measurement of the same frozen test set can bias tuning: no decisions on heldout until analysis freeze; use validation for iterative model selection, one confirmatory heldout evaluation at defined end.
