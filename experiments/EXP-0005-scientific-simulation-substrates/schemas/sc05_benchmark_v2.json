@@ -1,0 +1,425 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SynapticContinuum EXP-0005 Benchmark Atlas v2 Record Schema",
+  "description": "Side-by-side schema v2 ('2.0.0-sc05-proposal') for scientific simulation substrates (EXP-0005). Preserves EXP-0004 v1.0.0 unchanged while enforcing SHA-256 fixture identity, explicit semantic classification, cold/warm lifecycle timing separation, active vs allocated population separation, optimistic PDES rollback/commit separation, and mandatory explanations for null/unmeasured fields.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "synthetic_validation_sample",
+    "run_id",
+    "experiment_id",
+    "work_package",
+    "git_provenance",
+    "backend_provenance",
+    "hardware_environment",
+    "workload_identity",
+    "model_semantics",
+    "scale_and_activity_metrics",
+    "lifecycle_timing",
+    "resource_and_safety",
+    "validation_and_fidelity",
+    "missing_or_unsupported_fields",
+    "external_artifacts"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "2.0.0-sc05-proposal"
+    },
+    "synthetic_validation_sample": {
+      "type": "boolean",
+      "description": "True ONLY for synthetic schema validation samples (NOT A RUN). Must be false for any measured execution record."
+    },
+    "synthetic_notice": {
+      "type": ["string", "null"]
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 5,
+      "description": "Unique identifier (UTC + host + seed + backend + build)"
+    },
+    "experiment_id": {
+      "type": "string",
+      "const": "EXP-0005"
+    },
+    "work_package": {
+      "type": "string",
+      "enum": ["WP-00", "WP-01", "WP-02", "WP-03", "WP-04", "WP-05"]
+    },
+    "git_provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["branch", "commit_sha", "dirty", "command_line"],
+      "properties": {
+        "branch": { "type": "string", "minLength": 1 },
+        "commit_sha": { "type": "string", "pattern": "^[0-9a-fA-F]{7,40}$" },
+        "dirty": { "type": "boolean" },
+        "command_line": { "type": "string", "minLength": 1 },
+        "environment_variables": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        }
+      }
+    },
+    "backend_provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "backend_name",
+        "backend_variant",
+        "version_tag",
+        "source_sha",
+        "license",
+        "compiler",
+        "compiler_flags",
+        "python_version",
+        "package_lock_sha256"
+      ],
+      "properties": {
+        "backend_name": {
+          "type": "string",
+          "enum": [
+            "sc05_analytic_oracle",
+            "NEST",
+            "brian2",
+            "arbor",
+            "ROSS",
+            "exp0004_historical_external"
+          ]
+        },
+        "backend_variant": { "type": "string", "minLength": 1 },
+        "version_tag": { "type": "string", "minLength": 1 },
+        "source_sha": { "type": ["string", "null"] },
+        "license": { "type": "string", "minLength": 1 },
+        "build_system": { "type": ["string", "null"] },
+        "compiler": { "type": ["string", "null"] },
+        "compiler_flags": { "type": ["string", "null"] },
+        "python_version": { "type": "string", "minLength": 1 },
+        "package_lock_sha256": {
+          "type": ["string", "null"],
+          "pattern": "^[0-9a-fA-F]{64}$"
+        }
+      }
+    },
+    "hardware_environment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "host",
+        "os_kernel",
+        "virtualization",
+        "cpu_model",
+        "physical_cores",
+        "logical_threads",
+        "parallel_workers_used",
+        "mem_total_bytes",
+        "mem_available_start_bytes",
+        "mem_available_end_bytes",
+        "swap_used_start_bytes",
+        "swap_used_end_bytes"
+      ],
+      "properties": {
+        "host": { "type": "string", "minLength": 1 },
+        "os_kernel": { "type": "string", "minLength": 1 },
+        "virtualization": { "type": "string", "minLength": 1 },
+        "cpu_model": { "type": "string", "minLength": 1 },
+        "physical_cores": { "type": "integer", "minimum": 1 },
+        "logical_threads": { "type": "integer", "minimum": 1 },
+        "parallel_workers_used": { "type": "integer", "minimum": 1 },
+        "mem_total_bytes": { "type": "integer", "minimum": 1 },
+        "mem_available_start_bytes": { "type": "integer", "minimum": 0 },
+        "mem_available_end_bytes": { "type": "integer", "minimum": 0 },
+        "swap_used_start_bytes": { "type": "integer", "minimum": 0 },
+        "swap_used_end_bytes": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "workload_identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "workload_id",
+        "workload_instance_id",
+        "seed",
+        "rng_stream_id",
+        "config_path",
+        "config_sha256",
+        "edges_fixture_sha256",
+        "events_fixture_sha256",
+        "adapted_input_sha256"
+      ],
+      "properties": {
+        "workload_id": {
+          "type": "string",
+          "enum": [
+            "sc05/analytic-leak/v1",
+            "sc05/analytic-threshold/v1",
+            "sc05/replay/v1",
+            "sc05/disconnected/v1",
+            "sc05/random/v1",
+            "sc05/smallworld/v1",
+            "sc05/modular/v1",
+            "sc05/hierarchical/v1",
+            "sc05/plastic/v1",
+            "sc05/long-silence/v1",
+            "sc05/recurrent-sustained/v1",
+            "sc05/ross-causality/v1"
+          ]
+        },
+        "workload_instance_id": {
+          "type": "string",
+          "pattern": "^[0-9a-fA-F]{64}$"
+        },
+        "seed": { "type": "integer", "minimum": 0 },
+        "rng_stream_id": { "type": "string", "minLength": 1 },
+        "config_path": { "type": "string", "minLength": 1 },
+        "config_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-fA-F]{64}$"
+        },
+        "edges_fixture_sha256": {
+          "type": ["string", "null"],
+          "pattern": "^[0-9a-fA-F]{64}$"
+        },
+        "events_fixture_sha256": {
+          "type": ["string", "null"],
+          "pattern": "^[0-9a-fA-F]{64}$"
+        },
+        "adapted_input_sha256": {
+          "type": ["string", "null"],
+          "pattern": "^[0-9a-fA-F]{64}$"
+        },
+        "historical_exp0004_triple": {
+          "type": ["object", "null"],
+          "additionalProperties": false,
+          "required": ["source_schema_version", "benchmark_id", "graph_checksum", "input_events_checksum"],
+          "properties": {
+            "source_schema_version": { "type": "string", "const": "1.0.0" },
+            "benchmark_id": { "type": "string" },
+            "graph_checksum": { "type": "string", "pattern": "^0x[0-9a-fA-F]{16}$" },
+            "input_events_checksum": { "type": "string", "pattern": "^0x[0-9a-fA-F]{16}$" }
+          }
+        }
+      }
+    },
+    "model_semantics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "comparison_tier",
+        "semantic_classification",
+        "equation_signature",
+        "solver_kind",
+        "dt_ms",
+        "precision",
+        "threshold_policy",
+        "refractory_policy",
+        "delay_rounding_policy",
+        "tie_break_policy",
+        "plasticity_mode",
+        "history_capacity_depth",
+        "monitor_policy"
+      ],
+      "properties": {
+        "comparison_tier": {
+          "type": "string",
+          "enum": [
+            "Tier-A-analytic",
+            "Tier-B-observationally-aligned",
+            "Tier-C-native-capability"
+          ]
+        },
+        "semantic_classification": {
+          "type": "string",
+          "enum": [
+            "equivalent-exact",
+            "aligned-with-tolerance",
+            "different-neural-model",
+            "native-only",
+            "unsupported"
+          ]
+        },
+        "equation_signature": { "type": "string", "minLength": 1 },
+        "solver_kind": { "type": "string", "minLength": 1 },
+        "dt_ms": { "type": ["number", "null"], "exclusiveMinimum": 0.0 },
+        "precision": { "type": "string", "enum": ["fp64", "fp32", "mixed", "int16_quantized"] },
+        "threshold_policy": { "type": "string", "minLength": 1 },
+        "refractory_policy": { "type": "string", "minLength": 1 },
+        "delay_rounding_policy": { "type": "string", "minLength": 1 },
+        "tie_break_policy": { "type": "string", "minLength": 1 },
+        "plasticity_mode": { "type": "string", "minLength": 1 },
+        "history_capacity_depth": { "type": ["integer", "null"], "minimum": 0 },
+        "monitor_policy": {
+          "type": "string",
+          "enum": ["off", "minimal_spikes_only", "detailed_state_and_spikes"]
+        }
+      }
+    },
+    "scale_and_activity_metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "allocated_neurons_N",
+        "allocated_edges_M",
+        "allocated_compartments",
+        "active_neurons_count",
+        "active_participation_definition",
+        "external_events_injected",
+        "committed_spikes",
+        "synapse_deliveries",
+        "neuron_integration_steps",
+        "scheduler_processed_events",
+        "rolled_back_events",
+        "reexecuted_events",
+        "committed_events"
+      ],
+      "properties": {
+        "allocated_neurons_N": { "type": "integer", "minimum": 1 },
+        "allocated_edges_M": { "type": "integer", "minimum": 0 },
+        "allocated_compartments": { "type": ["integer", "null"], "minimum": 1 },
+        "active_neurons_count": { "type": ["integer", "null"], "minimum": 0 },
+        "active_participation_definition": { "type": "string", "minLength": 1 },
+        "external_events_injected": { "type": ["integer", "null"], "minimum": 0 },
+        "committed_spikes": { "type": ["integer", "null"], "minimum": 0 },
+        "synapse_deliveries": { "type": ["integer", "null"], "minimum": 0 },
+        "neuron_integration_steps": { "type": ["integer", "null"], "minimum": 0 },
+        "scheduler_processed_events": { "type": ["integer", "null"], "minimum": 0 },
+        "rolled_back_events": { "type": ["integer", "null"], "minimum": 0 },
+        "reexecuted_events": { "type": ["integer", "null"], "minimum": 0 },
+        "committed_events": { "type": ["integer", "null"], "minimum": 0 }
+      }
+    },
+    "lifecycle_timing": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "simulated_horizon_ms",
+        "compile_or_codegen_wall_s",
+        "network_construction_wall_s",
+        "first_call_prep_wall_s",
+        "steady_simulation_wall_s",
+        "readout_wall_s",
+        "total_end_to_end_wall_s",
+        "warmup_repetitions",
+        "measured_repetitions",
+        "rep_steady_simulation_wall_s",
+        "confidence_method",
+        "throughput_value",
+        "throughput_denominator_definition",
+        "simulated_sec_per_wall_sec"
+      ],
+      "properties": {
+        "simulated_horizon_ms": { "type": "number", "minimum": 0.0 },
+        "compile_or_codegen_wall_s": { "type": ["number", "null"], "minimum": 0.0 },
+        "network_construction_wall_s": { "type": ["number", "null"], "minimum": 0.0 },
+        "first_call_prep_wall_s": { "type": ["number", "null"], "minimum": 0.0 },
+        "steady_simulation_wall_s": { "type": "number", "exclusiveMinimum": 0.0 },
+        "readout_wall_s": { "type": ["number", "null"], "minimum": 0.0 },
+        "total_end_to_end_wall_s": { "type": "number", "exclusiveMinimum": 0.0 },
+        "warmup_repetitions": { "type": "integer", "minimum": 0 },
+        "measured_repetitions": { "type": "integer", "minimum": 1 },
+        "rep_steady_simulation_wall_s": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "number", "exclusiveMinimum": 0.0 }
+        },
+        "confidence_method": { "type": "string", "minLength": 1 },
+        "throughput_value": { "type": ["number", "null"], "minimum": 0.0 },
+        "throughput_denominator_definition": { "type": "string", "minLength": 1 },
+        "simulated_sec_per_wall_sec": { "type": "number", "minimum": 0.0 }
+      }
+    },
+    "resource_and_safety": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "peak_rss_bytes",
+        "rss_measurement_method",
+        "incremental_rss_bytes",
+        "safety_cap_bytes",
+        "oom_killed",
+        "swap_breach_aborted",
+        "timeout_aborted",
+        "exit_status"
+      ],
+      "properties": {
+        "peak_rss_bytes": { "type": "integer", "minimum": 1 },
+        "rss_measurement_method": { "type": "string", "minLength": 1 },
+        "incremental_rss_bytes": { "type": ["integer", "null"], "minimum": 0 },
+        "safety_cap_bytes": { "type": "integer", "minimum": 1 },
+        "oom_killed": { "type": "boolean" },
+        "swap_breach_aborted": { "type": "boolean" },
+        "timeout_aborted": { "type": "boolean" },
+        "exit_status": { "type": "integer" }
+      }
+    },
+    "validation_and_fidelity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "oracle_passed",
+        "timestamp_monotonicity_passed",
+        "backward_time_committed_events",
+        "output_trace_sha256",
+        "spike_precision",
+        "spike_recall",
+        "spike_time_mae_ms",
+        "spike_time_p95_ms",
+        "membrane_rmse_mv",
+        "parity_claim_with_exp0004"
+      ],
+      "properties": {
+        "oracle_passed": { "type": ["boolean", "null"] },
+        "timestamp_monotonicity_passed": { "type": "boolean" },
+        "backward_time_committed_events": { "type": "integer", "minimum": 0 },
+        "output_trace_sha256": {
+          "type": ["string", "null"],
+          "pattern": "^[0-9a-fA-F]{64}$"
+        },
+        "spike_precision": { "type": ["number", "null"], "minimum": 0.0, "maximum": 1.0 },
+        "spike_recall": { "type": ["number", "null"], "minimum": 0.0, "maximum": 1.0 },
+        "spike_time_mae_ms": { "type": ["number", "null"], "minimum": 0.0 },
+        "spike_time_p95_ms": { "type": ["number", "null"], "minimum": 0.0 },
+        "membrane_rmse_mv": { "type": ["number", "null"], "minimum": 0.0 },
+        "parity_claim_with_exp0004": { "type": "boolean" }
+      }
+    },
+    "missing_or_unsupported_fields": {
+      "type": "object",
+      "description": "Every null field in backend_provenance, workload_identity, model_semantics, scale_and_activity_metrics, lifecycle_timing, resource_and_safety, or validation_and_fidelity MUST be listed here with an explicit reason.",
+      "additionalProperties": {
+        "type": "string",
+        "minLength": 3
+      }
+    },
+    "external_artifacts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path_or_uri",
+          "purpose",
+          "byte_count",
+          "sha256",
+          "retention_status",
+          "reproduce_command"
+        ],
+        "properties": {
+          "path_or_uri": { "type": "string", "minLength": 1 },
+          "purpose": { "type": "string", "minLength": 1 },
+          "byte_count": { "type": "integer", "minimum": 0 },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-fA-F]{64}$"
+          },
+          "retention_status": {
+            "type": "string",
+            "enum": ["retained", "deleted", "missing"]
+          },
+          "reproduce_command": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  }
+}
