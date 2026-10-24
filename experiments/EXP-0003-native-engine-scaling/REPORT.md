@@ -73,11 +73,11 @@ Measured across standard shared screening matrix ($D=16, r=1.0, t_{\max}=5.0$, s
 
 ---
 
-### 3.2. Crossover: Event-Driven vs Synchronous at Matched Fidelity
+### 3.2. Crossover: Event-Driven vs Fixed-Step Synchronous Approximations
 
 To address reviewer feedback and avoid reliance on single-fixture extrapolations, a comprehensive empirical benchmark (`fidelity_sweep`) was executed across network scales ($N \in \{128, 1,024, 10,000\}$), active fractions ($f \in \{0.001, 0.010, 0.050, 0.100, 0.200, 0.500, 1.000\}$), and timesteps ($\Delta t = 0.10$ vs $\Delta t = 0.010$).
 
-#### Empirical Matched-Fidelity Benchmark Table
+**Fidelity limitation (reviewed):** The \(\Delta t=0.01\) run is a *finer fixed-step approximation*, not a verified equal-behavior or equal-fidelity execution mode across this matrix. Multiple cells retain nonzero spike-count differences and state RMSE relative to exact timestamp events (e.g., N=10,000 and f=1.0: 201 spike-count difference). Therefore the crossover below is specifically **a runtime crossover versus the stated fixed-step approximations at their measured errors**, **not** a proven equal-fidelity crossover or a property intrinsic to all neural models. The error measures must accompany all speed comparisons; achieving a common behavioral tolerance could require still finer dt or a different synchronous algorithm.\n\n#### Empirical Timing and Approximation-Error Benchmark Table
 
 | $N$ | Active Fraction ($f$) | Event Sim Time | Sync ($\Delta t = 0.1$) Time | Sync ($\Delta t = 0.01$) Time | RMSE ($\Delta t = 0.1$) | RMSE ($\Delta t = 0.01$) | Spike Error ($\Delta t = 0.1$) | Spike Error ($\Delta t = 0.01$) | Timestamp Err ($\Delta t = 0.1$) | Timestamp Err ($\Delta t = 0.01$) | Regime Favored ($\Delta t = 0.01$) |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
@@ -103,7 +103,7 @@ To address reviewer feedback and avoid reliance on single-fixture extrapolations
 | **10,000** | 0.500 | 137.274 ms | 16.734 ms | 47.397 ms | 0.3595 | 0.3291 | 1460 | 129 | 0.2819 ms | 0.1076 ms | **SYNC** |
 | **10,000** | 1.000 | 177.058 ms | 18.575 ms | 52.107 ms | 0.3124 | 0.2841 | 2053 | 201 | 0.2688 ms | 0.0907 ms | **SYNC** |
 
-#### Crossover Boundary and Extrapolation Demotion
+#### Observed Runtime Crossover (With Approximation Error) and Extrapolation Demotion
 
 1. **Measured Crossover at Approximate Fidelity ($\Delta t = 0.10$)**:
    - At $N=128$, event-driven simulation is faster for $f \le 0.05$; dense sync becomes faster at $f = 0.10$. Crossover: **$f^* \approx 0.05–0.07$**.
@@ -119,7 +119,7 @@ To address reviewer feedback and avoid reliance on single-fixture extrapolations
 3. **Status of Earlier 20–25% Crossover Claim**:
    > [!IMPORTANT]
    > **Extrapolation Demotion**: The previous report hypothesized that matched fidelity ($\Delta t \le 0.01$) would shift the crossover to $\sim 20–25\%$. That figure was an unvalidated analytical extrapolation based on theoretical 10× timestep multiplication on a single small fixture.
-   > Our comprehensive empirical measurements prove that while synchronous compute does scale with $1/\Delta t$, contiguous cache-line utilization and compiler SIMD auto-vectorization make dense array updates highly efficient, capping the true empirical crossover shift at **$f^* \approx 0.06–0.08$**. The $20–25\%$ figure is formally superseded.
+   > Our empirical timing measurements suggest that while synchronous compute scales with $1/\Delta t$, contiguous cache-line utilization and compiler SIMD auto-vectorization make dense array updates highly efficient, capping the true empirical crossover shift at **$f^* \approx 0.06–0.08$**. The $20–25\%$ figure is formally superseded.
 
 ---
 
