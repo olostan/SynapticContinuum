@@ -65,7 +65,16 @@ public:
 
         double epoch_delta = config_.min_delay;
         if (has_cross_edges) {
-            epoch_delta = (min_cross_delay > 0.0) ? min_cross_delay : 0.001;
+            if (min_cross_delay <= 0.0) {
+                throw std::invalid_argument(
+                    "cpp_owner causality precondition violation: Graph contains cross-region edge(s) "
+                    "with non-positive delay (min_cross_delay = " + std::to_string(min_cross_delay) +
+                    " <= 0.0). Conservative PDES lookahead requires strictly positive cross-region "
+                    "delays (d_min > 0.0) to prevent causal arrival inversions and deadlock. "
+                    "Rejecting graph per Chandy-Misra safety contract."
+                );
+            }
+            epoch_delta = min_cross_delay;
         } else {
             // Completely independent partitions: safe lookahead is the entire simulation horizon
             epoch_delta = t_max + 1.0;
@@ -212,6 +221,7 @@ public:
         for (auto& spks : per_worker_spikes) {
             res.spike_records.insert(res.spike_records.end(), spks.begin(), spks.end());
         }
+        res.total_spikes = res.spike_records.size();
         std::sort(res.spike_records.begin(), res.spike_records.end(), [](const SpikeRecord& a, const SpikeRecord& b) {
             if (std::abs(a.timestamp - b.timestamp) > 1e-6) return a.timestamp < b.timestamp;
             return a.node < b.node;

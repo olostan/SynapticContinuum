@@ -236,20 +236,132 @@ void test_sync_spiking_fidelity_stress() {
     std::cout << "  -> PASSED (Spiking fidelity converges monotonically with dt grid refinement)" << std::endl;
 }
 
-void test_owner_replay_across_worker_counts() {
-    std::cout << "[TEST] Running test_owner_replay_across_worker_counts (W=1, 2, 4)..." << std::endl;
+void test_zero_delay_causality_precondition_rejection() {
+    std::cout << "[TEST] Running test_zero_delay_causality_precondition_rejection..." << std::endl;
     sc::SubstrateConfig config;
-    config.num_nodes = 64;
+    config.num_nodes = 2;
+    config.mean_out_degree = 1;
+
+    // Cross-region cycle with delay 0.0: Node 0 -> Node 1 (delay 0.0), Node 1 -> Node 0 (delay 0.0)
+    sc::NeuralGraphCSR graph;
+    graph.num_nodes = 2;
+    graph.num_edges = 2;
+    graph.row_ptr = {0, 1, 2};
+    graph.targets = {1, 0};
+    graph.weights = {1.5f, 1.5f};
+    graph.delays = {0.0f, 0.0f};
+
+    std::vector<sc::ExternalEvent> events = {
+        {0.1, 0, 1.0f, -1, static_cast<int32_t>(sc::EventKind::EXTERNAL)}
+    };
+
+    // cpp_owner with W=2 MUST reject cross-region zero-delay edge
+    bool owner_w2_threw = false;
+    try {
+        sc::CppOwnerEngine owner_eng(config, graph, 2);
+        owner_eng.run(events, 5.0);
+    } catch (const std::invalid_argument& e) {
+        owner_w2_threw = true;
+        std::cout << "  Owner W=2 correctly rejected zero-delay cross-region edge: " << e.what() << std::endl;
+    }
+    ASSERT_TRUE(owner_w2_threw);
+
+    // cpp_locked with W=2 MUST reject non-positive delay
+    bool locked_w2_threw = false;
+    try {
+        sc::CppLockedEngine locked_eng(config, graph, 2);
+        locked_eng.run(events, 5.0);
+    } catch (const std::invalid_argument& e) {
+        locked_w2_threw = true;
+        std::cout << "  Locked W=2 correctly rejected zero-delay edge: " << e.what() << std::endl;
+    }
+    ASSERT_TRUE(locked_w2_threw);
+
+    // Single-worker engines MUST execute cleanly without throwing
+    sc::CppOwnerEngine owner_w1(config, graph, 1);
+    auto res_owner_w1 = owner_w1.run(events, 5.0);
+    ASSERT_TRUE(res_owner_w1.total_events_processed > 0);
+
+    sc::CppLockedEngine locked_w1(config, graph, 1);
+    auto res_locked_w1 = locked_w1.run(events, 5.0);
+    ASSERT_TRUE(res_locked_w1.total_events_processed > 0);
+
+    sc::CppPackedEngine packed_eng(config, graph);
+    auto res_packed = packed_eng.run(events, 5.0);
+    ASSERT_TRUE(res_packed.total_events_processed > 0);
+
+    std::cout << "  -> PASSED (Zero-delay cross-region causality precondition strictly enforced and verified)" << std::endl;
+}
+
+void test_owner_simultaneous_event_replay_w6_w8() {
+    std::cout << "[TEST] Running test_owner_simultaneous_event_replay_w6_w8..." << std::endl;
+    sc::SubstrateConfig config;
+    config.num_nodes = 128;
+    config.mean_out_degree = 16;
+    config.threshold = 1.0f;
+
+    auto graph = sc::GraphFactory::create_modular(128, 16, 777, 8, 0.80f);
+
+    // Generate large batch of SIMULTANEOUS events across all partitions
+    std::vector<sc::ExternalEvent> simultaneous_events;
+    for (double t : {1.0, 2.0, 3.0}) {
+        for (int32_t node = 0; node < 128; ++node) {
+            simultaneous_events.push_back({
+                t, node, 0.8f, -1, static_cast<int32_t>(sc::EventKind::EXTERNAL)
+            });
+        }
+    }
+
+    // Verify deterministic replay for W=6 (non-power-of-two) across 5 runs
+    uint64_t digest_w6 = 0;
+    uint64_t spikes_w6 = 0;
+    for (int rep = 0; rep < 5; ++rep) {
+        sc::CppOwnerEngine owner_w6(config, graph, 6);
+        auto res = owner_w6.run(simultaneous_events, 5.0);
+        std::cout << "  rep " << rep << " W=6: spikes=" << res.total_spikes << " digest=" << res.state_digest << std::endl;
+        if (rep == 0) {
+            digest_w6 = res.state_digest;
+            spikes_w6 = res.total_spikes;
+        } else {
+            ASSERT_TRUE(res.state_digest == digest_w6);
+            ASSERT_TRUE(res.total_spikes == spikes_w6);
+        }
+    }
+    std::cout << "  Owner W=6 verified bit-exact deterministic replay over 5 runs (spikes=" << spikes_w6 << ", digest=" << digest_w6 << ")" << std::endl;
+
+    // Verify deterministic replay for W=8 (power-of-two) across 5 runs
+    uint64_t digest_w8 = 0;
+    uint64_t spikes_w8 = 0;
+    for (int rep = 0; rep < 5; ++rep) {
+        sc::CppOwnerEngine owner_w8(config, graph, 8);
+        auto res = owner_w8.run(simultaneous_events, 5.0);
+        if (rep == 0) {
+            digest_w8 = res.state_digest;
+            spikes_w8 = res.total_spikes;
+        } else {
+            ASSERT_TRUE(res.state_digest == digest_w8);
+            ASSERT_TRUE(res.total_spikes == spikes_w8);
+        }
+    }
+    std::cout << "  Owner W=8 verified bit-exact deterministic replay over 5 runs (spikes=" << spikes_w8 << ", digest=" << digest_w8 << ")" << std::endl;
+
+    std::cout << "  -> PASSED (Nontrivial simultaneous-event ordering/replay invariant holds for W=6 and W=8)" << std::endl;
+}
+
+void test_owner_replay_across_worker_counts() {
+    std::cout << "[TEST] Running test_owner_replay_across_worker_counts (W=1, 2, 4, 6, 8)..." << std::endl;
+    sc::SubstrateConfig config;
+    config.num_nodes = 128;
     config.mean_out_degree = 8;
     config.threshold = 1.0f;
 
-    auto graph = sc::GraphFactory::create_modular(64, 8, 999, 4, 0.80f);
-    auto events = sc::EventGenerator::generate(64, 0.10, 1.0, 5.0, 999);
+    auto graph = sc::GraphFactory::create_modular(128, 8, 999, 8, 0.80f);
+    auto events = sc::EventGenerator::generate(128, 0.10, 1.0, 5.0, 999);
 
     sc::CppPackedEngine serial_eng(config, graph);
     auto res_serial = serial_eng.run(events, 5.0);
 
-    for (int32_t w : {1, 2, 4}) {
+    for (int32_t w : {1, 2, 4, 6, 8}) {
         sc::CppOwnerEngine owner_eng(config, graph, w);
         auto res_owner = owner_eng.run(events, 5.0);
         std::cout << "  w=" << w << " owner_spikes=" << res_owner.total_spikes << " serial_spikes=" << res_serial.total_spikes << std::endl;
@@ -258,7 +370,7 @@ void test_owner_replay_across_worker_counts() {
         ASSERT_TRUE(res_owner.spike_records.size() == res_serial.spike_records.size());
         ASSERT_TRUE(res_owner.state_digest == res_serial.state_digest);
     }
-    std::cout << "  -> PASSED (Owner W=1, 2, 4 bit-exact matches serial state digest: " << res_serial.state_digest << ")" << std::endl;
+    std::cout << "  -> PASSED (Owner W=1, 2, 4, 6, 8 bit-exact matches serial state digest: " << res_serial.state_digest << ")" << std::endl;
 }
 
 int main() {
@@ -272,6 +384,8 @@ int main() {
     test_adversarial_simultaneous_arrivals_hybrid();
     test_adversarial_causal_arrivals_parallel();
     test_sync_spiking_fidelity_stress();
+    test_zero_delay_causality_precondition_rejection();
+    test_owner_simultaneous_event_replay_w6_w8();
     test_owner_replay_across_worker_counts();
 
     std::cout << "===========================================" << std::endl;

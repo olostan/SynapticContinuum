@@ -83,13 +83,16 @@ def test_cpp_hybrid_vs_literal():
 
 
 def test_cpp_owner_replay_parity():
-    """Verify Owner C++ with 1 and 2 workers produces identical state digest to serial."""
-    res_serial = run_cpp_engine("packed", num_nodes=64, degree=8, active_fraction=0.10, rate=1.0, t_max=5.0, seed=999, warmups=0, reps=1)
-    res_owner1 = run_cpp_engine("owner", num_nodes=64, degree=8, active_fraction=0.10, rate=1.0, t_max=5.0, seed=999, workers=1, warmups=0, reps=1)
-    res_owner2 = run_cpp_engine("owner", num_nodes=64, degree=8, active_fraction=0.10, rate=1.0, t_max=5.0, seed=999, workers=2, warmups=0, reps=1)
+    """Verify Owner C++ with 1, 2, 4, 6, 8 workers produces identical state digest to serial."""
+    res_serial = run_cpp_engine("packed", num_nodes=128, degree=8, active_fraction=0.10, rate=1.0, t_max=5.0, seed=999, warmups=0, reps=1)
+    res_owner1 = run_cpp_engine("owner", num_nodes=128, degree=8, active_fraction=0.10, rate=1.0, t_max=5.0, seed=999, workers=1, warmups=0, reps=1)
+    res_owner2 = run_cpp_engine("owner", num_nodes=128, degree=8, active_fraction=0.10, rate=1.0, t_max=5.0, seed=999, workers=2, warmups=0, reps=1)
+    res_owner4 = run_cpp_engine("owner", num_nodes=128, degree=8, active_fraction=0.10, rate=1.0, t_max=5.0, seed=999, workers=4, warmups=0, reps=1)
+    res_owner6 = run_cpp_engine("owner", num_nodes=128, degree=8, active_fraction=0.10, rate=1.0, t_max=5.0, seed=999, workers=6, warmups=0, reps=1)
+    res_owner8 = run_cpp_engine("owner", num_nodes=128, degree=8, active_fraction=0.10, rate=1.0, t_max=5.0, seed=999, workers=8, warmups=0, reps=1)
 
-    assert res_serial["total_spikes"] == res_owner1["total_spikes"] == res_owner2["total_spikes"]
-    assert res_serial["state_digest"] == res_owner1["state_digest"] == res_owner2["state_digest"]
+    assert res_serial["total_spikes"] == res_owner1["total_spikes"] == res_owner2["total_spikes"] == res_owner4["total_spikes"] == res_owner6["total_spikes"] == res_owner8["total_spikes"]
+    assert res_serial["state_digest"] == res_owner1["state_digest"] == res_owner2["state_digest"] == res_owner4["state_digest"] == res_owner6["state_digest"] == res_owner8["state_digest"]
 
 
 def test_preflight_memory_safety():

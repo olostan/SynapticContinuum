@@ -56,7 +56,17 @@ public:
                 min_graph_delay = graph_.delays[i];
             }
         }
-        if (min_graph_delay <= 0.0) min_graph_delay = 0.001; // Conservative positive lower bound
+        if (num_workers_ > 1 && min_graph_delay <= 0.0) {
+            throw std::invalid_argument(
+                "cpp_locked causality precondition violation: Graph contains edge(s) with non-positive delay "
+                "(min_graph_delay = " + std::to_string(min_graph_delay) + " <= 0.0). Multi-worker locked queue "
+                "requires strictly positive lookahead (min_delay > 0.0) to establish a safe non-zero commit horizon. "
+                "Rejecting graph per conservative PDES safety contract."
+            );
+        }
+        if (min_graph_delay <= 0.0) {
+            min_graph_delay = 0.0; // Single worker can process zero-delay edges sequentially
+        }
 
         // Track in-flight timestamps per worker for conservative safe horizon
         std::vector<double> in_flight_t(num_workers_, std::numeric_limits<double>::infinity());
@@ -242,6 +252,7 @@ public:
         for (auto& spks : per_worker_spikes) {
             res.spike_records.insert(res.spike_records.end(), spks.begin(), spks.end());
         }
+        res.total_spikes = res.spike_records.size();
         std::sort(res.spike_records.begin(), res.spike_records.end(), [](const SpikeRecord& a, const SpikeRecord& b) {
             if (std::abs(a.timestamp - b.timestamp) > 1e-6) return a.timestamp < b.timestamp;
             return a.node < b.node;

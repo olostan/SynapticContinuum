@@ -33,10 +33,19 @@ add_executable(sc_tests
 )
 target_link_libraries(sc_tests PRIVATE pthread)
 
+# Fidelity Sweep Benchmark Executable
+add_executable(fidelity_sweep
+    src/cpp/benchmarks/fidelity_sweep.cpp
+)
+target_link_libraries(fidelity_sweep PRIVATE pthread)
+
 # Output directories
 set_target_properties(sc_engine PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/bin"
 )
 set_target_properties(sc_tests PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/bin"
+)
+set_target_properties(fidelity_sweep PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/bin"
 )

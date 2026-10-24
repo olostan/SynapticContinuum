@@ -5,6 +5,7 @@
 #include <cmath>
 #include <memory>
 #include <algorithm>
+#include <atomic>
 
 namespace sc {
 
@@ -107,7 +108,7 @@ public:
     std::vector<double> last_update_times;
     std::vector<double> refractory_until;
     std::vector<int32_t> spike_counts;
-    uint64_t total_spikes = 0;
+    std::atomic<uint64_t> total_spikes{0};
 
     std::unique_ptr<ExponentialTraceBankNative> trace_bank;
     std::unique_ptr<BoundedEventHistoryNative> history_buffer;
@@ -158,7 +159,7 @@ public:
             potentials[node] = config.v_reset;
             refractory_until[node] = current_time + config.refractory_period;
             spike_counts[node]++;
-            total_spikes++;
+            total_spikes.fetch_add(1, std::memory_order_relaxed);
             return true;
         }
         return false;
@@ -183,7 +184,7 @@ public:
     double* last_update_times = nullptr;
     double* refractory_until = nullptr;
     int32_t* spike_counts = nullptr;
-    uint64_t total_spikes = 0;
+    std::atomic<uint64_t> total_spikes{0};
 
     std::unique_ptr<ExponentialTraceBankNative> trace_bank;
     std::unique_ptr<BoundedEventHistoryNative> history_buffer;
@@ -239,7 +240,7 @@ public:
             potentials[node] = config.v_reset;
             refractory_until[node] = current_time + config.refractory_period;
             spike_counts[node]++;
-            total_spikes++;
+            total_spikes.fetch_add(1, std::memory_order_relaxed);
             return true;
         }
         return false;

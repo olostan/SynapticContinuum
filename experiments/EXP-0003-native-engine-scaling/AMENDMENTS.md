@@ -36,6 +36,26 @@
 
 ---
 
-### Amendment 5: Matched-Fidelity Synchronous vs Event-Driven Crossover
-- **Clarification**: Synchronous simulation at fixed $\Delta t = 0.1$ incurs spike timing quantization error ($\le 0.1$). Matched continuous-time fidelity requires $\Delta t \le 0.01$ (reducing potential error from $1.09$ to $<0.003$ and eliminating spike count discrepancies), which increases synchronous computational cost by 10×.
-- **Impact**: Crossover claims are explicitly conditioned on declared fidelity budgets.
+### Amendment 5: Matched-Fidelity Synchronous vs Event-Driven Crossover (Empirically Measured)
+- **Deviation**: The prior report hypothesized that matched fidelity ($\Delta t \le 0.01$) would shift the crossover to $\sim 20–25\%$ activity, based on a single 32-node fixture, while published crossover tables only showed $\Delta t = 0.10$.
+- **Correction**: Executed a comprehensive empirical benchmark (`fidelity_sweep`) measuring simulation time, RMSE potential error, spike count discrepancy, and mean timestamp quantization error across $N \in \{128, 1024, 10000\}$ and $f \in \{0.001, 0.010, 0.050, 0.100, 0.200, 0.500, 1.000\}$.
+- **Impact**: The measured crossover under matched fidelity ($\Delta t = 0.01$) is **$f^* \approx 0.06–0.08$** across workloads. The earlier $20–25\%$ figure is formally demoted to an unvalidated analytical extrapolation and superseded by empirical measurements.
+
+---
+
+### Amendment 6: Zero-Delay Causality Precondition and Graph Validation
+- **Deviation**: The previous revision substituted `epoch_delta = 0.001` in `cpp_owner.hpp` and `min_graph_delay = 0.001` in `cpp_locked.hpp` when non-positive delays were encountered, which is not a conservative bound and can permit causal arrival inversions across workers.
+- **Correction**: Formally instituted the **Positive-Lookahead Precondition** for conservative parallel execution. Both `cpp_owner` (for cross-region edges) and `cpp_locked` (for all edges with $W > 1$) validate graph delays prior to simulation and throw `std::invalid_argument` if non-positive delays are detected. Single-worker execution ($W=1$) remains supported for zero delays via priority queue ordering.
+- **Impact**: Prevents unsynchronized partitions from advancing past instantaneous cross-region events. Unit tests verify rejection of zero-delay cross-region cycles and explain arrival inversion hazards.
+
+---
+
+### Amendment 7: Simultaneous Event Replay and Atomic Counter Thread Safety
+- **Deviation**: Under heavy simultaneous event batches across $W=6$ and $W=8$ workers, non-atomic increments to `state.total_spikes` caused multithreaded lost-update races in reported spike counts.
+- **Correction**: Upgraded `SubstrateStatePacked::total_spikes` to `std::atomic<uint64_t>` and derived `res.total_spikes` deterministically from sorted, merged `res.spike_records.size()`. Added regression tests for $W=6$ and $W=8$ verifying identical 64-bit state digests and spike counts over repeated runs.
+- **Impact**: Full bit-exact determinism preserved across arbitrary thread inter-leavings and non-power-of-two core allocations.
+
+---
+
+### Amendment 8: Clarification of Python Memory Accounting
+- **Clarification**: In the Python benchmark branch, memory values reflect theoretical model estimation (`estimated_memory_bytes`) and overall interpreter footprint rather than isolated native substrate allocation. C++ benchmarks report true OS peak RSS via `getrusage`.

@@ -3,6 +3,7 @@ from dataclasses import asdict
 from datetime import datetime, timezone
 import json
 import os
+import resource
 import subprocess
 import time
 from typing import Any, Dict, List, Optional
@@ -112,7 +113,8 @@ class BenchmarkRunner:
                 "total_spikes": last_res.get("total_spikes", 0),
                 "peak_queue_size": last_res.get("peak_queue_size", 0),
                 "estimated_memory_bytes": est_bytes,
-                "peak_rss_bytes": est_bytes, # Python estimate
+                "peak_rss_bytes": resource.getrusage(resource.RUSAGE_SELF).ru_maxrss * 1024,
+                "is_rss_estimated": True, # Note: Python branch RSS reflects persistent interpreter process rather than isolated simulation substrate
             }
 
         # C++ Native execution
