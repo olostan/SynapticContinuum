@@ -6,6 +6,8 @@
   "required": [
     "schema_version",
     "benchmark_id",
+    "run_id",
+    "build_id",
     "semantic_class",
     "hardware_environment",
     "graph_configuration",
@@ -22,7 +24,20 @@
     },
     "benchmark_id": {
       "type": "string",
-      "description": "Deterministic SHA256 or canonical identifier of the workload parameters and graph seed"
+      "minLength": 1,
+      "description": "Immutable canonical identifier of the workload parameters, topology, scale, and seed (invariant across W, engines, and compiler builds)"
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Unique identifier for this specific execution (benchmark_id + build_id + engine + queue + representation + partitioner + W)"
+    },
+    "build_id": {
+      "type": "string",
+      "enum": [
+        "portable_o3",
+        "znver3_o3"
+      ]
     },
     "workload_name": {
       "type": "string"
@@ -69,7 +84,11 @@
       "properties": {
         "num_nodes": { "type": "integer", "minimum": 1 },
         "num_edges": { "type": "integer", "minimum": 0 },
+        "mean_out_degree": { "type": "integer", "minimum": 0 },
         "topology_type": { "type": "string" },
+        "representation": { "type": "string" },
+        "state_layout": { "type": "string" },
+        "history_capacity_L": { "type": "integer", "minimum": 0 },
         "clustering_coefficient": { "type": "number" },
         "characteristic_path_length": { "type": "number" },
         "modularity": { "type": "number" },
@@ -87,12 +106,16 @@
       "properties": {
         "engine_id": { "type": "string" },
         "algorithm_family": { "type": "string" },
+        "queue_family": { "type": "string" },
+        "partitioner": { "type": "string" },
         "num_workers": { "type": "integer", "minimum": 1 },
         "num_regions": { "type": "integer", "minimum": 1 },
         "t_max": { "type": "number" },
         "min_delay": { "type": "number" },
         "max_delay": { "type": "number" },
-        "order_relaxation_epsilon": { "type": "number" }
+        "order_relaxation_epsilon": { "type": "number" },
+        "warmup_runs": { "type": "integer", "minimum": 0 },
+        "timed_repetitions": { "type": "integer", "minimum": 1 }
       }
     },
     "workload_metrics": {
@@ -105,12 +128,14 @@
       "properties": {
         "active_fraction": { "type": "number" },
         "external_events": { "type": "integer" },
-        "total_events_processed": { "type": "integer" },
-        "total_edges_traversed": { "type": "integer" },
-        "total_spikes": { "type": "integer" },
-        "cross_region_events": { "type": "integer" },
+        "total_events_processed": { "type": "integer", "minimum": 0 },
+        "total_edges_traversed": { "type": "integer", "minimum": 0 },
+        "total_spikes": { "type": "integer", "minimum": 0 },
+        "cross_region_events": { "type": "integer", "minimum": 0 },
         "cross_region_event_fraction": { "type": "number" },
-        "total_migrations": { "type": "integer" },
+        "total_migrations": { "type": "integer", "minimum": 0 },
+        "migrated_queue_events": { "type": "integer", "minimum": 0 },
+        "migrated_mailbox_events": { "type": "integer", "minimum": 0 },
         "migration_pause_sec": { "type": "number" }
       }
     },
@@ -123,9 +148,15 @@
       ],
       "properties": {
         "wall_time_sim_sec": { "type": "number", "minimum": 0.0 },
+        "median_sim_sec": { "type": "number", "minimum": 0.0 },
+        "std_sim_sec": { "type": "number", "minimum": 0.0 },
+        "rep_wall_sim_sec": {
+          "type": "array",
+          "items": { "type": "number", "minimum": 0.0 }
+        },
         "wall_time_total_sec": { "type": "number", "minimum": 0.0 },
         "thread_spawn_join_overhead_sec": { "type": "number" },
-        "events_per_sec": { "type": "number" },
+        "events_per_sec": { "type": "number", "minimum": 0.0 },
         "worker_active_sec": {
           "type": "array",
           "items": { "type": "number" }
@@ -151,7 +182,8 @@
         "hardware_perf_counters_available"
       ],
       "properties": {
-        "peak_rss_bytes": { "type": "integer" },
+        "peak_rss_bytes": { "type": "integer", "minimum": 0 },
+        "graph_payload_bytes": { "type": "integer", "minimum": 0 },
         "minor_page_faults": { "type": "integer" },
         "major_page_faults": { "type": "integer" },
         "voluntary_context_switches": { "type": "integer" },
@@ -168,9 +200,15 @@
       ],
       "properties": {
         "state_digest": { "type": "string" },
-        "parity_with_serial": { "type": "boolean" },
+        "reference_serial_digest": { "type": ["string", "null"] },
+        "parity_with_serial": { "type": ["boolean", "null"] },
+        "exact_spike_matches": { "type": "integer" },
+        "backward_time_events": { "type": "integer" },
+        "out_of_order_worker_events": { "type": "integer" },
         "spike_count_error": { "type": "integer" },
+        "spike_timestamp_rmse": { "type": "number" },
         "potential_rmse": { "type": "number" },
+        "temporal_discrimination_accuracy": { "type": "number" },
         "temporal_discrimination_passed": { "type": "boolean" }
       }
     }

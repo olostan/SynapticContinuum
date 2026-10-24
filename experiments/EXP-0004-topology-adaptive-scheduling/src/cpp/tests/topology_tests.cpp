@@ -1,10 +1,13 @@
 #include "../core/types.hpp"
 #include "../core/graph_topologies.hpp"
+#include "../core/graph_representations.hpp"
 #include "../core/graph_metrics.hpp"
 #include "../core/partitioners.hpp"
 #include "../engines/cpp_serial.hpp"
 #include "../engines/cpp_owner_instrumented.hpp"
 #include "../engines/cpp_persistent_pool.hpp"
+#include "../engines/cpp_openmp_epoch.hpp"
+#include "../engines/cpp_pairwise_watermark.hpp"
 #include "../engines/cpp_adaptive.hpp"
 #include "../engines/cpp_relaxed.hpp"
 #include "../engines/cpp_barrier_free_independent.hpp"
@@ -46,9 +49,14 @@ void test_graph_generators() {
     ASSERT_TRUE(g_ws_0.num_nodes == N);
     ASSERT_TRUE(g_ws_01.num_nodes == N);
 
-    // 3. Modular SBM
+    // 3. Modular SBM (direct flat vs vec-of-vec bit-exact equivalence)
     auto g_mod = sc::Exp4GraphGenerators::create_modular_sbm(N, D, 4, 0.10f, seed);
+    auto g_mod_vov = sc::Exp4GraphGenerators::create_modular_sbm_vec_of_vec(N, D, 4, 0.10f, seed);
     ASSERT_TRUE(g_mod.graph.num_nodes == N);
+    ASSERT_TRUE(g_mod.graph.num_edges == g_mod_vov.graph.num_edges);
+    ASSERT_TRUE(g_mod.graph.targets == g_mod_vov.graph.targets);
+    ASSERT_TRUE(g_mod.graph.weights == g_mod_vov.graph.weights);
+    ASSERT_TRUE(g_mod.graph.delays == g_mod_vov.graph.delays);
     ASSERT_TRUE(g_mod.planted_labels.size() == static_cast<size_t>(N));
 
     // 4. Six disconnected modules control (c = 0.0)
@@ -201,16 +209,47 @@ void test_causal_parity_across_engines() {
         ASSERT_TRUE(res_owner.state_digest == res_serial.state_digest);
     }
 
-    // 3. Persistent pool engine across W=1, 2, 4 with R=8 logical regions
+    // 3. Persistent pool engine across W=1, 2, 4 with R=8 logical regions (BinaryHeap, DaryHeap<4>, DaryHeap<8>, BucketEventQueue)
     for (int32_t W : {1, 2, 4}) {
-        std::cout << "  [parity] pool W=" << W << std::endl;
+        std::cout << "  [parity] pool BinaryHeap/Dary4/Dary8/Bucket W=" << W << std::endl;
         auto node_to_reg = sc::Exp4Partitioners::partition_contiguous(64, 8);
-        sc::Exp4PersistentPoolEngine pool(config, g_mod.graph, W, 8, node_to_reg);
-        sc::SimulationResult res_pool;
-        pool.run(inputs, 5.0, &res_pool);
+        sc::Exp4PersistentPoolEngineT<sc::BinaryHeapQueue> pool_bin(config, g_mod.graph, W, 8, node_to_reg);
+        sc::SimulationResult res_bin;
+        pool_bin.run(inputs, 5.0, &res_bin);
+        ASSERT_TRUE(res_bin.total_spikes == res_serial.total_spikes);
+        ASSERT_TRUE(res_bin.state_digest == res_serial.state_digest);
 
-        ASSERT_TRUE(res_pool.total_spikes == res_serial.total_spikes);
-        ASSERT_TRUE(res_pool.state_digest == res_serial.state_digest);
+        sc::Exp4PersistentPoolEngineT<sc::DaryHeapQueue<4>> pool_d4(config, g_mod.graph, W, 8, node_to_reg);
+        sc::SimulationResult res_d4;
+        pool_d4.run(inputs, 5.0, &res_d4);
+        ASSERT_TRUE(res_d4.total_spikes == res_serial.total_spikes);
+        ASSERT_TRUE(res_d4.state_digest == res_serial.state_digest);
+
+        sc::Exp4PersistentPoolEngineT<sc::DaryHeapQueue<8>> pool_d8(config, g_mod.graph, W, 8, node_to_reg);
+        sc::SimulationResult res_d8;
+        pool_d8.run(inputs, 5.0, &res_d8);
+        ASSERT_TRUE(res_d8.total_spikes == res_serial.total_spikes);
+        ASSERT_TRUE(res_d8.state_digest == res_serial.state_digest);
+
+        sc::Exp4PersistentPoolEngineT<sc::BucketEventQueue> pool_bkt(config, g_mod.graph, W, 8, node_to_reg);
+        sc::SimulationResult res_bkt;
+        pool_bkt.run(inputs, 5.0, &res_bkt);
+        ASSERT_TRUE(res_bkt.total_spikes == res_serial.total_spikes);
+        ASSERT_TRUE(res_bkt.state_digest == res_serial.state_digest);
+
+        // 4. OpenMP Epoch Engine
+        sc::Exp4OpenMPEngine omp_eng(config, g_mod.graph, W, 8, node_to_reg);
+        sc::SimulationResult res_omp;
+        omp_eng.run(inputs, 5.0, &res_omp);
+        ASSERT_TRUE(res_omp.total_spikes == res_serial.total_spikes);
+        ASSERT_TRUE(res_omp.state_digest == res_serial.state_digest);
+
+        // 5. Pairwise Watermark Engine (no global barriers)
+        sc::Exp4PairwiseWatermarkEngine wm_eng(config, g_mod.graph, W, 8, node_to_reg);
+        sc::SimulationResult res_wm;
+        wm_eng.run(inputs, 5.0, &res_wm);
+        ASSERT_TRUE(res_wm.total_spikes == res_serial.total_spikes);
+        ASSERT_TRUE(res_wm.state_digest == res_serial.state_digest);
     }
 
     std::cout << "  -> PASSED (Bit-exact state digest match: " << res_serial.state_digest
@@ -282,7 +321,7 @@ void test_adaptive_engine() {
 }
 
 void test_forced_migration_concurrent_traffic() {
-    std::cout << "[TEST] Running test_forced_migration_concurrent_traffic (TSan & race safety)..." << std::endl;
+    std::cout << "[TEST] Running test_forced_migration_concurrent_traffic (TSan, race safety & bit-exact parity)..." << std::endl;
     sc::SubstrateConfig config;
     config.num_nodes = 96;
     config.tau_m = 5.0f;
@@ -294,19 +333,35 @@ void test_forced_migration_concurrent_traffic() {
     auto g_mod = sc::Exp4GraphGenerators::create_modular_sbm(96, 12, 6, 0.25f, seed, 0.4f, 0.2f, 1.0f);
     auto node_to_reg = sc::Exp4Partitioners::partition_contiguous(96, 6);
 
-    // Skewed input streams concentrated on region 0 (nodes 0..15)
+    // Skewed input streams concentrated on region 0 (nodes 0..15) and region 2 (nodes 32..47)
     std::vector<sc::ExternalEvent> inputs;
     for (int32_t step = 0; step < 400; ++step) {
         inputs.push_back({0.005 * step, step % 16, 1.5f});
+        if (step % 3 == 0) {
+            inputs.push_back({0.005 * step + 0.001, 32 + (step % 16), 1.5f});
+        }
     }
 
-    // Force migration on EVERY epoch with threshold = 1.05 and lower event barrier
-    sc::Exp4AdaptiveEngine adaptive(config, g_mod.graph, 3, 6, node_to_reg, 1.05, 1);
-    auto stats = adaptive.run_adaptive(inputs, 3.0);
+    // Serial ground-truth reference
+    sc::Exp4SerialEngine serial(config, g_mod.graph);
+    auto res_serial = serial.run(inputs, 3.0);
+
+    // Force migration on EVERY epoch with threshold = 1.01 and min_epoch_events = 1.0
+    sc::Exp4AdaptiveEngine adaptive(config, g_mod.graph, 3, 6, node_to_reg, 1.01, 1, 1.0);
+    sc::SimulationResult res_adaptive;
+    auto stats = adaptive.run_adaptive(inputs, 3.0, &res_adaptive);
 
     ASSERT_TRUE(stats.total_migrations > 0);
-    ASSERT_TRUE(stats.total_events_processed > 0);
-    std::cout << "  -> PASSED (Completed " << stats.total_migrations << " forced migrations safely under heavy cross-traffic)" << std::endl;
+    ASSERT_TRUE(stats.migrated_queue_events > 0);
+    ASSERT_TRUE(stats.migrated_mailbox_events > 0);
+    ASSERT_TRUE(stats.total_events_processed == res_serial.total_events_processed);
+    ASSERT_TRUE(stats.total_spikes == res_serial.total_spikes);
+    ASSERT_TRUE(stats.state_digest == res_serial.state_digest);
+
+    std::cout << "  -> PASSED (Migrations: " << stats.total_migrations
+              << ", Queue Ev Moved: " << stats.migrated_queue_events
+              << ", Mailbox Ev Moved: " << stats.migrated_mailbox_events
+              << ", Bit-exact digest match: " << stats.state_digest << ")" << std::endl;
 }
 
 void test_barrier_free_independent_engine() {
@@ -373,21 +428,29 @@ void test_relaxed_engine() {
     sc::Exp4SerialEngine serial(config, g_mod.graph);
     auto ref = serial.run(inputs, 5.0);
 
-    // 1. Epsilon = 0: MUST be bit-exact with serial reference
+    // 1. Epsilon = 0: MUST be bit-exact with serial reference and 100% temporal discrimination accuracy
     sc::Exp4RelaxedEngine relaxed_zero(config, g_mod.graph, 2, 4, {}, 0.0);
-    auto div_zero = relaxed_zero.evaluate_divergence_vs_reference(inputs, 5.0, ref);
+    auto div_zero = relaxed_zero.evaluate_divergence_vs_reference(inputs, 5.0, ref, 100);
     ASSERT_TRUE(div_zero.spike_count_error == 0);
+    ASSERT_TRUE(div_zero.backward_time_events == 0);
+    ASSERT_TRUE(div_zero.state_digest == div_zero.reference_digest);
     ASSERT_NEAR(div_zero.potential_rmse, 0.0, 1e-4);
+    ASSERT_NEAR(div_zero.temporal_discrimination_accuracy, 1.0, 1e-6);
     ASSERT_TRUE(div_zero.temporal_discrimination_passed);
 
-    // 2. Epsilon = 1.0: Real order relaxation test
+    // 2. Epsilon = 1.0: Real order relaxation test with measured backward-time violations and degraded discrimination
     sc::Exp4RelaxedEngine relaxed_pos(config, g_mod.graph, 2, 4, {}, 1.0);
-    auto div_pos = relaxed_pos.evaluate_divergence_vs_reference(inputs, 5.0, ref);
+    auto div_pos = relaxed_pos.evaluate_divergence_vs_reference(inputs, 5.0, ref, 100);
+    ASSERT_TRUE(div_pos.backward_time_events > 0);
+    ASSERT_TRUE(div_pos.temporal_discrimination_accuracy < 1.0);
+    ASSERT_TRUE(!div_pos.temporal_discrimination_passed);
     std::cout << "  [relaxed eps=1.0] Spike err: " << div_pos.spike_count_error
+              << ", Backward ev: " << div_pos.backward_time_events
+              << ", Exact matches: " << div_pos.exact_spike_matches << "/" << ref.total_spikes
               << ", Pot RMSE: " << div_pos.potential_rmse
-              << ", T RMSE: " << div_pos.spike_timestamp_rmse << std::endl;
+              << ", Discrim Acc: " << div_pos.temporal_discrimination_accuracy << " (chance=0.50)" << std::endl;
 
-    std::cout << "  -> PASSED (eps=0 is exact, eps>0 runs relaxed scheduling)" << std::endl;
+    std::cout << "  -> PASSED (eps=0 is exact, eps>0 runs relaxed scheduling with measured violations)" << std::endl;
 }
 
 int main() {

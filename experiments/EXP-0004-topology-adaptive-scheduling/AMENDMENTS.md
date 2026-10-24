@@ -1,68 +1,47 @@
 # SynapticContinuum EXP-0004: Research Protocol Amendments
 
-**Status**: APPROVED POST-PREREGISTRATION EXPANSION  
+**Status**: APPROVED & FULLY EXECUTED POST-PREREGISTRATION EXPANSION  
 **Date**: 2026-10-24  
-**Governing Document**: [SPEC.md](SPEC.md), [EXPERIMENTATION.md](../../EXPERIMENTATION.md), PR #13 Code Review  
+**Governing Document**: [SPEC.md](SPEC.md), [EXPERIMENTATION.md](../../EXPERIMENTATION.md), PR #13 Code Reviews  
 **Author**: Principal Experimental Engineer  
-**Approved By**: Repository Owner (`@olostan`) via PR #13 review directive  
+**Approved By**: Repository Owner (`@olostan`) via PR #13 review directives  
 
 ---
 
 ## 1. Context and Rationale
 
-The original preregistered specification for EXP-0004 ([SPEC.md](SPEC.md)) formulated six core hypotheses ($H1$ through $H6$) investigating how network topology, event locality, persistent worker pooling, dynamic region migration, and order relaxation affect conservative parallel discrete-event simulation (PDES) on multi-core hardware.
-
-Following initial execution and code review of PR #13 (commit `a19abe1`), an independent audit identified several concurrency, benchmarking, and methodological opportunities to strengthen scientific rigor:
-1. **Migration Phase Synchronization**: In the initial prototype, dynamic region migration could mutate worker queues while workers were advancing to mailbox drain.
-2. **Order Relaxation Engine**: The initial `cpp_relaxed.hpp` wrapped the strict persistent pool without altering the synchronization window or scheduling policy.
-3. **Hardware Scaling Baseline**: The original 6-module disconnected scaling test ($2.53\times$ speedup) was confounded by two global barriers per epoch. A barrier-free independent worker loop was needed to establish the true hardware event-processing ceiling.
-4. **Heuristic Partitioning Nomenclature**: The greedy boundary swap method was labeled `mincut`, risking confusion with exact mincut or multilevel spectral/METIS partitioning algorithms.
-5. **Workload Volume**: Early Stage 1 runs processed only hundreds of events, causing barrier latency to dominate computational time. Sustained workloads ($\ge 10^6$ events) were required to characterize large-scale steady-state throughput.
-6. **Cross-Experiment Contract**: Future experiments (EXP-0005+) required a machine-readable JSON schema, canonical fixtures, and a queryable Pareto frontier tool.
+Following initial execution (`a19abe1`) and two rounds of rigorous scientific and code audit on PR #13, we enacted and executed seven protocol amendments to eliminate concurrency hazards, enforce zero-fabrication schema validation, remove unsupported hardware cache claims, complete the comparative matrices (D1, D2, D3, D4, D6), and scale execution up to $N = 10,000,000$ neurons ($160,000,000$ synapses) within the 16 GB host's 60% available-RAM safety gate.
 
 ---
 
-## 2. Approved Protocol Amendments
+## 2. Executed Protocol Amendments
 
-### Amendment 1: Three-Barrier Migration Phase Protocol
-- **Mechanism**: Replaced the two-barrier epoch cycle with a three-barrier protocol:
-  1. `epoch_barrier_`: All $W$ workers complete event processing up to $t_{\text{epoch}}$ and arrive.
-  2. *Coordinator Migration Phase*: All $W$ workers park at `migration_barrier_`. The coordinator exclusively rebalances regions, transfers pending queue events, and reroutes in-flight mailbox messages.
-  3. `migration_barrier_`: Coordinator releases all workers to drain their rebalanced mailboxes safely.
-  4. `drain_barrier_`: All workers finish mailbox drain before beginning the next epoch.
-- **Verification**: Zero data races verified under GCC ThreadSanitizer (`-fsanitize=thread`) with forced migration on every epoch under heavy cross-traffic.
+### Amendment 1: Three-Barrier Migration Protocol & Conservative All-Region Lookahead
+- **Mechanism**:
+  1. `epoch_barrier_`: All $W$ workers finish local event processing up to $t_{\text{epoch}}$ and arrive.
+  2. *Coordinator Migration Phase*: While workers park at `migration_barrier_`, thread 0 rebalances overloaded regions, transfers queued events (`migrated_queue_events`), and reroutes in-flight mailbox messages (`migrated_mailbox_events`).
+  3. `migration_barrier_` & `drain_barrier_`: Workers drain rebalanced mailboxes and synchronize before the next epoch.
+  4. Because region-to-worker ownership changes dynamically in `Exp4AdaptiveEngine`, lookahead is computed across all inter-region edges (`check_all_inter_region_delays_ = true`), guaranteeing that no future migration can expose a smaller cross-worker delay than the conservative epoch window.
+- **Verification**: `test_forced_migration_concurrent_traffic` verified `14` migrations (`2,769` migrated queue events, `47` migrated mailbox events) with 100% bit-exact `state_digest` parity (`14408938184421392896`) against `Exp4SerialEngine` and **0 errors under ASan/UBSan and TSan**.
 
-### Amendment 2: Physical Barrier-Free Hardware Scaling Control
-- **Mechanism**: Added `Exp4BarrierFreeIndependentEngine`. For strictly disconnected topologies ($c=0.0$), workers execute disjoint partitions of the graph with zero global barriers, zero mutexes, and zero mailbox overhead.
-- **Scientific Role**: Disentangles engine computation efficiency from synchronization overhead. Establishes the empirical hardware ceiling for multi-core scaling on the test host (AMD Ryzen 5 PRO 5650GE).
+### Amendment 2: Strict Schema-Validated Benchmark Records (`schemas/benchmark_schema.json` & `scripts/pareto_query.py`)
+- **Mechanism**: Removed all post-hoc record synthesis and default fabrication from `scripts/pareto_query.py`. `exp0004_bench` directly emits 182 canonical `benchmark_records` per build (`364` total across `znver3_o3` and `portable_o3`), validated by `jsonschema.validate` and checked for exact arithmetic consistency (`events_per_sec == total_events_processed / wall_time_sim_sec`) and measured `parity_with_serial`.
 
-### Amendment 3: Genuine Order Relaxation & Discrimination Task
-- **Mechanism**: Implemented `Exp4RelaxedEngine` with parameter $\epsilon$. Expands the epoch lookahead to $\Delta t = d_{\min, \text{cross}} + \epsilon$. Late-arriving events are applied to neuron potentials without rollback.
-- **Evaluation**: Evaluates divergence against the exact serial continuous-time reference across $\epsilon \in \{0.0, 0.1, 0.5, 1.0, 2.0\}$. Includes a temporal sequence discrimination task ($A \to B$ vs $B \to A$) to verify causal sensitivity.
+### Amendment 3: Multi-Repetition $N=1\text{M}$ Analysis & Removal of Unmeasured L3 Cache Claims
+- **Correction**: Removed the unverified claim attributing $N=1\text{M}$ scaling to per-core L3 cache partitioning on a shared 16 MiB L3 cache without PMU counters (`perf_event_open` is unavailable in WSL2).
+- **Execution**: Executed $N=1,000,000, D=16$ under both the short-horizon workload (186,881 events) and a sustained workload (1,403,156 processed events) with 2 warmups and 5 timed repetitions, recording all per-repetition wall times and comparing against both $W=1$ (`self_speedup`) and `Exp4SerialEngine` (`speedup_vs_serial`).
 
-### Amendment 4: Accurate Heuristic Partitioning Terminology
-- **Change**: Formally renamed `partition_greedy_mincut` to `partition_greedy_boundary_heuristic`.
-- **Clarification**: Documented that this algorithm is a local greedy boundary swap heuristic with soft capacity balancing, distinct from global exact mincut or multilevel partitioners (e.g. METIS, KaHIP). Retained an inline alias for backward compatibility.
+### Amendment 4: Stage 1B Zero-Edge Pure Trace Replay
+- **Mechanism**: Stage 1B replays the 970,974-event trace on a zero-edge graph (`num_edges = 0`), ensuring `trace_events == total_events_processed == 970,974` and isolating queue/dispatch throughput from synaptic fan-out.
 
-### Amendment 5: Cross-Experiment Benchmark Contract & Schema
-- **Artifacts**:
-  - `schemas/benchmark_schema.json`: Validated versioned schema for benchmark results.
-  - `BENCHMARK_CATALOG.md`: Canonical catalog of workload IDs and configurations.
-  - `scripts/pareto_query.py`: Query tool filtering by memory, topology, and scale to extract Pareto-optimal backends.
+### Amendment 5: Comparative Matrices D1 (Queues), D2 (Representations/History $L$), D3 (METIS & igraph Leiden), D4 (OpenMP & Pairwise Watermarks), and D6 (`NOT RUN` External Simulators)
+- **D1**: Benchmarked `BinaryHeapQueue` (2-ary), `DaryHeapQueue<4>`, `DaryHeapQueue<8>`, and `BucketEventQueue`.
+- **D2**: Benchmarked `csr_vec_of_vec` vs `csr_direct_flat` vs `csr_compact_quantized_8B` vs `procedural_on_the_fly_0B`, `soa_packed` vs `aos_neuron_struct`, and history depths $L \in \{0, 16, 64\}$.
+- **D3**: Integrated external library baselines **`pymetis` (`metis_kway`)** and **`python-igraph` (`igraph_leiden`)** alongside `contiguous`, `random_hash`, `planted_oracle`, `greedy_boundary_heuristic`, and `activity_aware`.
+- **D4**: Implemented `Exp4OpenMPEngine` (`-fopenmp`) and `Exp4PairwiseWatermarkEngine` (Chandy-Misra-Bryant pairwise lookahead watermarks without global barriers) alongside `owner_barrier`, `persistent_pool`, and `adaptive_scheduler`.
 
-### Amendment 6: Scale Ladder Expansion with RAM Preflight Guardrails
-- **Execution**: Scaled network sizes $N \in \{10\text{k}, 100\text{k}, 1\text{M}, 3\text{M}\}$ on the 16 GB Linux host under strict memory preflight ($\le 60\%$ currently available RAM).
-- **Workload Volume**: Sustained event horizons generating $\ge 1\text{M}$ processed events on large runs.
+### Amendment 6: Direct Flat CSR Construction & Extreme Scale Ladder ($N = 3\text{M}$ and $N = 10\text{M}$)
+- **Mechanism**: Eliminated intermediate `std::vector<std::vector<...>>` allocations during graph construction, cutting peak build memory by $\approx 50\%$ and enabling preflight-gated ($\le 60\%$ available RAM) execution at **$N=3,000,000, D=16$** (2.08 GB RSS, 1.68M events) and **$N=10,000,000, D=4$ & $D=16$** (up to 160M synapses, 6.49 GB RSS, 1.57M events) with 100% bit-exact serial parity.
 
-### Amendment 7: Modern CMake & Compiler Target Tracking
-- **Configuration**:
-  - Modern target-based CMake with `Threads::Threads`.
-  - Tracked compiler optimization variants: Portable Release (`-O3 -DNDEBUG`) vs Host-Tuned Zen3 (`-O3 -march=znver3 -mtune=znver3 -DNDEBUG`).
-  - Separate debug/sanitizer targets (`topology_tests_asan`, `topology_tests_tsan`).
-  - Documented tool restrictions (unprivileged `perf` counters recorded as unavailable rather than simulated).
-
----
-
-## 3. Preservation of Historical Findings
-
-All preliminary findings reported in the initial execution (`a19abe1`) are preserved in `REPORT.md` under Section 8 (Intellectual History & Audit Trail). The amendments expand and refine our empirical conclusions without retroactively altering preregistered commitments.
+### Amendment 7: Stage 4 Causal Violation Counters & 100-Trial Temporal Order Discrimination
+- **Mechanism**: Instrumented `Exp4RelaxedEngine` with `backward_time_events`, `out_of_order_worker_events`, `exact_spike_matches`, and a 100-trial temporal order discrimination task ($A \to B$ vs $B \to A$ against a 50% chance baseline).

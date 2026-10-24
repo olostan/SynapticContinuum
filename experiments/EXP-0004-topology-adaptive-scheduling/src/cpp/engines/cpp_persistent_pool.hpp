@@ -4,6 +4,8 @@
 #include "../../../../EXP-0003-native-engine-scaling/src/cpp/core/graph.hpp"
 #include "../../../../EXP-0003-native-engine-scaling/src/cpp/core/state.hpp"
 #include "../../../../EXP-0003-native-engine-scaling/src/cpp/queues/binary_heap.hpp"
+#include "../../../../EXP-0003-native-engine-scaling/src/cpp/queues/dary_heap.hpp"
+#include "../../../../EXP-0003-native-engine-scaling/src/cpp/queues/bucket_queue.hpp"
 #include <vector>
 #include <thread>
 #include <atomic>
@@ -17,19 +19,22 @@
 
 namespace sc {
 
-class Exp4PersistentPoolEngine {
+template <typename QueueType = BinaryHeapQueue>
+class Exp4PersistentPoolEngineT {
 public:
-    explicit Exp4PersistentPoolEngine(
+    explicit Exp4PersistentPoolEngineT(
         const SubstrateConfig& config,
         const NeuralGraphCSR& graph,
         int32_t num_workers,
         int32_t num_regions,
-        const std::vector<int32_t>& node_to_region = {}
+        const std::vector<int32_t>& node_to_region = {},
+        bool check_all_inter_region_delays = false
     ) : config_(config),
         graph_(graph),
         num_workers_(std::max(1, num_workers)),
         num_regions_(std::max(num_workers_, num_regions)),
         node_to_region_(node_to_region),
+        check_all_inter_region_delays_(check_all_inter_region_delays),
         stop_workers_(false),
         epoch_barrier_(num_workers_ + 1), // Workers + Coordinator
         migration_barrier_(num_workers_ + 1),
@@ -55,7 +60,7 @@ public:
         start_persistent_workers();
     }
 
-    ~Exp4PersistentPoolEngine() {
+    ~Exp4PersistentPoolEngineT() {
         stop_persistent_workers();
     }
 
@@ -97,7 +102,8 @@ public:
                 int32_t v = tgts[i];
                 int32_t reg_v = node_to_region_[v];
                 int32_t owner_v = region_owner_[reg_v];
-                if (owner_u != owner_v) {
+                bool is_cross = check_all_inter_region_delays_ ? (reg_u != reg_v) : (owner_u != owner_v);
+                if (is_cross) {
                     has_cross_edges = true;
                     if (d[i] < min_cross_delay) {
                         min_cross_delay = d[i];
@@ -123,7 +129,11 @@ public:
         worker_queues_.clear();
         worker_queues_.reserve(W);
         for (int32_t w = 0; w < W; ++w) {
-            worker_queues_.emplace_back(std::max(size_t{16384}, external_events.size() * 2 / W + 1024));
+            if constexpr (std::is_same_v<QueueType, BucketEventQueue>) {
+                worker_queues_.emplace_back(0.0005, 65536);
+            } else {
+                worker_queues_.emplace_back(std::max(size_t{16384}, external_events.size() * 2 / W + 1024));
+            }
         }
 
         uint64_t seq = 0;
@@ -240,6 +250,8 @@ public:
         stats.total_spikes = all_spikes.size();
         stats.cross_region_events = cross_worker_events_.load();
         stats.total_migrations = total_migrations_recorded_;
+        stats.migrated_queue_events = migrated_queue_events_recorded_;
+        stats.migrated_mailbox_events = migrated_mailbox_events_recorded_;
         stats.migration_pause_sec = migration_pause_recorded_sec_;
         stats.backlog_imbalance_ratio = imbalance;
         stats.peak_rss_bytes = get_actual_peak_rss_bytes();
@@ -423,9 +435,10 @@ protected:
     int32_t num_workers_;
     int32_t num_regions_;
     std::vector<int32_t> node_to_region_;
+    bool check_all_inter_region_delays_;
     std::vector<int32_t> region_owner_;
 
-    std::vector<BinaryHeapQueue> worker_queues_;
+    std::vector<QueueType> worker_queues_;
     std::vector<std::vector<std::vector<Event>>> mailboxes_;
 
     std::unique_ptr<SubstrateStatePacked> current_state_;
@@ -446,6 +459,8 @@ protected:
     std::vector<uint64_t> region_events_;
 
     uint64_t total_migrations_recorded_ = 0;
+    uint64_t migrated_queue_events_recorded_ = 0;
+    uint64_t migrated_mailbox_events_recorded_ = 0;
     double migration_pause_recorded_sec_ = 0.0;
 
     // Thread pool synchronization
@@ -461,5 +476,7 @@ protected:
     std::barrier<> migration_barrier_;
     std::barrier<> drain_barrier_;
 };
+
+using Exp4PersistentPoolEngine = Exp4PersistentPoolEngineT<BinaryHeapQueue>;
 
 } // namespace sc

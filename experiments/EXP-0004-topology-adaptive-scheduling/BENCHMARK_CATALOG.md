@@ -1,7 +1,7 @@
 # SynapticContinuum EXP-0004: Benchmark Catalog & Workload Registry
 
 **Schema Version**: `1.0.0` ([schemas/benchmark_schema.json](schemas/benchmark_schema.json))  
-**Document Status**: ACTIVE SPECIFICATION  
+**Document Status**: ACTIVE & STRICTLY VALIDATED (364 Schema-v1.0.0 Records Emitted)  
 **Host Architecture (Current)**: Linux x86_64 (`lenobox`, AMD Ryzen 5 PRO 5650GE, 6C/12T, 16 MiB L3, 16 GB DDR4)  
 **Host Architecture (Planned Follow-on)**: Apple Silicon M4 Pro (Darwin ARM64, 14-core [10P + 4E], 48 GB Unified Memory) — **MAC PENDING**  
 
@@ -9,56 +9,65 @@
 
 ## 1. Overview and Design Principles
 
-The SynapticContinuum Benchmark Catalog standardizes benchmark configurations across experiments (EXP-0004, EXP-0005+), ensuring that performance claims across different engines, data representations, and hardware platforms share identical mathematical stimuli and graph definitions.
+The SynapticContinuum Benchmark Catalog standardizes benchmark configurations across experiments (EXP-0004, EXP-0005+), ensuring that performance claims across different engines, queue structures, data representations, and hardware platforms share identical mathematical stimuli and graph definitions.
 
-### Key Rules:
-1. **Deterministic Benchmark ID**: `benchmark_id` is a canonical hash/slug uniquely encoding the workload parameters, graph generator, degree sequence, stimulus seed, and partition scheme.
-2. **Explicit Semantic Classes**: Performance cannot be compared across different semantic classes:
-   - `exact`: Bit-exact causal parity with serial continuous-time LIF reference (Digest match required).
-   - `fixed-dt-approx`: Time-stepped approximation ($\Delta t$-discretized update).
-   - `relaxed-model`: Bounded temporal order relaxation with parameter $\epsilon$ (no rollback).
-   - `trace-replay-only`: Fixed trace dispatch microbenchmark isolating memory/cache dispatch without neural model updates.
-3. **Machine Headroom Guardrails**:
-   - On 16 GB Linux host: Strict preflight check ensuring peak memory $\le 60\%$ of currently available RAM (~6.5 GiB max).
-   - On 48 GB macOS host: Workload ladder extends to $N = 10\text{M}$ and $30\text{M}$ with unified memory profiling.
+### Key Integrity Rules (Enforced by `scripts/pareto_query.py`):
+1. **Immutable Workload Benchmark ID**: `benchmark_id` uniquely identifies the **workload** (stage, topology, $N$, $D$, stimulus regime) and remains **invariant** across worker counts $W$, engine implementations (`cpp_serial`, `cpp_persistent_pool`, `cpp_openmp_epoch`, `cpp_pairwise_watermark`, etc.), and compiler build IDs (`znver3_o3`, `portable_o3`). The per-execution identifier is stored separately in `run_id`.
+2. **Zero Post-Hoc Normalization or Default Fabrication**:
+   - `exp0004_bench` directly emits canonical `benchmark_records` conforming to [`schemas/benchmark_schema.json`](schemas/benchmark_schema.json).
+   - `scripts/pareto_query.py` validates every record with `jsonschema.validate` and verifies arithmetic consistency (`events_per_sec == total_events_processed / wall_time_sim_sec`). No missing fields or defaults are synthesized in Python.
+3. **Measured Causal Parity Gate (`parity_with_serial`)**:
+   - `parity_with_serial` is set to `true` **only** when `Exp4SerialEngine` was executed on the identical workload and the parallel run matched `state_digest`, `total_spikes`, and `total_events_processed` bit-for-bit.
+   - Any record with `parity_with_serial == false` (such as $\epsilon \ge 0.100$ in `relaxed-model` or quantized/procedural approximations in D2) is automatically refused from `exact` Pareto frontiers.
 
 ---
 
-## 2. Canonical Workload Registry
+## 2. Canonical Workload Registry Emitted by `exp0004_bench`
 
-| Benchmark ID | Workload Description | Graph Topology | $N$ | Out-Degree $D$ | Active Fraction $f$ | Events Horizon | Semantic Class |
-|---|---|---|---|---|---|---|---|
-| `cfg_sw_n10k_d16_p001_s42` | Watts-Strogatz Small World | Small World ($p=0.01$) | 10,000 | 16 | 0.05 | 2,000 | `exact` |
-| `cfg_mod_n100k_d16_c005_s777` | Modular SBM 100k | Modular SBM ($c=0.05$, 24 modules) | 100,000 | 16 | 0.01 | 20,000 | `exact` |
-| `cfg_mod_n1m_d16_c005_s999` | Modular SBM 1M Sustained | Modular SBM ($c=0.05$, 48 modules) | 1,000,000 | 16 | 0.005 | $\ge 1,000,000$ | `exact` |
-| `cfg_disc_n100k_d16_m6_s123` | Disconnected 6-Module Control | Disconnected ($c=0.0$) | 100,000 | 16 | 0.01 | 20,000 | `exact` |
-| `cfg_celegans_multiplex_n279` | C. elegans Connectome | CoMuNeLab Multiplex Connectome | 279 | Empirical | 0.20 | 500 | `exact` |
-| `cfg_relaxed_discrim_eps05` | Temporal Discrimination ($\epsilon$) | Sequence Discrimination ($A \to B$) | 128 | 8 | 0.10 | 1,000 | `relaxed-model` |
+| `benchmark_id` | Stage & Workload Description | Graph Topology | $N$ | $D$ | Processed Events | Semantic Class | Records per Build |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| `exp0004_stage0_disconnected_N10000_D16` | Stage 0 Disconnected Control (5 seeds) | Disconnected 6-Module ($c=0.0$) | 10,000 | 16 | 31,963–33,784 | `exact` | 45 |
+| `exp0004_stage0_random_N10000_D16` | Stage 0 Uniform Random Control (5 seeds) | Uniform Random ($D=16$) | 10,000 | 16 | 33,221–35,442 | `exact` | 25 |
+| `exp0004_stage1_topo_<name>_N10000_D16` | Stage 1 Controlled Topology Sweep (13 regimes) | WS, SBM, Hierarchical, Rewired, Permuted | 10,000 | 16 | 1,684–1,772 | `exact` | 39 |
+| `exp0004_stage1b_trace_replay_N10000` | Stage 1B Pure Trace Replay (`num_edges=0`) | Empty-Edge Replay Graph | 10,000 | 0 | 970,974 | `trace-replay-only` | 5 |
+| `exp0004_stage2_partition_N10000_D16_c0.10` | Stage 2 Partitioning Strategies (D3, incl. METIS & Leiden) | Modular SBM ($c=0.10$) | 10,000 | 16 | 22,111 | `exact` | 8 |
+| `exp0004_stage2b_queues_N10000_D16_c0.10` | Stage 2B Priority Queue Family (D1: 2/4/8-ary, Bucket) | Modular SBM ($c=0.10$) | 10,000 | 16 | 22,111 | `exact` | 8 |
+| `exp0004_stage2c_repr_<label>_N100000_D16` | Stage 2C Representations, Layouts & History $L$ (D2) | Modular SBM ($c=0.05$) | 100,000 | 16 | 4,227–4,752 | `exact` / `approx` | 7 |
+| `exp0004_stage3_schedulers_N10000_D16_c0.10` | Stage 3 Parallel Schedulers (D4 across $W=1..12$) | Modular SBM ($c=0.10, R=24$) | 10,000 | 16 | 22,111 | `exact` | 19 |
+| `exp0004_stage3b_scale_N100000_D16_c0.02` | Stage 3B High-Scale 100k Sweep | Modular SBM ($c=0.02, R=24$) | 100,000 | 16 | 49,245 | `exact` | 5 |
+| `exp0004_stage3c_scale_N1000000_D16_short_horizon_186k` | Stage 3C 1M Short-Horizon (5 reps) | Disconnected 6-Module | 1,000,000 | 16 | 186,881 | `exact` | 5 |
+| `exp0004_stage3c_scale_N1000000_D16_sustained_1m_events` | Stage 3C 1M Sustained $\ge 1.4\text{M}$ Events (5 reps) | Disconnected 6-Module | 1,000,000 | 16 | 1,403,156 | `exact` | 5 |
+| `exp0004_stage3d_scale_N3000000_D16` | Stage 3D Extreme Scale 3M Neurons (48M edges) | Disconnected 6-Module | 3,000,000 | 16 | 1,684,864 | `exact` | 3 |
+| `exp0004_stage3d_scale_N10000000_D4` | Stage 3D Extreme Scale 10M Neurons ($D=4$, 40M edges) | Disconnected 6-Module | 10,000,000 | 4 | 1,658,352 | `exact` | 3 |
+| `exp0004_stage3d_scale_N10000000_D16` | Stage 3D Extreme Scale 10M Neurons ($D=16$, 160M edges) | Disconnected 6-Module | 10,000,000 | 16 | 1,572,432 | `exact` | 3 |
+| `exp0004_stage4_relaxed_N10000_D16_c0.10` | Stage 4 Order Relaxation ($\epsilon \in [0, 1]$) & Discrimination | Modular SBM ($c=0.10, R=24$) | 10,000 | 16 | 22,000–22,111 | `exact` / `relaxed-model` | 6 |
 
 ---
 
 ## 3. Querying the Benchmark Catalog & Pareto Frontier
 
-A dedicated query CLI (`scripts/pareto_query.py`) allows subsequent experiments to inspect the catalog and extract Pareto-optimal configurations:
+Use `scripts/pareto_query.py` to validate all records and compute non-dominated Pareto frontiers (maximizing `events_per_sec`, minimizing `peak_rss_bytes`):
 
 ```bash
-# Query all exact runs with memory <= 8 GiB and N >= 100k
-python3 scripts/pareto_query.py --path runs --max-memory-gib 8.0 --min-nodes 100000 --semantic-class exact --pareto
+# Validate all 364 records across znver3_o3 and portable_o3 and print the global exact Pareto frontier
+./.venv/bin/python scripts/pareto_query.py --path runs --semantic-class exact --pareto
 
-# Output raw JSON for pipeline consumption
-python3 scripts/pareto_query.py --path runs --topology modular --pareto --json
+# Filter by minimum scale (N >= 1,000,000) and memory budget (<= 7.0 GiB)
+./.venv/bin/python scripts/pareto_query.py --path runs --min-nodes 1000000 --max-memory-gib 7.0 --semantic-class exact --pareto
+
+# Filter for a single workload benchmark_id across all engines and worker counts
+./.venv/bin/python scripts/pareto_query.py --path runs --benchmark-id exp0004_stage3_schedulers_N10000_D16_c0.10 --pareto
 ```
 
 ---
 
-## 4. Mac Apple Silicon M4 Pro Handoff Guide (Darwin ARM64 PENDING)
+## 4. Mac Apple Silicon M4 Pro Handoff Guide (Darwin ARM64 `MAC PENDING`)
 
-When running on the 48 GB M4 Pro machine:
-1. **Do not fabricate Mac results on Linux.** All Mac benchmark cells remain `PENDING`.
-2. **Workload Compatibility**: Use identical canonical configuration files from `configs/`.
-3. **Build Flags**:
-   - Compiler: Apple Clang (`clang++ -O3 -std=c++20 -DNDEBUG`)
-   - Target Arch: `-mcpu=apple-m4` or `-march=armv8.6-a+fp16+neon`
-4. **Core Pinning**:
-   - Differentiate Apple Performance (P) cores vs Efficiency (E) cores (e.g. via `pthread_setaffinity_np` or macOS QoS classes).
-   - Report $W=1 \to 2 \to 4 \to 8 \to 10$ on P-cores separately from E-core mix.
+When running on the 48 GB M4 Pro machine (using `fish` shell syntax):
+```fish
+set -gx OMP_NUM_THREADS 10
+cmake -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build -j 10
+./.venv/bin/python -m src.python.orchestrator --profile standard --build-id m4pro_o3 --out runs
+./.venv/bin/python scripts/pareto_query.py --path runs --pareto
+```

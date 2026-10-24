@@ -19,7 +19,7 @@ public:
         double imbalance_threshold = 1.35,
         int32_t min_migration_interval_epochs = 2,
         double min_epoch_events = 10.0
-    ) : Exp4PersistentPoolEngine(config, graph, num_workers, num_regions, node_to_region),
+    ) : Exp4PersistentPoolEngine(config, graph, num_workers, num_regions, node_to_region, true),
         imbalance_threshold_(imbalance_threshold),
         min_migration_interval_epochs_(min_migration_interval_epochs),
         min_epoch_events_(min_epoch_events),
@@ -35,12 +35,16 @@ public:
     ) {
         epoch_counter_ = 0;
         total_migrations_recorded_ = 0;
+        migrated_queue_events_recorded_ = 0;
+        migrated_mailbox_events_recorded_ = 0;
         migration_pause_recorded_sec_ = 0.0;
         last_worker_events_.assign(num_workers_, 0);
 
         auto stats = run(external_events, t_max, out_sim_result);
         stats.scheduler_name = "cpp_adaptive_W" + std::to_string(num_workers_) + "_R" + std::to_string(num_regions_);
         stats.total_migrations = total_migrations_recorded_;
+        stats.migrated_queue_events = migrated_queue_events_recorded_;
+        stats.migrated_mailbox_events = migrated_mailbox_events_recorded_;
         stats.migration_pause_sec = migration_pause_recorded_sec_;
         return stats;
     }
@@ -107,6 +111,7 @@ protected:
                         int32_t reg = node_to_region_[ev.target];
                         if (reg == candidate_r) {
                             q_light.push(ev);
+                            migrated_queue_events_recorded_++;
                         } else {
                             retained.push_back(ev);
                         }
@@ -126,6 +131,7 @@ protected:
                         for (const auto& ev : mb) {
                             int32_t reg = node_to_region_[ev.target];
                             if (reg == candidate_r) {
+                                migrated_mailbox_events_recorded_++;
                                 if (u == w_light) {
                                     // Origin was w_light, destination is now also w_light
                                     q_light.push(ev);

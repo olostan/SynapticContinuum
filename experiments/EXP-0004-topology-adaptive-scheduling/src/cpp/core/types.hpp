@@ -38,7 +38,9 @@ enum class Exp4PartitionType : int32_t {
     RANDOM_HASH = 1,
     PLANTED_ORACLE = 2,
     GREEDY_MINCUT = 3,
-    ACTIVITY_AWARE = 4
+    ACTIVITY_AWARE = 4,
+    METIS_KWAY = 5,
+    IGRAPH_LEIDEN = 6
 };
 
 inline std::string partition_type_to_string(Exp4PartitionType type) {
@@ -46,8 +48,10 @@ inline std::string partition_type_to_string(Exp4PartitionType type) {
         case Exp4PartitionType::CONTIGUOUS: return "contiguous";
         case Exp4PartitionType::RANDOM_HASH: return "random_hash";
         case Exp4PartitionType::PLANTED_ORACLE: return "planted_oracle";
-        case Exp4PartitionType::GREEDY_MINCUT: return "greedy_mincut";
+        case Exp4PartitionType::GREEDY_MINCUT: return "greedy_boundary_heuristic";
         case Exp4PartitionType::ACTIVITY_AWARE: return "activity_aware";
+        case Exp4PartitionType::METIS_KWAY: return "metis_kway";
+        case Exp4PartitionType::IGRAPH_LEIDEN: return "igraph_leiden";
         default: return "unknown";
     }
 }
@@ -78,6 +82,8 @@ struct Exp4ProfilingStats {
     uint64_t total_spikes = 0;
     uint64_t cross_region_events = 0;
     uint64_t total_migrations = 0;
+    uint64_t migrated_queue_events = 0;
+    uint64_t migrated_mailbox_events = 0;
     double migration_pause_sec = 0.0;
     double edge_cut_fraction = 0.0;
     double active_event_cut_fraction = 0.0;

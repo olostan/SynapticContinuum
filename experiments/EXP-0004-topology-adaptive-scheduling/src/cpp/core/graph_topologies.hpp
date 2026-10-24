@@ -49,15 +49,21 @@ public:
         uint32_t k_fwd = k / 2;
         uint32_t k_bwd = k - k_fwd;
 
-        std::vector<std::vector<uint32_t>> all_targets(num_nodes);
-        std::vector<std::vector<float>> all_weights(num_nodes);
-        std::vector<std::vector<float>> all_delays(num_nodes);
+        uint64_t estimated_edges = static_cast<uint64_t>(num_nodes) * k;
+        g.targets.reserve(estimated_edges);
+        g.weights.reserve(estimated_edges);
+        g.delays.reserve(estimated_edges);
 
-        uint64_t total_edges = 0;
+        std::vector<uint32_t> targets;
+        targets.reserve(k);
+        std::vector<uint32_t> clean_targets;
+        clean_targets.reserve(k);
+
+        uint64_t offset = 0;
 
         for (int32_t u = 0; u < num_nodes; ++u) {
-            std::vector<uint32_t> targets;
-            targets.reserve(k);
+            g.row_ptr[u] = offset;
+            targets.clear();
 
             // Construct ring lattice neighbors
             for (uint32_t i = 1; i <= k_fwd; ++i) {
@@ -90,8 +96,7 @@ public:
             }
 
             // Remove any accidental duplicates or self-loops
-            std::vector<uint32_t> clean_targets;
-            clean_targets.reserve(targets.size());
+            clean_targets.clear();
             for (uint32_t t : targets) {
                 if (t != static_cast<uint32_t>(u) &&
                     std::find(clean_targets.begin(), clean_targets.end(), t) == clean_targets.end()) {
@@ -100,42 +105,22 @@ public:
             }
 
             bool is_inhibitory = (rng.uniform_float(0.0f, 1.0f) < 0.20f);
-            std::vector<float> weights(clean_targets.size());
-            std::vector<float> delays(clean_targets.size());
             for (size_t i = 0; i < clean_targets.size(); ++i) {
                 float w_raw = rng.uniform_float(0.5f, 1.5f) * weight_scale;
-                weights[i] = is_inhibitory ? -w_raw : w_raw;
-                delays[i] = rng.uniform_float(min_delay, max_delay);
+                g.targets.push_back(static_cast<int32_t>(clean_targets[i]));
+                g.weights.push_back(is_inhibitory ? -w_raw : w_raw);
+                g.delays.push_back(rng.uniform_float(min_delay, max_delay));
             }
 
-            total_edges += clean_targets.size();
-            all_targets[u] = std::move(clean_targets);
-            all_weights[u] = std::move(weights);
-            all_delays[u] = std::move(delays);
-        }
-
-        g.num_edges = total_edges;
-        g.targets.resize(total_edges);
-        g.weights.resize(total_edges);
-        g.delays.resize(total_edges);
-
-        uint64_t offset = 0;
-        for (int32_t u = 0; u < num_nodes; ++u) {
-            g.row_ptr[u] = offset;
-            size_t count = all_targets[u].size();
-            for (size_t i = 0; i < count; ++i) {
-                g.targets[offset + i] = static_cast<int32_t>(all_targets[u][i]);
-                g.weights[offset + i] = all_weights[u][i];
-                g.delays[offset + i] = all_delays[u][i];
-            }
-            offset += count;
+            offset += clean_targets.size();
         }
         g.row_ptr[num_nodes] = offset;
+        g.num_edges = offset;
 
         return g;
     }
 
-    static GeneratedGraphWithLabels create_modular_sbm(
+    static GeneratedGraphWithLabels create_modular_sbm_vec_of_vec(
         int32_t num_nodes,
         int32_t mean_out_degree,
         int32_t num_modules,
@@ -185,7 +170,6 @@ public:
             std::vector<uint32_t> targets;
             targets.reserve(k);
 
-            // Sample intra-module edges
             uint32_t intra_needed = (m_size > 1) ? std::min(k_intra, m_size - 1) : 0U;
             int attempts = 0;
             while (targets.size() < intra_needed && attempts < 100) {
@@ -197,13 +181,12 @@ public:
                 }
             }
 
-            // Sample cross-module edges
             if (k_cross > 0 && num_nodes > static_cast<int32_t>(m_size)) {
                 attempts = 0;
                 while (targets.size() < (intra_needed + k_cross) && attempts < 200) {
                     uint32_t cand = rng.uniform_uint(num_nodes);
                     attempts++;
-                    if (cand >= m_start && cand < m_end) continue; // Must be cross-module
+                    if (cand >= m_start && cand < m_end) continue;
                     if (std::find(targets.begin(), targets.end(), cand) == targets.end()) {
                         targets.push_back(cand);
                     }
@@ -242,6 +225,101 @@ public:
             offset += count;
         }
         res.graph.row_ptr[num_nodes] = offset;
+
+        return res;
+    }
+
+    static GeneratedGraphWithLabels create_modular_sbm(
+        int32_t num_nodes,
+        int32_t mean_out_degree,
+        int32_t num_modules,
+        float cross_module_ratio_c,
+        uint64_t seed,
+        float weight_scale = 0.25f,
+        float min_delay = 0.2f,
+        float max_delay = 2.0f
+    ) {
+        DeterministicRNG rng(seed);
+        GeneratedGraphWithLabels res;
+        res.graph.num_nodes = num_nodes;
+        res.graph.row_ptr.resize(num_nodes + 1, 0);
+        res.planted_labels.resize(num_nodes, 0);
+
+        if (num_modules <= 1) {
+            res.graph = create_uniform_random(num_nodes, mean_out_degree, seed, weight_scale, min_delay, max_delay);
+            return res;
+        }
+
+        int32_t nodes_per_module = num_nodes / num_modules;
+        for (int32_t u = 0; u < num_nodes; ++u) {
+            int32_t m = u / nodes_per_module;
+            if (m >= num_modules) m = num_modules - 1;
+            res.planted_labels[u] = m;
+        }
+
+        uint32_t k = std::min(static_cast<uint32_t>(mean_out_degree),
+                              (num_nodes > 1) ? static_cast<uint32_t>(num_nodes - 1) : 0U);
+        uint32_t k_cross = static_cast<uint32_t>(std::round(k * cross_module_ratio_c));
+        if (k_cross > k) k_cross = k;
+        uint32_t k_intra = k - k_cross;
+
+        uint64_t estimated_edges = static_cast<uint64_t>(num_nodes) * k;
+        res.graph.targets.reserve(estimated_edges);
+        res.graph.weights.reserve(estimated_edges);
+        res.graph.delays.reserve(estimated_edges);
+
+        std::vector<uint32_t> targets;
+        targets.reserve(k);
+
+        uint64_t offset = 0;
+
+        for (int32_t u = 0; u < num_nodes; ++u) {
+            res.graph.row_ptr[u] = offset;
+            int32_t my_m = res.planted_labels[u];
+            uint32_t m_start = static_cast<uint32_t>(my_m * nodes_per_module);
+            uint32_t m_end = (my_m == num_modules - 1) ? static_cast<uint32_t>(num_nodes)
+                                                       : static_cast<uint32_t>((my_m + 1) * nodes_per_module);
+            uint32_t m_size = m_end - m_start;
+
+            targets.clear();
+
+            // Sample intra-module edges
+            uint32_t intra_needed = (m_size > 1) ? std::min(k_intra, m_size - 1) : 0U;
+            int attempts = 0;
+            while (targets.size() < intra_needed && attempts < 100) {
+                uint32_t cand = m_start + rng.uniform_uint(m_size);
+                attempts++;
+                if (cand == static_cast<uint32_t>(u)) continue;
+                if (std::find(targets.begin(), targets.end(), cand) == targets.end()) {
+                    targets.push_back(cand);
+                }
+            }
+
+            // Sample cross-module edges
+            if (k_cross > 0 && num_nodes > static_cast<int32_t>(m_size)) {
+                attempts = 0;
+                while (targets.size() < (intra_needed + k_cross) && attempts < 200) {
+                    uint32_t cand = rng.uniform_uint(num_nodes);
+                    attempts++;
+                    if (cand >= m_start && cand < m_end) continue; // Must be cross-module
+                    if (std::find(targets.begin(), targets.end(), cand) == targets.end()) {
+                        targets.push_back(cand);
+                    }
+                }
+            }
+
+            bool is_inhibitory = (rng.uniform_float(0.0f, 1.0f) < 0.20f);
+            for (size_t i = 0; i < targets.size(); ++i) {
+                float w_raw = rng.uniform_float(0.5f, 1.5f) * weight_scale;
+                res.graph.targets.push_back(static_cast<int32_t>(targets[i]));
+                res.graph.weights.push_back(is_inhibitory ? -w_raw : w_raw);
+                res.graph.delays.push_back(rng.uniform_float(min_delay, max_delay));
+            }
+
+            offset += targets.size();
+        }
+        res.graph.row_ptr[num_nodes] = offset;
+        res.graph.num_edges = offset;
 
         return res;
     }
@@ -286,17 +364,22 @@ public:
         uint32_t k = std::min(static_cast<uint32_t>(mean_out_degree),
                               (num_nodes > 1) ? static_cast<uint32_t>(num_nodes - 1) : 0U);
 
-        std::vector<std::vector<uint32_t>> all_targets(num_nodes);
-        std::vector<std::vector<float>> all_weights(num_nodes);
-        std::vector<std::vector<float>> all_delays(num_nodes);
-        uint64_t total_edges = 0;
+        uint64_t estimated_edges = static_cast<uint64_t>(num_nodes) * k;
+        res.graph.targets.reserve(estimated_edges);
+        res.graph.weights.reserve(estimated_edges);
+        res.graph.delays.reserve(estimated_edges);
+
+        std::vector<uint32_t> targets;
+        targets.reserve(k);
+
+        uint64_t offset = 0;
 
         for (int32_t u = 0; u < num_nodes; ++u) {
+            res.graph.row_ptr[u] = offset;
             int32_t leaf_u = res.planted_labels[u];
             int32_t branch_u = leaf_u / sub_modules_per_branch;
 
-            std::vector<uint32_t> targets;
-            targets.reserve(k);
+            targets.clear();
 
             int attempts = 0;
             while (targets.size() < k && attempts < 300) {
@@ -333,37 +416,17 @@ public:
             }
 
             bool is_inhibitory = (rng.uniform_float(0.0f, 1.0f) < 0.20f);
-            std::vector<float> weights(targets.size());
-            std::vector<float> delays(targets.size());
             for (size_t i = 0; i < targets.size(); ++i) {
                 float w_raw = rng.uniform_float(0.5f, 1.5f) * weight_scale;
-                weights[i] = is_inhibitory ? -w_raw : w_raw;
-                delays[i] = rng.uniform_float(min_delay, max_delay);
+                res.graph.targets.push_back(static_cast<int32_t>(targets[i]));
+                res.graph.weights.push_back(is_inhibitory ? -w_raw : w_raw);
+                res.graph.delays.push_back(rng.uniform_float(min_delay, max_delay));
             }
 
-            total_edges += targets.size();
-            all_targets[u] = std::move(targets);
-            all_weights[u] = std::move(weights);
-            all_delays[u] = std::move(delays);
-        }
-
-        res.graph.num_edges = total_edges;
-        res.graph.targets.resize(total_edges);
-        res.graph.weights.resize(total_edges);
-        res.graph.delays.resize(total_edges);
-
-        uint64_t offset = 0;
-        for (int32_t u = 0; u < num_nodes; ++u) {
-            res.graph.row_ptr[u] = offset;
-            size_t count = all_targets[u].size();
-            for (size_t i = 0; i < count; ++i) {
-                res.graph.targets[offset + i] = static_cast<int32_t>(all_targets[u][i]);
-                res.graph.weights[offset + i] = all_weights[u][i];
-                res.graph.delays[offset + i] = all_delays[u][i];
-            }
-            offset += count;
+            offset += targets.size();
         }
         res.graph.row_ptr[num_nodes] = offset;
+        res.graph.num_edges = offset;
 
         return res;
     }
