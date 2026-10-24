@@ -42,11 +42,11 @@
   },
   "workload_identity": {
     "workload_id": "sc05/disconnected/v1",
-    "workload_instance_id": "3673c2f0835d4a0e78dc23e88b528eb00b967428dc215e8ffebfdf761f63aa2d",
+    "workload_instance_id": "e64769404ede50afdee0ce2f0175f0b20c175d16ee0211051ada74124a50d18d",
     "seed": 11,
     "rng_stream_id": "SplitMix64-deterministic-v1:seed=11",
     "config_path": "experiments/EXP-0005-scientific-simulation-substrates/fixtures/manifest_sha256.json",
-    "config_sha256": "55c4b37bcfb1ead48c1be514f428fb20da08d8253d3eb21d340f6a72fc02a258",
+    "config_sha256": "b9a55e0a3ad13c18b3ca3593ac49b5c508b1692fef832a82e5eaafabb9b3c91f",
     "edges_fixture_sha256": "88ab14d356a2cf40def0d18cdaab7154aabf24d30300473aeed17f507ee77462",
     "events_fixture_sha256": "27eace633b48892f9170c69f232c9a8321e06818ca8bb93f9fbcdded32fa0103",
     "adapted_input_sha256": "27eace633b48892f9170c69f232c9a8321e06818ca8bb93f9fbcdded32fa0103",

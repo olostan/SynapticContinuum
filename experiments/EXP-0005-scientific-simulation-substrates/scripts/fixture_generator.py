@@ -17,10 +17,11 @@ strictly positive axonal delays (delay_ms > 0), and deterministic sorting:
   - Edges sorted by: (src_id, dst_id, delay_ms, weight_mV)
   - External events sorted by: (t_ms, target_id, src_id, ordinal)
 
-Supports `--seed` and `--output` for writing large scale fixtures (e.g. N=10k, 100k)
-outside Git (`$SC_ARTIFACT_ROOT/EXP-0005/fixtures/`) using the unified
-`sc05-fixture-manifest-v1` schema so custom exports round-trip directly through
-`scripts/validate_sc05_v2.py`.
+Custom on-demand exports (`--mode custom`) default outside Git
+(`$SC_ARTIFACT_ROOT/EXP-0005/fixtures/` or `/tmp/sc-artifacts/EXP-0005/fixtures/`),
+refuse to write into the committed `EXP-0005/fixtures` directory, isolate each
+workload inside `<output_dir>/<workload_instance_id>/`, and forbid destructive
+collisions unless `--allow-overwrite` is explicitly passed.
 """
 
 from __future__ import annotations
@@ -31,13 +32,15 @@ import hashlib
 import io
 import json
 import math
+import os
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 
 EXP0005_ROOT = Path(__file__).resolve().parent.parent
 REPO_ROOT = EXP0005_ROOT.parent.parent
 EXP0004_ROOT = REPO_ROOT / "experiments" / "EXP-0004-topology-adaptive-scheduling"
+COMMITTED_FIXTURES_DIR = (EXP0005_ROOT / "fixtures").resolve()
 
 TOPOLOGY_TO_WORKLOAD_ID: Dict[str, str] = {
     "disconnected": "sc05/disconnected/v1",
@@ -146,6 +149,45 @@ def serialize_events_csv(events: List[Tuple[float, int, int, int, float]]) -> by
     return buf.getvalue().encode("utf-8")
 
 
+def validate_topology_parameters(
+    topology: str,
+    num_nodes: int,
+    out_degree: int,
+    num_modules: int,
+    cross_module_ratio: float = 0.05,
+) -> None:
+    """
+    Validate graph generation parameters upfront and fail fast on impossible degree/module
+    combinations instead of entering infinite rejection-sampling loops.
+    """
+    if num_nodes < 2:
+        raise ValueError(f"num_nodes must be >= 2 for directed edge generation, got {num_nodes}")
+    if out_degree < 0:
+        raise ValueError(f"out_degree must be >= 0, got {out_degree}")
+    if out_degree >= num_nodes:
+        raise ValueError(
+            f"out_degree ({out_degree}) must be strictly less than num_nodes ({num_nodes}) without self-edges/duplicates."
+        )
+    if num_modules < 1 or num_modules > num_nodes:
+        raise ValueError(f"num_modules ({num_modules}) must satisfy 1 <= num_modules <= num_nodes ({num_nodes}).")
+    if not (0.0 <= cross_module_ratio <= 1.0):
+        raise ValueError(f"cross_module_ratio ({cross_module_ratio}) must be in [0.0, 1.0].")
+
+    if topology in ("disconnected", "modular_sbm", "modular"):
+        nodes_per_mod = num_nodes // num_modules
+        min_mod_size = nodes_per_mod
+        if topology == "disconnected" and out_degree >= min_mod_size:
+            raise ValueError(
+                f"Impossible disconnected graph parameters: out_degree={out_degree} >= module_size={min_mod_size} "
+                f"(num_nodes={num_nodes}, num_modules={num_modules}) without self-edges or duplicate edges."
+            )
+        if topology in ("modular_sbm", "modular") and cross_module_ratio == 0.0 and out_degree >= min_mod_size:
+            raise ValueError(
+                f"Impossible modular_sbm parameters with cross_module_ratio=0.0: out_degree={out_degree} "
+                f">= module_size={min_mod_size}."
+            )
+
+
 def generate_Topology_edges(
     topology: str,
     num_nodes: int,
@@ -159,30 +201,52 @@ def generate_Topology_edges(
 ) -> List[Tuple[int, int, float, float]]:
     """
     Generate a deterministic directed graph with unique (src_id, dst_id) pairs per node
-    and no self-edges.
+    and no self-edges. Fails fast if parameters are invalid or if rejection sampling
+    exceeds a bounded attempt limit.
     """
-    if num_nodes <= 1 or out_degree <= 0:
+    if out_degree == 0:
         return []
-    k = min(out_degree, num_nodes - 1)
+    validate_topology_parameters(
+        topology=topology,
+        num_nodes=num_nodes,
+        out_degree=out_degree,
+        num_modules=num_modules,
+        cross_module_ratio=cross_module_ratio,
+    )
+    k = out_degree
     rng = SplitMix64(seed)
     edges: List[Tuple[int, int, float, float]] = []
 
-    nodes_per_mod = max(1, num_nodes // num_modules)
+    nodes_per_mod = num_nodes // num_modules
+    max_attempts_per_node = max(1000, k * 250)
 
     for u in range(num_nodes):
         mod_u = min(num_modules - 1, u // nodes_per_mod)
         mod_start = mod_u * nodes_per_mod
         mod_end = num_nodes if mod_u == num_modules - 1 else (mod_u + 1) * nodes_per_mod
+        mod_size = mod_end - mod_start
         targets_set = set()
+        attempts = 0
 
         while len(targets_set) < k:
+            attempts += 1
+            if attempts > max_attempts_per_node:
+                raise RuntimeError(
+                    f"Exceeded max target sampling attempts ({max_attempts_per_node}) on node {u} "
+                    f"for topology={topology}, N={num_nodes}, D={out_degree}, M={num_modules}."
+                )
             if topology == "disconnected":
-                cand = mod_start + rng.uniform_uint(max(1, mod_end - mod_start))
+                cand = mod_start + rng.uniform_uint(mod_size)
             elif topology in ("modular_sbm", "modular"):
-                if rng.uniform_float(0.0, 1.0) < cross_module_ratio:
+                # If all (mod_size - 1) intra-module neighbors are already exhausted, allow cross-module fallback
+                # when cross_module_ratio > 0; otherwise sample according to cross_module_ratio.
+                intra_exhausted = len([t for t in targets_set if mod_start <= t < mod_end]) >= (mod_size - 1)
+                if (intra_exhausted and cross_module_ratio > 0.0) or (
+                    rng.uniform_float(0.0, 1.0) < cross_module_ratio
+                ):
                     cand = rng.uniform_uint(num_nodes)
                 else:
-                    cand = mod_start + rng.uniform_uint(max(1, mod_end - mod_start))
+                    cand = mod_start + rng.uniform_uint(mod_size)
             elif topology == "random":
                 cand = rng.uniform_uint(num_nodes)
             else:
@@ -201,6 +265,62 @@ def generate_Topology_edges(
     return edges
 
 
+def compute_stimulus_target_budget(
+    num_nodes: int,
+    num_modules: int,
+    active_fraction: float,
+    stimulus_distribution: str,
+) -> Dict[str, Any]:
+    """
+    Compute and validate the realized target-neuron pool budget for external stimulus:
+      - `active_fraction` (in `(0.0, 1.0]`) is defined as the **within-module active fraction**
+        for each stimulated module.
+      - Under `stratified_modules`, all `num_modules` modules are stimulated; each module `m`
+        exposes `active_per_module = max(1, min(mod_size, round(mod_size * active_fraction)))`
+        candidate target neurons `[mod_start, mod_start + active_per_module)`.
+      - Under `localized_first_module`, **only Module 0** (`[0, mod0_size)`) is ever stimulated,
+        and `active_fraction` applies to Module 0's size (`mod0_size`):
+        `active_in_mod0 = max(1, min(mod0_size, round(mod0_size * active_fraction)))`
+        candidate target neurons `[0, active_in_mod0) subset [0, mod0_size)`.
+        Even at `active_fraction = 0.50` or `1.00`, target IDs in `localized_first_module`
+        are strictly constrained to Module 0 (`[0, mod0_size)`).
+    """
+    if num_nodes < 1:
+        raise ValueError(f"num_nodes must be >= 1, got {num_nodes}")
+    if num_modules < 1 or num_modules > num_nodes:
+        raise ValueError(f"num_modules ({num_modules}) must be in [1, {num_nodes}]")
+    if not (0.0 < active_fraction <= 1.0):
+        raise ValueError(f"active_fraction must be in (0.0, 1.0], got {active_fraction}")
+
+    nodes_per_mod = max(1, num_nodes // num_modules)
+    if stimulus_distribution == "stratified_modules":
+        per_mod_pools: List[int] = []
+        for m in range(num_modules):
+            mod_start = m * nodes_per_mod
+            mod_end = num_nodes if m == num_modules - 1 else (m + 1) * nodes_per_mod
+            mod_size = max(1, mod_end - mod_start)
+            active_in_mod = max(1, min(mod_size, int(round(mod_size * active_fraction))))
+            per_mod_pools.append(active_in_mod)
+        return {
+            "active_fraction_scope": "per_stimulated_module",
+            "stimulated_modules": list(range(num_modules)),
+            "target_pool_per_module": per_mod_pools,
+            "total_target_pool_neurons": sum(per_mod_pools),
+        }
+    elif stimulus_distribution == "localized_first_module":
+        mod0_size = num_nodes if num_modules == 1 else nodes_per_mod
+        active_in_mod0 = max(1, min(mod0_size, int(round(mod0_size * active_fraction))))
+        per_mod_pools = [active_in_mod0] + [0 for _ in range(num_modules - 1)]
+        return {
+            "active_fraction_scope": "within_module_0_only",
+            "stimulated_modules": [0],
+            "target_pool_per_module": per_mod_pools,
+            "total_target_pool_neurons": active_in_mod0,
+        }
+    else:
+        raise ValueError(f"Unsupported stimulus_distribution='{stimulus_distribution}'")
+
+
 def generate_external_events(
     num_nodes: int,
     num_events: int,
@@ -217,28 +337,38 @@ def generate_external_events(
 
     Supported `stimulus_distribution` modes:
       - `"stratified_modules"`: distributes external events evenly across all `num_modules`
-        contiguous modules (`i % num_modules`), sampling targets within the active subset
-        `[mod_start, mod_start + active_per_mod)` of each module. Ensures multi-module and
-        disconnected parallel ceiling controls stimulate all modules reproducibly.
-      - `"localized_first_module"`: intentionally restricts external stimulus to the active
-        subset of Module 0 (`[0, round(N * active_fraction))`) as a localized-activity control.
+        contiguous modules (`i % num_modules`), sampling targets within `[mod_start, mod_start + active_in_mod)`
+        where `active_in_mod = max(1, min(mod_size, round(mod_size * active_fraction)))`.
+      - `"localized_first_module"`: strictly constrains all external events to Module 0
+        (`[0, mod0_size)`), sampling targets within `[0, active_in_mod0)` where
+        `active_in_mod0 = max(1, min(mod0_size, round(mod0_size * active_fraction)))`.
+        Even for `active_fraction = 0.50` or `1.00`, no target ever spills into Module 1..M-1.
     """
+    if num_events < 0:
+        raise ValueError(f"num_events must be >= 0, got {num_events}")
+    if horizon_ms <= 0.0:
+        raise ValueError(f"horizon_ms must be > 0, got {horizon_ms}")
+    budget = compute_stimulus_target_budget(
+        num_nodes=num_nodes,
+        num_modules=num_modules,
+        active_fraction=active_fraction,
+        stimulus_distribution=stimulus_distribution,
+    )
+
     rng = SplitMix64(seed ^ 0xA5A5A5A55A5A5A5A)
-    nodes_per_mod = max(1, num_nodes // max(1, num_modules))
+    nodes_per_mod = max(1, num_nodes // num_modules)
     raw_events: List[Tuple[float, int, float]] = []
 
     for i in range(num_events):
         t_ms = round(rng.uniform_float(0.5, horizon_ms), 6)
-        if stimulus_distribution == "stratified_modules" and num_modules > 1:
+        if stimulus_distribution == "stratified_modules":
             mod_idx = i % num_modules
             mod_start = mod_idx * nodes_per_mod
-            mod_end = num_nodes if mod_idx == num_modules - 1 else (mod_idx + 1) * nodes_per_mod
-            mod_size = max(1, mod_end - mod_start)
-            active_in_mod = max(1, int(round(mod_size * active_fraction)))
+            active_in_mod = budget["target_pool_per_module"][mod_idx]
             target_id = mod_start + rng.uniform_uint(active_in_mod)
         elif stimulus_distribution == "localized_first_module":
-            active_limit = max(1, int(round(num_nodes * active_fraction)))
-            target_id = rng.uniform_uint(active_limit)
+            active_in_mod0 = budget["target_pool_per_module"][0]
+            target_id = rng.uniform_uint(active_in_mod0)
         else:
             raise ValueError(f"Unsupported stimulus_distribution='{stimulus_distribution}'")
 
@@ -280,6 +410,10 @@ def _default_manifest_policies() -> Dict[str, Any]:
         "delay_constraint": "strictly_positive_delay_ms_gt_0",
         "event_tie_break_order": ["t_ms", "target_id", "src_id", "ordinal"],
         "refractory_interval": "half_open_[t_spike, t_spike + refractory_ms)",
+        "active_fraction_definition": (
+            "fraction of neurons within each stimulated module eligible to receive external events; "
+            "localized_first_module is strictly bounded to Module 0 [0, N//num_modules) for all active_fraction in (0, 1]"
+        ),
     }
 
 
@@ -491,6 +625,7 @@ def build_default_wp00_fixtures(output_dir: Path) -> Dict[str, Any]:
         serialize_events_csv(disc_events),
         "Pilot disconnected stratified external stimulus (64 events, 16 per module across 4 modules, seed=11)",
     )
+    disc_budget = compute_stimulus_target_budget(128, 4, 0.25, "stratified_modules")
     disc_cfg = {
         "topology": "disconnected",
         "num_nodes": 128,
@@ -499,6 +634,8 @@ def build_default_wp00_fixtures(output_dir: Path) -> Dict[str, Any]:
         "cross_module_ratio": 0.0,
         "active_fraction": 0.25,
         "stimulus_distribution": "stratified_modules",
+        "target_pool_per_module": disc_budget["target_pool_per_module"],
+        "total_target_pool_neurons": disc_budget["total_target_pool_neurons"],
         "horizon_ms": 100.0,
         "tau_ms": 10.0,
         "v_th_mv": 1.0,
@@ -525,6 +662,8 @@ def build_default_wp00_fixtures(output_dir: Path) -> Dict[str, Any]:
     }
 
     # 4b. Pilot Disconnected Localized-Activity Control (Module 0 only, N=128, D=4, seed=11)
+    # Note: active_fraction=0.25 within Module 0 (32 nodes) exposes 8 target neurons [0..7] in Module 0,
+    # matching the per-module active target pool (8 neurons/module) of the stratified workload!
     disc_loc_events = generate_external_events(
         num_nodes=128,
         num_events=64,
@@ -537,8 +676,9 @@ def build_default_wp00_fixtures(output_dir: Path) -> Dict[str, Any]:
     disc_loc_events_sha = _write_and_record(
         "pilot_disconnected_localized_n128_d4_s11_events.csv",
         serialize_events_csv(disc_loc_events),
-        "Pilot disconnected localized-activity control external stimulus (all 64 events in Module 0 [0..31], seed=11)",
+        "Pilot disconnected localized-activity control external stimulus (all 64 events in Module 0 [0..7], seed=11)",
     )
+    disc_loc_budget = compute_stimulus_target_budget(128, 4, 0.25, "localized_first_module")
     disc_loc_cfg = {
         "topology": "disconnected",
         "num_nodes": 128,
@@ -547,6 +687,8 @@ def build_default_wp00_fixtures(output_dir: Path) -> Dict[str, Any]:
         "cross_module_ratio": 0.0,
         "active_fraction": 0.25,
         "stimulus_distribution": "localized_first_module",
+        "target_pool_per_module": disc_loc_budget["target_pool_per_module"],
+        "total_target_pool_neurons": disc_loc_budget["total_target_pool_neurons"],
         "horizon_ms": 100.0,
         "tau_ms": 10.0,
         "v_th_mv": 1.0,
@@ -600,6 +742,7 @@ def build_default_wp00_fixtures(output_dir: Path) -> Dict[str, Any]:
         serialize_events_csv(mod_events),
         "Pilot modular SBM stratified external stimulus (64 events, 16 per module across 4 modules, seed=11)",
     )
+    mod_budget = compute_stimulus_target_budget(128, 4, 0.25, "stratified_modules")
     mod_cfg = {
         "topology": "modular_sbm",
         "num_nodes": 128,
@@ -608,6 +751,8 @@ def build_default_wp00_fixtures(output_dir: Path) -> Dict[str, Any]:
         "cross_module_ratio": 0.05,
         "active_fraction": 0.25,
         "stimulus_distribution": "stratified_modules",
+        "target_pool_per_module": mod_budget["target_pool_per_module"],
+        "total_target_pool_neurons": mod_budget["total_target_pool_neurons"],
         "horizon_ms": 100.0,
         "tau_ms": 10.0,
         "v_th_mv": 1.0,
@@ -683,8 +828,16 @@ def build_default_wp00_fixtures(output_dir: Path) -> Dict[str, Any]:
     return manifest_obj
 
 
+def default_external_custom_dir() -> Path:
+    """Return default external artifact directory outside Git for custom fixtures."""
+    env_root = os.environ.get("SC_ARTIFACT_ROOT")
+    if env_root:
+        return Path(env_root).resolve() / "EXP-0005" / "fixtures"
+    return Path("/tmp/sc-artifacts/EXP-0005/fixtures").resolve()
+
+
 def generate_custom_fixture_cli(
-    output_dir: Path,
+    output_dir: Optional[Path],
     topology: str,
     num_nodes: int,
     out_degree: int,
@@ -692,21 +845,68 @@ def generate_custom_fixture_cli(
     horizon_ms: float,
     seed: int,
     num_modules: int = 4,
+    cross_module_ratio: float = 0.05,
     active_fraction: float = 0.25,
     stimulus_distribution: str = "stratified_modules",
+    allow_overwrite: bool = False,
 ) -> Dict[str, Any]:
     """
-    Generate an on-demand fixture (e.g. outside Git for large scales) using the exact same
-    `sc05-fixture-manifest-v1` structure (`files` + `workloads`) and canonical `sc05/*/v1`
-    workload IDs so it validates directly via `scripts/validate_sc05_v2.py`.
+    Generate an on-demand fixture outside Git using content-addressed naming
+    and per-instance directory isolation (`<output_dir>/<workload_instance_id>/`).
+
+    Safety & Non-Collision Guarantees:
+      1. Refuses to write into the committed `EXP-0005/fixtures` directory so canonical
+         committed fixtures can never be accidentally overwritten by `--mode custom`.
+      2. Names fixture files and manifest keys by a 16-hex-char config digest + seed
+         (`custom_<topo>_n<N>_d<D>_s<seed>_<cfg_hash12>`) and stores each workload instance
+         inside `<output_dir>/<workload_instance_id>/` while also indexing it in the
+         shared root `<output_dir>/manifest_sha256.json` under its unique `workload_instance_id`.
+      3. Two workloads at the same `(topology, num_nodes, out_degree, seed)` that differ in
+         `num_events`, `horizon_ms`, `num_modules`, `cross_module_ratio`, `active_fraction`,
+         or `stimulus_distribution` receive distinct file names, distinct directories, and
+         distinct entries in `manifest_sha256.json` with zero collision.
+      4. If the exact same `workload_instance_id` already exists in `output_dir` and
+         `allow_overwrite=False`, raises `FileExistsError` rather than silently overwriting.
     """
     if topology not in TOPOLOGY_TO_WORKLOAD_ID:
         raise ValueError(f"Unsupported topology '{topology}'; must be one of {sorted(TOPOLOGY_TO_WORKLOAD_ID)}")
 
-    output_dir.mkdir(parents=True, exist_ok=True)
+    target_root = (output_dir if output_dir is not None else default_external_custom_dir()).resolve()
+    if target_root == COMMITTED_FIXTURES_DIR or COMMITTED_FIXTURES_DIR in target_root.parents:
+        raise PermissionError(
+            f"Refusing to write custom on-demand fixture into committed directory '{target_root}'. "
+            "Use an external path (e.g. $SC_ARTIFACT_ROOT/EXP-0005/fixtures)."
+        )
+
     workload_id = TOPOLOGY_TO_WORKLOAD_ID[topology]
     canonical_topo = "modular_sbm" if topology == "modular" else topology
-    prefix = f"custom_{canonical_topo}_n{num_nodes}_d{out_degree}_s{seed}"
+    effective_cross = 0.0 if canonical_topo == "disconnected" else cross_module_ratio
+
+    budget = compute_stimulus_target_budget(
+        num_nodes=num_nodes,
+        num_modules=num_modules,
+        active_fraction=active_fraction,
+        stimulus_distribution=stimulus_distribution,
+    )
+    cfg = {
+        "topology": canonical_topo,
+        "num_nodes": num_nodes,
+        "out_degree": out_degree,
+        "num_modules": num_modules,
+        "cross_module_ratio": effective_cross,
+        "active_fraction": active_fraction,
+        "stimulus_distribution": stimulus_distribution,
+        "target_pool_per_module": budget["target_pool_per_module"],
+        "total_target_pool_neurons": budget["total_target_pool_neurons"],
+        "num_events": num_events,
+        "horizon_ms": horizon_ms,
+        "tau_ms": 10.0,
+        "v_th_mv": 1.0,
+        "v_reset_mv": 0.0,
+        "refractory_ms": 2.0,
+    }
+    cfg_digest12 = sha256_bytes(canonical_json_bytes({"seed": seed, "config": cfg}))[:12]
+    stem = f"custom_{canonical_topo}_n{num_nodes}_d{out_degree}_s{seed}_{cfg_digest12}"
 
     edges = generate_Topology_edges(
         topology=canonical_topo,
@@ -714,6 +914,7 @@ def generate_custom_fixture_cli(
         out_degree=out_degree,
         seed=seed,
         num_modules=num_modules,
+        cross_module_ratio=effective_cross,
     )
     events = generate_external_events(
         num_nodes=num_nodes,
@@ -727,28 +928,11 @@ def generate_custom_fixture_cli(
     edges_bytes = serialize_edges_csv(edges)
     events_bytes = serialize_events_csv(events)
 
-    edges_file = f"{prefix}_edges.csv"
-    events_file = f"{prefix}_events.csv"
-    (output_dir / edges_file).write_bytes(edges_bytes)
-    (output_dir / events_file).write_bytes(events_bytes)
-
+    edges_file = f"{stem}_edges.csv"
+    events_file = f"{stem}_events.csv"
     edges_sha = sha256_bytes(edges_bytes)
     events_sha = sha256_bytes(events_bytes)
 
-    cfg = {
-        "topology": canonical_topo,
-        "num_nodes": num_nodes,
-        "out_degree": out_degree,
-        "num_modules": num_modules,
-        "active_fraction": active_fraction,
-        "stimulus_distribution": stimulus_distribution,
-        "num_events": num_events,
-        "horizon_ms": horizon_ms,
-        "tau_ms": 10.0,
-        "v_th_mv": 1.0,
-        "v_reset_mv": 0.0,
-        "refractory_ms": 2.0,
-    }
     w_instance_id = compute_workload_instance_id(
         workload_id,
         seed,
@@ -756,11 +940,71 @@ def generate_custom_fixture_cli(
         {edges_file: edges_sha, events_file: events_sha},
     )
 
-    manifest_path = output_dir / "manifest_sha256.json"
-    if manifest_path.exists():
-        manifest_obj = json.loads(manifest_path.read_text(encoding="utf-8"))
+    instance_dir = target_root / w_instance_id
+    root_manifest_path = target_root / "manifest_sha256.json"
+    if instance_dir.exists() and not allow_overwrite:
+        raise FileExistsError(
+            f"Workload instance '{w_instance_id}' already exists at {instance_dir}. "
+            "Pass allow_overwrite=True (--allow-overwrite) to overwrite."
+        )
+
+    instance_dir.mkdir(parents=True, exist_ok=True)
+    rel_edges_path = f"{w_instance_id}/{edges_file}"
+    rel_events_path = f"{w_instance_id}/{events_file}"
+    (instance_dir / edges_file).write_bytes(edges_bytes)
+    (instance_dir / events_file).write_bytes(events_bytes)
+
+    # Also write canonical workload_config.json inside the instance directory so records
+    # referencing `workload_config.json` can be checked for exact semantic config equality
+    instance_cfg_path = instance_dir / "workload_config.json"
+    instance_cfg_bytes = canonical_json_bytes(cfg)
+    instance_cfg_path.write_bytes(instance_cfg_bytes)
+    instance_cfg_sha = sha256_bytes(instance_cfg_bytes)
+
+    file_entries = {
+        edges_file: {
+            "path": rel_edges_path,
+            "byte_count": len(edges_bytes),
+            "sha256": edges_sha,
+            "description": f"Custom {canonical_topo} graph edges (N={num_nodes}, D={out_degree}, seed={seed}, cfg={cfg_digest12})",
+        },
+        events_file: {
+            "path": rel_events_path,
+            "byte_count": len(events_bytes),
+            "sha256": events_sha,
+            "description": f"Custom {canonical_topo} stimulus events ({num_events} events, {stimulus_distribution}, f={active_fraction}, seed={seed})",
+        },
+    }
+    workload_entry = {
+        "workload_id": workload_id,
+        "seed": seed,
+        "config": cfg,
+        "config_sha256": instance_cfg_sha,
+        "workload_instance_id": w_instance_id,
+        "files": [edges_file, events_file],
+    }
+
+    # Write self-contained per-instance manifest
+    instance_manifest_obj = {
+        "schema_version": "sc05-fixture-manifest-v1",
+        "generator": "experiments/EXP-0005-scientific-simulation-substrates/scripts/fixture_generator.py",
+        "rng_algorithm": "SplitMix64-deterministic-v1",
+        "units": {"time": "ms", "voltage": "mV", "weight": "mV", "delay": "ms"},
+        "policies": _default_manifest_policies(),
+        "files": {
+            edges_file: {**file_entries[edges_file], "path": edges_file},
+            events_file: {**file_entries[events_file], "path": events_file},
+        },
+        "workloads": {w_instance_id: workload_entry},
+    }
+    instance_manifest_path = instance_dir / "manifest_sha256.json"
+    instance_manifest_path.write_bytes(canonical_json_bytes(instance_manifest_obj))
+
+    # Update shared root manifest without colliding across parameter combinations
+    if root_manifest_path.exists():
+        root_manifest_obj = json.loads(root_manifest_path.read_text(encoding="utf-8"))
     else:
-        manifest_obj = {
+        root_manifest_obj = {
             "schema_version": "sc05-fixture-manifest-v1",
             "generator": "experiments/EXP-0005-scientific-simulation-substrates/scripts/fixture_generator.py",
             "rng_algorithm": "SplitMix64-deterministic-v1",
@@ -770,30 +1014,20 @@ def generate_custom_fixture_cli(
             "workloads": {},
         }
 
-    manifest_obj["files"][edges_file] = {
-        "path": edges_file,
-        "byte_count": len(edges_bytes),
-        "sha256": edges_sha,
-        "description": f"Custom {canonical_topo} graph edges (N={num_nodes}, D={out_degree}, seed={seed})",
-    }
-    manifest_obj["files"][events_file] = {
-        "path": events_file,
-        "byte_count": len(events_bytes),
-        "sha256": events_sha,
-        "description": f"Custom {canonical_topo} stimulus events ({num_events} events, {stimulus_distribution}, seed={seed})",
-    }
-    manifest_obj["workloads"][prefix] = {
-        "workload_id": workload_id,
-        "seed": seed,
-        "config": cfg,
-        "workload_instance_id": w_instance_id,
-        "files": [edges_file, events_file],
-    }
+    if not allow_overwrite and w_instance_id in root_manifest_obj.get("workloads", {}):
+        raise FileExistsError(f"Workload instance '{w_instance_id}' already registered in {root_manifest_path}")
 
-    manifest_bytes = canonical_json_bytes(manifest_obj)
-    manifest_path.write_bytes(manifest_bytes)
-    (output_dir / f"{prefix}_manifest.json").write_bytes(manifest_bytes)
-    return manifest_obj["workloads"][prefix]
+    root_manifest_obj["files"].update(file_entries)
+    root_manifest_obj["workloads"][w_instance_id] = workload_entry
+    root_manifest_path.write_bytes(canonical_json_bytes(root_manifest_obj))
+
+    return {
+        **workload_entry,
+        "instance_dir": str(instance_dir),
+        "instance_manifest_path": str(instance_manifest_path),
+        "root_manifest_path": str(root_manifest_path),
+        "workload_config_path": str(instance_cfg_path),
+    }
 
 
 def main() -> int:
@@ -809,8 +1043,8 @@ def main() -> int:
     parser.add_argument(
         "--output",
         type=str,
-        default=str(EXP0005_ROOT / "fixtures"),
-        help="Output directory for generated fixtures",
+        default=None,
+        help="Output directory (defaults to EXP-0005/fixtures for wp00-committed, or $SC_ARTIFACT_ROOT/EXP-0005/fixtures for custom)",
     )
     parser.add_argument(
         "--topology",
@@ -820,6 +1054,8 @@ def main() -> int:
     parser.add_argument("--nodes", type=int, default=128)
     parser.add_argument("--degree", type=int, default=4)
     parser.add_argument("--modules", type=int, default=4)
+    parser.add_argument("--cross-module-ratio", type=float, default=0.05)
+    parser.add_argument("--active-fraction", type=float, default=0.25)
     parser.add_argument("--events", type=int, default=64)
     parser.add_argument("--horizon-ms", type=float, default=100.0)
     parser.add_argument(
@@ -828,10 +1064,15 @@ def main() -> int:
         default="stratified_modules",
     )
     parser.add_argument("--seed", type=int, default=11)
+    parser.add_argument(
+        "--allow-overwrite",
+        action="store_true",
+        help="Allow overwriting an existing custom workload_instance_id directory",
+    )
     args = parser.parse_args()
 
-    out_path = Path(args.output).resolve()
     if args.mode == "wp00-committed":
+        out_path = Path(args.output).resolve() if args.output else COMMITTED_FIXTURES_DIR
         manifest = build_default_wp00_fixtures(out_path)
         total_bytes = sum(f["byte_count"] for f in manifest["files"].values())
         print(
@@ -839,6 +1080,7 @@ def main() -> int:
             f"(total {total_bytes} bytes <= 1 MiB policy)."
         )
     else:
+        out_path = Path(args.output).resolve() if args.output else default_external_custom_dir()
         summary = generate_custom_fixture_cli(
             output_dir=out_path,
             topology=args.topology,
@@ -848,11 +1090,14 @@ def main() -> int:
             horizon_ms=args.horizon_ms,
             seed=args.seed,
             num_modules=args.modules,
+            cross_module_ratio=args.cross_module_ratio,
+            active_fraction=args.active_fraction,
             stimulus_distribution=args.stimulus_distribution,
+            allow_overwrite=args.allow_overwrite,
         )
         print(
             f"[WP-00] Generated custom fixture {summary['workload_id']} "
-            f"(instance={summary['workload_instance_id']}) in {out_path}"
+            f"(instance={summary['workload_instance_id']}) at {summary['instance_manifest_path']}"
         )
     return 0
 

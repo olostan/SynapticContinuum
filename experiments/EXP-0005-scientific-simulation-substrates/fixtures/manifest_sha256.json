@@ -31,10 +31,10 @@
       "sha256": "531f8a3c9d3973783804780dc11ea70dc4e63e0d1d4cb1051b84f84e28d9c3a6"
     },
     "pilot_disconnected_localized_n128_d4_s11_events.csv": {
-      "byte_count": 2052,
-      "description": "Pilot disconnected localized-activity control external stimulus (all 64 events in Module 0 [0..31], seed=11)",
+      "byte_count": 2010,
+      "description": "Pilot disconnected localized-activity control external stimulus (all 64 events in Module 0 [0..7], seed=11)",
       "path": "fixtures/pilot_disconnected_localized_n128_d4_s11_events.csv",
-      "sha256": "d086ad6cb8a32738a1db9375d022c3737efb801a18d1e4fd99049bbdd04e8a0c"
+      "sha256": "6614b22edcccc35dff88fe2f2edfeb101c5972f9d035997427aaadaf19ea2455"
     },
     "pilot_disconnected_n128_d4_s11_edges.csv": {
       "byte_count": 14600,
@@ -82,6 +82,7 @@
     "read_only_verified": true
   },
   "policies": {
+    "active_fraction_definition": "fraction of neurons within each stimulated module eligible to receive external events; localized_first_module is strictly bounded to Module 0 [0, N//num_modules) for all active_fraction in (0, 1]",
     "delay_constraint": "strictly_positive_delay_ms_gt_0",
     "duplicate_edges": "forbidden_per_src_dst_pair",
     "edge_direction": "directed_src_to_dst",
@@ -183,8 +184,15 @@
         "out_degree": 4,
         "refractory_ms": 2.0,
         "stimulus_distribution": "localized_first_module",
+        "target_pool_per_module": [
+          8,
+          0,
+          0,
+          0
+        ],
         "tau_ms": 10.0,
         "topology": "disconnected",
+        "total_target_pool_neurons": 8,
         "v_reset_mv": 0.0,
         "v_th_mv": 1.0
       },
@@ -194,7 +202,7 @@
       ],
       "seed": 11,
       "workload_id": "sc05/disconnected/v1",
-      "workload_instance_id": "9835409c686ec997741257b2e8fac60bf2d244de04154594d123f5d49797af4a"
+      "workload_instance_id": "a8664ca245de5b0a886458f3687935577f328216b561c364410a4f9c99cfd164"
     },
     "pilot_disconnected_n128_d4_s11": {
       "config": {
@@ -206,8 +214,15 @@
         "out_degree": 4,
         "refractory_ms": 2.0,
         "stimulus_distribution": "stratified_modules",
+        "target_pool_per_module": [
+          8,
+          8,
+          8,
+          8
+        ],
         "tau_ms": 10.0,
         "topology": "disconnected",
+        "total_target_pool_neurons": 32,
         "v_reset_mv": 0.0,
         "v_th_mv": 1.0
       },
@@ -217,7 +232,7 @@
       ],
       "seed": 11,
       "workload_id": "sc05/disconnected/v1",
-      "workload_instance_id": "3673c2f0835d4a0e78dc23e88b528eb00b967428dc215e8ffebfdf761f63aa2d"
+      "workload_instance_id": "e64769404ede50afdee0ce2f0175f0b20c175d16ee0211051ada74124a50d18d"
     },
     "pilot_modular_n128_d4_s11": {
       "config": {
@@ -229,8 +244,15 @@
         "out_degree": 4,
         "refractory_ms": 2.0,
         "stimulus_distribution": "stratified_modules",
+        "target_pool_per_module": [
+          8,
+          8,
+          8,
+          8
+        ],
         "tau_ms": 10.0,
         "topology": "modular_sbm",
+        "total_target_pool_neurons": 32,
         "v_reset_mv": 0.0,
         "v_th_mv": 1.0
       },
@@ -240,7 +262,7 @@
       ],
       "seed": 11,
       "workload_id": "sc05/modular/v1",
-      "workload_instance_id": "423fa2f37fc9f22d982b12640c31322f83db3e599419c77bc50eb8a0f24b637b"
+      "workload_instance_id": "81b664a4f54b96ac813c323ca60e13e99cedbe77d46db210076abc1bb464ed4c"
     }
   }
 }

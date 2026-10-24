@@ -102,6 +102,7 @@ class TestSchemaV2Validator(unittest.TestCase):
             edges_fname, events_fname = w_entry["files"]
             edges_sha = custom_manifest["files"][edges_fname]["sha256"]
             events_sha = custom_manifest["files"][events_fname]["sha256"]
+            edges_rel_path = custom_manifest["files"][edges_fname]["path"]
 
             # 2. Build a record referencing the custom fixture and validate end-to-end
             rec = copy.deepcopy(self.sample)
@@ -126,9 +127,11 @@ class TestSchemaV2Validator(unittest.TestCase):
             )
             self.assertTrue(summary["valid"])
             self.assertEqual(summary["workload_id"], "sc05/modular/v1")
+            self.assertEqual(summary["verification_level"], "full_on_disk_bytes_verified")
+            self.assertEqual(summary["verified_fixture_files_count"], 2)
 
             # 3. Tamper with raw bytes of the on-disk edges CSV file -> MUST FAIL
-            edges_disk_path = tmp_path / edges_fname
+            edges_disk_path = tmp_path / edges_rel_path
             orig_edges_bytes = edges_disk_path.read_bytes()
             edges_disk_path.write_bytes(orig_edges_bytes + b"\n0,1,1.00000000,0.10000000\n")
             with self.assertRaises(self.val_mod.RecordValidationError):
@@ -153,7 +156,31 @@ class TestSchemaV2Validator(unittest.TestCase):
                     allow_synthetic_sample=True,
                 )
 
-            # 5. Tamper with manifest recipe config without updating workload_instance_id -> MUST FAIL
+            # 5. Tamper with standalone workload_config.json AND update config_sha256 so file hash matches,
+            #    verifying P2-4 semantic config check against expected_w["config"] -> MUST FAIL
+            inst_dir = tmp_path / w_entry["workload_instance_id"]
+            standalone_cfg_path = inst_dir / "workload_config.json"
+            orig_standalone_bytes = standalone_cfg_path.read_bytes()
+            tampered_standalone_obj = json.loads(orig_standalone_bytes.decode("utf-8"))
+            tampered_standalone_obj["horizon_ms"] = 999.0
+            tampered_standalone_bytes = (json.dumps(tampered_standalone_obj, indent=2) + "\n").encode("utf-8")
+            standalone_cfg_path.write_bytes(tampered_standalone_bytes)
+            tampered_standalone_rec = copy.deepcopy(rec)
+            tampered_standalone_rec["workload_identity"]["config_path"] = str(standalone_cfg_path)
+            tampered_standalone_rec["workload_identity"]["config_sha256"] = hashlib.sha256(
+                tampered_standalone_bytes
+            ).hexdigest()
+            with self.assertRaises(self.val_mod.RecordValidationError):
+                self.val_mod.validate_sc05_v2_record(
+                    record=tampered_standalone_rec,
+                    schema=self.schema,
+                    fixtures_manifest=custom_manifest,
+                    fixtures_base_dir=tmp_path,
+                    allow_synthetic_sample=True,
+                )
+            standalone_cfg_path.write_bytes(orig_standalone_bytes)
+
+            # 6. Tamper with manifest recipe config without updating workload_instance_id -> MUST FAIL
             tampered_manifest = copy.deepcopy(custom_manifest)
             for k in tampered_manifest["workloads"]:
                 tampered_manifest["workloads"][k]["config"]["tau_ms"] = 99.0
@@ -166,7 +193,8 @@ class TestSchemaV2Validator(unittest.TestCase):
                     allow_synthetic_sample=True,
                 )
 
-            # 6. Delete fixture file on disk -> MUST FAIL in default mode
+            # 7. Delete fixture file on disk -> MUST FAIL in default mode,
+            #    and report manifest_only_unverified_bytes when allow_external_archived_manifest=True (P2-2)
             edges_disk_path.unlink()
             with self.assertRaises(self.val_mod.RecordValidationError):
                 self.val_mod.validate_sc05_v2_record(
@@ -176,6 +204,114 @@ class TestSchemaV2Validator(unittest.TestCase):
                     fixtures_base_dir=tmp_path,
                     allow_synthetic_sample=True,
                 )
+            archived_summary = self.val_mod.validate_sc05_v2_record(
+                record=rec,
+                schema=self.schema,
+                fixtures_manifest=custom_manifest,
+                fixtures_base_dir=tmp_path,
+                allow_synthetic_sample=True,
+                allow_external_archived_manifest=True,
+            )
+            self.assertEqual(archived_summary["verification_level"], "manifest_only_unverified_bytes")
+            self.assertEqual(archived_summary["verified_fixture_files_count"], 1)
+            self.assertEqual(archived_summary["expected_fixture_files_count"], 2)
+
+    def test_custom_parameter_sweeps_same_topology_n_d_seed_do_not_collide(self) -> None:
+        """
+        Regression test for Review #2 P1-A:
+        1. Refuses to write custom fixtures into committed EXP-0005/fixtures.
+        2. Two custom fixtures with identical (topology, N, D, seed) but different
+           (active_fraction, horizon_ms, num_events, stimulus_distribution) get distinct
+           filenames, isolated <workload_instance_id>/ directories, coexist in the shared
+           manifest_sha256.json without clobbering, and both validate independently.
+        3. Re-running an identical configuration without allow_overwrite=True raises FileExistsError.
+        """
+        with self.assertRaises(PermissionError):
+            self.gen_mod.generate_custom_fixture_cli(
+                output_dir=EXP0005_ROOT / "fixtures",
+                topology="modular_sbm",
+                num_nodes=64,
+                out_degree=4,
+                num_events=32,
+                horizon_ms=100.0,
+                seed=11,
+            )
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp_path = Path(tmpdir)
+            w_sparse = self.gen_mod.generate_custom_fixture_cli(
+                output_dir=tmp_path,
+                topology="modular_sbm",
+                num_nodes=64,
+                out_degree=4,
+                num_events=32,
+                horizon_ms=100.0,
+                seed=11,
+                active_fraction=0.10,
+                stimulus_distribution="stratified_modules",
+            )
+            w_dense = self.gen_mod.generate_custom_fixture_cli(
+                output_dir=tmp_path,
+                topology="modular_sbm",
+                num_nodes=64,
+                out_degree=4,
+                num_events=128,
+                horizon_ms=1000.0,
+                seed=11,
+                active_fraction=0.50,
+                stimulus_distribution="localized_first_module",
+            )
+
+            self.assertNotEqual(w_sparse["workload_instance_id"], w_dense["workload_instance_id"])
+            self.assertNotEqual(w_sparse["files"], w_dense["files"])
+
+            # Re-running w_sparse without allow_overwrite=True must raise FileExistsError
+            with self.assertRaises(FileExistsError):
+                self.gen_mod.generate_custom_fixture_cli(
+                    output_dir=tmp_path,
+                    topology="modular_sbm",
+                    num_nodes=64,
+                    out_degree=4,
+                    num_events=32,
+                    horizon_ms=100.0,
+                    seed=11,
+                    active_fraction=0.10,
+                    stimulus_distribution="stratified_modules",
+                    allow_overwrite=False,
+                )
+
+            shared_manifest = json.loads((tmp_path / "manifest_sha256.json").read_text(encoding="utf-8"))
+            self.assertIn(w_sparse["workload_instance_id"], shared_manifest["workloads"])
+            self.assertIn(w_dense["workload_instance_id"], shared_manifest["workloads"])
+
+            for w_entry in (w_sparse, w_dense):
+                inst_id = w_entry["workload_instance_id"]
+                inst_cfg_path = tmp_path / inst_id / "workload_config.json"
+                self.assertTrue(inst_cfg_path.exists())
+                edges_fname, events_fname = w_entry["files"]
+                rec = copy.deepcopy(self.sample)
+                rec["workload_identity"] = {
+                    "workload_id": w_entry["workload_id"],
+                    "workload_instance_id": inst_id,
+                    "seed": 11,
+                    "rng_stream_id": "SplitMix64-deterministic-v1:seed=11",
+                    "config_path": str(inst_cfg_path),
+                    "config_sha256": hashlib.sha256(inst_cfg_path.read_bytes()).hexdigest(),
+                    "edges_fixture_sha256": shared_manifest["files"][edges_fname]["sha256"],
+                    "events_fixture_sha256": shared_manifest["files"][events_fname]["sha256"],
+                    "adapted_input_sha256": shared_manifest["files"][events_fname]["sha256"],
+                    "historical_exp0004_triple": None,
+                }
+                summary = self.val_mod.validate_sc05_v2_record(
+                    record=rec,
+                    schema=self.schema,
+                    fixtures_manifest=shared_manifest,
+                    fixtures_base_dir=tmp_path,
+                    allow_synthetic_sample=True,
+                )
+                self.assertTrue(summary["valid"])
+                self.assertEqual(summary["verification_level"], "full_on_disk_bytes_verified")
+                self.assertEqual(summary["verified_fixture_files_count"], 2)
 
     def test_fixed_dt_native_model_passes_aligned_with_tolerance(self) -> None:
         """

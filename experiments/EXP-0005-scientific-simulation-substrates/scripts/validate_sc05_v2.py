@@ -231,21 +231,6 @@ def validate_sc05_v2_record(
     search_dirs.extend([EXP0005_ROOT / "fixtures", EXP0005_ROOT, REPO_ROOT])
 
     wi = record["workload_identity"]
-    # Verify config_path on disk and its SHA-256 unless in explicit external-archived mode
-    cfg_file = _resolve_candidate_path(wi["config_path"], search_dirs)
-    if cfg_file is None:
-        if not allow_external_archived_manifest:
-            raise RecordValidationError(
-                f"Referenced workload config_path '{wi['config_path']}' does not exist on disk."
-            )
-    else:
-        actual_cfg_sha = hashlib.sha256(cfg_file.read_bytes()).hexdigest()
-        if actual_cfg_sha.lower() != wi["config_sha256"].lower():
-            raise RecordValidationError(
-                f"On-disk config_sha256 mismatch for '{wi['config_path']}': "
-                f"record claims {wi['config_sha256']}, actual file bytes hashed to {actual_cfg_sha}."
-            )
-
     known_instances = {
         w["workload_instance_id"]: w for w in fixtures_manifest.get("workloads", {}).values()
     }
@@ -265,8 +250,64 @@ def validate_sc05_v2_record(
             f"Seed mismatch for workload instance {w_inst_id}: got {wi['seed']}, expected {expected_w['seed']}"
         )
 
+    # Verify config_path on disk, its SHA-256, and semantic equality with expected_w["config"]
+    cfg_file = _resolve_candidate_path(wi["config_path"], search_dirs)
+    config_file_verified_on_disk = False
+    if cfg_file is None:
+        if not allow_external_archived_manifest:
+            raise RecordValidationError(
+                f"Referenced workload config_path '{wi['config_path']}' does not exist on disk."
+            )
+    else:
+        raw_cfg_bytes = cfg_file.read_bytes()
+        actual_cfg_sha = hashlib.sha256(raw_cfg_bytes).hexdigest()
+        if actual_cfg_sha.lower() != wi["config_sha256"].lower():
+            raise RecordValidationError(
+                f"On-disk config_sha256 mismatch for '{wi['config_path']}': "
+                f"record claims {wi['config_sha256']}, actual file bytes hashed to {actual_cfg_sha}."
+            )
+        config_file_verified_on_disk = True
+        if cfg_file.suffix.lower() == ".json":
+            try:
+                parsed_cfg = json.loads(raw_cfg_bytes.decode("utf-8"))
+            except Exception as exc:
+                raise RecordValidationError(
+                    f"Failed to parse JSON at config_path '{wi['config_path']}': {exc}"
+                ) from exc
+            if isinstance(parsed_cfg, dict):
+                if parsed_cfg.get("schema_version") == "sc05-fixture-manifest-v1":
+                    cfg_workloads = parsed_cfg.get("workloads", {})
+                    matched_manifest_w = None
+                    for mw in cfg_workloads.values():
+                        if isinstance(mw, dict) and mw.get("workload_instance_id") == w_inst_id:
+                            matched_manifest_w = mw
+                            break
+                    if matched_manifest_w is None or matched_manifest_w.get("config") != expected_w.get("config"):
+                        raise RecordValidationError(
+                            f"Semantic config mismatch between config_path manifest '{wi['config_path']}' "
+                            f"and expected workload recipe for instance {w_inst_id}."
+                        )
+                elif "config" in parsed_cfg and isinstance(parsed_cfg["config"], dict):
+                    if parsed_cfg["config"] != expected_w.get("config"):
+                        raise RecordValidationError(
+                            f"Semantic config mismatch in '{wi['config_path']}': "
+                            f"file config {parsed_cfg['config']} != manifest recipe config {expected_w.get('config')}."
+                        )
+                    if "workload_instance_id" in parsed_cfg and parsed_cfg["workload_instance_id"] != w_inst_id:
+                        raise RecordValidationError(
+                            f"workload_instance_id in config_path '{wi['config_path']}' "
+                            f"({parsed_cfg['workload_instance_id']}) != record workload_instance_id ({w_inst_id})."
+                        )
+                else:
+                    if parsed_cfg != expected_w.get("config"):
+                        raise RecordValidationError(
+                            f"Semantic config mismatch in standalone config file '{wi['config_path']}': "
+                            f"file content does not match manifest recipe config for {w_inst_id}."
+                        )
+
     files_meta = fixtures_manifest.get("files", {})
     verified_file_hashes: Dict[str, str] = {}
+    physically_verified_fixture_files_count = 0
     for fname in expected_w.get("files", []):
         if fname not in files_meta:
             raise RecordValidationError(f"Fixture file '{fname}' missing from manifest['files'].")
@@ -295,6 +336,7 @@ def validate_sc05_v2_record(
                     f"Byte count mismatch for fixture file '{fname}': manifest expects {manifest_f_bytes}, "
                     f"actual bytes={len(raw_bytes)}."
                 )
+            physically_verified_fixture_files_count += 1
 
         verified_file_hashes[fname] = actual_f_sha
         if fname.endswith("_edges.csv") and wi.get("edges_fixture_sha256") != actual_f_sha:
@@ -305,6 +347,15 @@ def validate_sc05_v2_record(
             raise RecordValidationError(
                 f"events_fixture_sha256 mismatch for {fname}: got {wi.get('events_fixture_sha256')}, expected {actual_f_sha}"
             )
+
+    expected_fixture_files_count = len(expected_w.get("files", []))
+    all_bytes_verified = (
+        config_file_verified_on_disk
+        and physically_verified_fixture_files_count == expected_fixture_files_count
+    )
+    verification_level = (
+        "full_on_disk_bytes_verified" if all_bytes_verified else "manifest_only_unverified_bytes"
+    )
 
     # Independently recompute workload_instance_id from canonical recipe + verified file hashes
     if "config" not in expected_w or not isinstance(expected_w["config"], dict):
@@ -415,7 +466,9 @@ def validate_sc05_v2_record(
         "workload_id": wi["workload_id"],
         "workload_instance_id": wi["workload_instance_id"],
         "recomputed_workload_instance_id": recomputed_instance_id,
-        "verified_fixture_files_count": len(verified_file_hashes),
+        "verified_fixture_files_count": physically_verified_fixture_files_count,
+        "expected_fixture_files_count": expected_fixture_files_count,
+        "verification_level": verification_level,
         "semantic_classification": ms["semantic_classification"],
         "null_fields_documented_count": len(null_paths),
         "jsonschema_version": JSONSCHEMA_VERSION,

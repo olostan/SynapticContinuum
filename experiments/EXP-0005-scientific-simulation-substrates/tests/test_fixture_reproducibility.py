@@ -143,15 +143,86 @@ class TestFixtureReproducibility(unittest.TestCase):
                 f"Expected equal 16-event stratification across 4 modules in {fname}, got {mod_counts}",
             )
 
-        # Localized control must stimulate only Module 0 (all 64 external events in [0, 32))
+        # Localized control must stimulate only Module 0 (all 64 external events in [0, 8) at f=0.25)
         loc_counts = {0: 0, 1: 0, 2: 0, 3: 0}
         with (self.fixtures_dir / "pilot_disconnected_localized_n128_d4_s11_events.csv").open(
             "r", encoding="utf-8", newline=""
         ) as f:
             for row in csv.DictReader(f):
                 tgt = int(row["target_id"])
+                self.assertLess(tgt, 8, f"Expected localized target in [0, 8) at f=0.25, got {tgt}")
                 loc_counts[tgt // 32] += 1
         self.assertEqual(loc_counts, {0: 64, 1: 0, 2: 0, 3: 0})
+
+    def test_localized_first_module_strictly_bounded_to_module0_at_high_active_fraction(self) -> None:
+        """
+        Regression test for Review #2 P1-B: at active_fraction=0.50 and 1.00 with N=128,
+        num_modules=4 (module 0 = [0, 32)), localized_first_module MUST strictly constrain
+        target_id to [0, 32) and NEVER spill into Modules 1..3.
+        """
+        b025 = self.gen.compute_stimulus_target_budget(128, 4, 0.25, "localized_first_module")
+        self.assertEqual(b025["target_pool_per_module"], [8, 0, 0, 0])
+        self.assertEqual(b025["total_target_pool_neurons"], 8)
+
+        b050 = self.gen.compute_stimulus_target_budget(128, 4, 0.50, "localized_first_module")
+        self.assertEqual(b050["target_pool_per_module"], [16, 0, 0, 0])
+        self.assertEqual(b050["total_target_pool_neurons"], 16)
+
+        b100 = self.gen.compute_stimulus_target_budget(128, 4, 1.00, "localized_first_module")
+        self.assertEqual(b100["target_pool_per_module"], [32, 0, 0, 0])
+        self.assertEqual(b100["total_target_pool_neurons"], 32)
+
+        for frac, max_target_exclusive in ((0.25, 8), (0.50, 16), (1.00, 32)):
+            events = self.gen.generate_external_events(
+                num_nodes=128,
+                num_events=128,
+                horizon_ms=100.0,
+                seed=11,
+                active_fraction=frac,
+                num_modules=4,
+                stimulus_distribution="localized_first_module",
+            )
+            self.assertEqual(len(events), 128)
+            for ev in events:
+                tgt = int(ev[1])
+                self.assertGreaterEqual(tgt, 0)
+                self.assertLess(
+                    tgt,
+                    max_target_exclusive,
+                    f"Localized stimulus at active_fraction={frac} spilled to target_id={tgt} >= {max_target_exclusive}",
+                )
+                self.assertEqual(tgt // 32, 0, f"Event leaked outside Module 0 into Module {tgt // 32}")
+
+    def test_topology_parameter_validation_fails_fast_on_impossible_degree(self) -> None:
+        """
+        Regression test for Review #2 P2-1: generate_Topology_edges must raise ValueError
+        immediately when out_degree >= module_size on disconnected graphs or when out_degree >= num_nodes.
+        """
+        with self.assertRaises(ValueError):
+            # N=8, 4 modules -> module_size=2, out_degree=4 is impossible without self/cross edges
+            self.gen.generate_Topology_edges(
+                topology="disconnected",
+                num_nodes=8,
+                out_degree=4,
+                seed=11,
+                num_modules=4,
+            )
+        with self.assertRaises(ValueError):
+            self.gen.generate_Topology_edges(
+                topology="random",
+                num_nodes=8,
+                out_degree=8,
+                seed=11,
+                num_modules=2,
+            )
+        with self.assertRaises(ValueError):
+            self.gen.generate_Topology_edges(
+                topology="modular_sbm",
+                num_nodes=16,
+                out_degree=4,
+                seed=11,
+                num_modules=0,
+            )
 
     def test_exp0004_read_only_provenance_hashes(self) -> None:
         manifest = json.loads(self.manifest_path.read_text(encoding="utf-8"))
