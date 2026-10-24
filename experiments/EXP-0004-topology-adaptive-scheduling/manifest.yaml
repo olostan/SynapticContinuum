@@ -1,0 +1,54 @@
+schema_version: 1
+id: EXP-0004
+name: topology-adaptive-scheduling
+status: planned
+design_date: 2026-10-23
+depends_on: [EXP-0002, EXP-0003]
+hardware:
+  target: linux-x86_64
+  cpu: amd-ryzen-5-pro-5650ge
+  ram: detect-at-runtime
+  expected_upgrade_total_gib: 32
+  do_not_assume_upgrade_installed: true
+  max_available_ram_fraction: 0.60
+  cuda_rocm_not_required: true
+build: {language: c++20, portability: linux-and-macos, compiler: autodetect}
+execution:
+  seeds_smoke: [11, 23]
+  seeds_primary: [11, 23, 37, 41, 53]
+  warmups_min: 2
+  repetitions_min: 5
+  core_sizes: [1024, 10000, 100000]
+  optional_sizes: [1000000]
+  out_degrees: [4, 16, 64]
+  initial_degree: 16
+  active_fractions: [0.01, 0.10, 0.50]
+  rates: [0.1, 1, 10]
+  worker_counts_primary: [1, 2, 4, 6]
+  worker_counts_smt_diagnostic: [8, 12]
+  region_counts: [6, 24, 96, 384]
+  modular_cross_region_targets: [0, 0.01, 0.10, 0.50, 1]
+  small_world_rewiring_probability: [0, 0.01, 0.1, 0.5, 1]
+  relaxed_epsilon_optional: [0, 0.001, 0.01, 0.1]
+  per_cell_wall_minutes: 10
+  initial_campaign_wall_minutes: 360
+  staged_screening_not_cartesian: true
+engines:
+  control: [cpp-serial-exact, exp0003-cpp-owner-static-barriers]
+  candidates: [static-community-owner, persistent-worker-owner, many-region-owner, activity-aware-owner, dynamic-migration-owner]
+  optional: [bounded-asynchronous-model]
+data:
+  required_synthetic: [random-fixed-degree, directed-small-world, modular-block, hierarchical-modular, degree-preserving-rewired, disconnected-control]
+  optional_external: [celegans-connectome, flywire-adult-fly-connectome]
+  external_dataset_fetch_optional: true
+  commit_binary_dataset: false
+evidence:
+  compact_metrics_only: true
+  record_code_graph_fixture_hashes: true
+  record_actual_rss: true
+  record_workers_active_idle_barrier_times: true
+  measure_actual_cross_region_event_fraction: true
+  strict_mode_causal_parity_required: true
+  negative_results_first_class: true
+  no_unmeasured_claims: true
+review: {independent: true, execution_pr_auto_merge: false}
