@@ -1,78 +1,49 @@
 # SynapticContinuum
 
-*A lightweight, parallel research space on persistent neural computation beyond token-by-token generation.*
+*Open research into persistent, self-developing internal computation, nonlinguistic experience, autonomous exploration and evolving significance.*
 
-**Status:** exploration, not a validated architecture · **Initial snapshot:** 2026-10-22 · **Repository:** SynapticContinuum
+**Status: research and competing hypotheses, not a demonstrated artificial mind.** The compact worlds, neural algorithms, LLM critics and prior experiments are scientific tools, not the final objective.
 
 ## North star
 
-> Can a neural system operate as a persistent artificial mind, continuously developing its own internal activity and potentially self-originating new thoughts, with external input and output serving as occasional interactions rather than the purpose or clock of cognition?
+> Can a continuously developing computational system form an evolving, experience-grounded inner world of possible pasts, uncertain presents and imagined futures; let those possibilities interact and generate further possibilities; and learn **what deserves attention** through dynamic, multidimensional significance — all without requiring a prompt, preassigned words or a final answer?
 
-**Primary research goal:** explore the possibility of a continuously operating artificial mind with endogenous dynamics, self-reflection, and internally emerging thought-like structures. Optimizing token efficiency, answer accuracy, or hardware throughput is **not** the research objective; these are feasibility constraints or diagnostic comparisons. We do not assume that the resulting activity is conscious, intelligent, or qualitatively free of learned statistical patterns. Those interpretations require operational definitions and evidence.
+The system might one day encounter an unidentified moving creature on an elevated surface and spontaneously explore safety, earlier experience, instability, possible movement and other associations. It could revisit old possibilities, seek new sensory evidence, form a provisional conclusion or stay silent. A human may eventually call part of that activity 'cat', 'danger' or 'curiosity', but no fixed CAT node or text generation need have driven the process.
 
-We are not trying to build another text-based agent loop and call it continuous thought. The central object of study is **latent neural state that changes without generating tokens and without requiring external stimulation**.
+This is an aspiration and testable scientific program, not a claim about achieved cognition or subjective consciousness. 'Consciousness as an illusion' is allowed as a motivating philosophical view; we do not pretend the question is settled.
 
-## Non-negotiable research orientation
+## Read this repository in order
 
-We seek **emerging traits, internally initiated activity, and potential self-observation**, not faster or more correct answers. Imperfect utterances, silence, spontaneous initiation and unexpected developmental paths are valid research observations. A conventional LLM can offer fallible retrospective reinforcement of contextual plausibility, but should not prescribe target sentences, become the permanent behavior policy, or turn the project into response imitation. The decisive evidence is causal development over a persistent individual trajectory, with controls against replay, noise and judge-pleasing. No behavioral result alone proves consciousness.
+1. **[VISION.md](VISION.md)** — the long-term behavioral/causal aspiration; representation, time, learned significance, imagination, language-after-experience and epistemic boundaries.
+2. **[FOUNDATIONS.md](FOUNDATIONS.md)** — research invariants we should preserve while testing mechanisms.
+3. **[ATLAS.md](ATLAS.md)** — competing architectural families, falsifiers, experiments and current uncertainty.
+4. **[AGENTS.md](AGENTS.md)** — concise guidance for parallel research agents and scientific reviewers.
+5. **[SOURCES.md](SOURCES.md)** / [RESEARCH_LANDSCAPE.md](RESEARCH_LANDSCAPE.md) — annotated prior art and critical novelty boundaries; established results versus speculation.
+6. **[EXPERIMENTATION.md](EXPERIMENTATION.md)** and [experiments](experiments/) — exact empirical protocols, archived results and scoped proposals.
 
-## Current research focus (2026-10-22)
+Our initial conceptual research is preserved in [the historical atlas](archive/ATLAS-2026-10-22.md), [ideas](ideas/), [notes](notes/), [findings](research/findings/), [prototypes](prototypes/) and [experimental reports](experiments/). **The fact that an experiment was performed is not evidence that its model is the preferred future architecture.**
 
-The latest discussion extends the original latent-recurrence thesis into a **shared, temporally expressive neural substrate**. Inputs, internal activity, communication output and feedback are interacting neural events; connections may remember earlier activations. Faster plasticity, slower LoRA-style consolidation, evolutionary selection, and an optional conventional-LLM **guardrail** remain separate hypotheses rather than prescribed mechanisms.
+## Important distinctions
 
-**Read [Living Foundations](FOUNDATIONS.md) first** for the current working principles. The original atlas remains a broad hypothesis map, not a frozen architecture. Recent independent papers: [temporal connection memory](ideas/temporal-connection-memory.md), [communication as activation](ideas/communication-as-activation.md), [adaptive plasticity and guardrails](ideas/adaptive-plasticity-and-guardrails.md). Initial experimental entry point: [timed HI → HELLO](experiments/E004-timed-greeting.md). A [runnable supervised toy prototype](prototypes/continuous-greeting/README.md) is available as a baseline, not as validation of the full architecture.
+- **A word is not necessarily a thought.** Internally useful meaning may be distributed across trajectories or learned relations; language can be an optional later interpreter or input port.
+- **A possibility is not an observation.** An old factual observation, a revised present belief, an imagined future and a counterfactual should remain distinguishable.
+- **Exploration priority is not truth probability.** Unlikely high-consequence events may deserve attention, while obvious events may not.
+- **An output is not the internal process.** Silent spontaneous exploration and later causal influence can be more interesting than a correct textual answer.
+- **Reinforcement is not teaching a target sentence.** Error correction, local plasticity, inhibition, intrinsic learning and a fallible outside critic are alternatives to study.
+- **Continuous is not constant firing.** Quiescence, asynchronous updates or selective replay may be valid operational states.
 
-## How to navigate
+## Research, not a premature architecture choice
 
-- **[FOUNDATIONS.md](FOUNDATIONS.md)** — concise current hypotheses and invariants; start here for the newest conceptual synthesis.
-- **[ATLAS.md](ATLAS.md)** — the main evolving research map: hypotheses, alternatives, technical constraints, discriminating tests, open tensions, and possible trajectories. Start here for understanding.
-- **[AGENTS.md](AGENTS.md)** — short operating guidance and ready-to-use prompts for parallel research agents. Start here when delegating.
-- **[SOURCES.md](SOURCES.md)** — annotated research bibliography, with relevance and caveats.
-- **[RESEARCH_LANDSCAPE.md](RESEARCH_LANDSCAPE.md)** — independent prior-art comparison, novelty boundaries, competing explanations, citation audit, and discriminating research priorities.
-- **[ideas/developmental-communication.md](ideas/developmental-communication.md)** — imperfect attempts, reinforcement and emergent communication across continuous experience.
-- **[ideas/spontaneous-social-behavior.md](ideas/spontaneous-social-behavior.md)** — self-initiated communication and social behavior without prompt-response scheduling.
-- **[ideas/](ideas/)** — competing architectures; agents can propose contradictory ideas.
-- **[experiments/](experiments/)** — executable proposals; no obligation to implement them in order.
-- **[notes/](notes/)** — independent agent notes, negative results, rebuttals, surprising observations.
-- **[results/](results/)** — machine-readable experiment results, figure metadata, and short summaries; avoid large binary checkpoints in Git.
+Keep all options alive: time-sensitive neural connections, mixed distributed population coding, learned embeddings of experiences, recurrent generative models, associative completion, episodic replay, symbolic/probabilistic inference, Copycat/NARS-inspired search, dynamic attention, active inference, intrinsic motivation, local plasticity, and hybrids.
 
-## The research loop (deliberately light)
+What matters is whether a mechanism *causally* supports experience-dependent and internally initiated developments. We distinguish replay from generative recombination, memory from learning, calibration from plausibility, internal attention from external action, and fancy decoders from real student computation. Simple strong baselines and negative results matter.
 
-1. **Explore**: any agent chooses a question and creates one self-contained note, idea, or experiment proposal on its own branch.
-2. **Challenge**: another agent may write a counterargument or contradictory prediction. Do not erase disagreement.
-3. **Test**: formulate the smallest experiment that would distinguish competing explanations. Record baselines and negative results.
-4. **Synthesize**: occasionally update ATLAS.md to reflect what has changed, linking the original evidence. The atlas is a map, not a gatekeeper.
+## Current scientific status
 
-For now, work directly on `main`: no required PRs or issue tracking. Parallel agents should each write new, uniquely named files to avoid collisions; coordinate before editing shared atlas or bibliography. Branches can be introduced later if needed.
+Experiments EXP-0001–0005 and earlier E001–E006 proposals examined **particular** temporal memory, event scheduling, stability, topology, communication and scientific simulation questions. Read their actual reports for verified numbers and limitations. Their results neither demonstrate the overall vision nor invalidate it. Separate EXP-0006 design proposals may be superseded by the new architecture-neutral vision and require independent reconsideration before implementation. No new execution or results are implied by a documentation change.
 
-**Writing boundaries**: every agent may add its own files under `notes/`, `ideas/`, or `experiments/`. The integrator is the normal editor of `ATLAS.md` and `SOURCES.md`. Exceptions are fine when no other agent is touching them.
+## Approach
 
-## Suggested parallel starts
+Explore openly; look for nearest prior research; articulate strong alternatives and falsifiers; use the smallest meaningful controlled world and ablations; collect per-seed evidence and causal interventions; analyze whether insights can extend beyond a toy environment. Spend limited local compute on discriminating hypotheses rather than performance engineering detached from the scientific goal.
 
-- **Scout**: survey recurrent depth, latent reasoning, neural CA, equilibrium networks, dynamic routing, and counterevidence since 2024.
-- **Architect**: develop a neuron/region-level update rule that is actually executable without autoregressive decoding.
-- **Retrofit investigator**: assess where existing pretrained Transformer blocks can be reused, and which interfaces fail under feedback.
-- **Skeptic**: argue why apparently intelligent activity could be mere unstable dynamics; propose discriminating controls.
-- **Experimentalist**: design an equal-compute benchmark with non-token latent updates and repeatability.
-- **Synthesizer**: reconcile findings *without erasing competing hypotheses*.
-
-See [AGENTS.md](AGENTS.md) for copy-paste prompts.
-
-## First machine and feasibility
-
-Target experiments that can begin on a personal Apple Silicon laptop with about 48 GB unified memory. Prefer tiny synthetic systems and ~0.5–1.7B open-weight models before attempting larger runs. We should benchmark memory, speed, training support, and actual backend feature access before choosing MLX vs PyTorch/MPS. This is a feasibility constraint, not a prescribed framework.
-
-## What counts as progress?
-
-- A falsifiable hypothesis with a clear prediction.
-- A faithful reproduction or refutation of a paper's central result.
-- A surprising **negative** finding that closes an unproductive branch.
-- An implementation that actually updates a persistent hidden state *without emitting an intermediate vocabulary token*.
-- A controlled task where more internal computation increases accuracy under matched budgets.
-- A strong alternative explanation, supported by an experiment.
-
-**Not progress by itself**: visually exciting activation patterns, output fluency, mere repeated LLM calls, or unsupported analogies to biological awareness.
-
-## Publication stance
-
-This is a **public** exploratory research repository. Do not commit private notes, credentials, copyrighted datasets, restricted checkpoints, or findings presented as verified without evidence. Apache-2.0 is the repository license; external models, papers, and data retain their own licenses.
+Project license: [Apache-2.0](LICENSE).

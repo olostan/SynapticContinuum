@@ -62,3 +62,8 @@ and open a PR to main. Never merge; never upload large artifacts.
 ```
 
 If a long run terminates early, record partial metrics, reason and whether checkpoint resume is possible. Do not fabricate missing metrics. A PR can be **ready for design review** without any runs and should say so.
+
+
+## Vision alignment for newly proposed experiments (2026-10-24)
+
+Before designing a new executable EXP, read [VISION.md](VISION.md), [FOUNDATIONS.md](FOUNDATIONS.md) and [ATLAS.md](ATLAS.md). A task benchmark, explicit-symbol world, neural-activity plot or simulation-scale result is only an **instrument**. State which uncertainty about *persistent, self-initiated, nonlinguistic meaning, branching hypotheses, revisable temporal belief, significance-steered attention, active information seeking or lifelong adaptation* the proposed test can constrain. Include honest simpler baseline(s), a way to detect semantic inference by the measurement decoder itself, and a stopping criterion. The candidate mechanism need not encompass the full vision, but every proposed claim must say what it does **not** test. Do not retroactively reinterpret earlier EXP results or turn the unmerged EXP-0006 design into an approved architecture.

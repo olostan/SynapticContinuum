@@ -130,3 +130,47 @@ For each new source, record title, link, authors/year, method, training/inferenc
 - [Constitutional AI](https://arxiv.org/abs/2212.08073) (2022): illustrates AI-generated feedback. In SynapticContinuum **the reference LLM is a fallible validator, not a teacher or a target to imitate**.
 
 **New comparison questions:** What changes when timestamps are injected versus when extra neural cycles occur during silence? Can compressed source-traces match per-edge temporal kernels? Is an internally emitted communication command distinguishable from observed delivery? What validated outcome provides learning signals when the LLM validator is uncertain?
+
+
+## 2026-10-24 — New vision: fluid concepts, motivated exploration and nonlinguistic meaning
+
+These are **existing mechanism and theory precedents**, not papers claiming or proving SynapticContinuum's envisioned persistent open-ended inner process. Read [VISION.md](VISION.md) and [ATLAS.md](ATLAS.md) for the distinctions.
+
+### Hofstadter / Mitchell — Copycat: fluid analogy and stochastic micro-agents
+- Original cognitive architecture account (Hofstadter & Mitchell, 1995): https://melaniemitchell.me/PapersContent/HofstadterMitchellCopycat1995.pdf
+- Historical MIT technical report (Hofstadter, 1984): https://dspace.mit.edu/entities/publication/f5c71f85-e38a-43f6-8897-8dfbb33dbd85
+- **Relevance:** slipnet, workspace, stochastic codelets, dynamic temperature, partial analogy and selective attention. **Limit:** predetermined analogy microdomain and explicit conceptual components; do not claim it demonstrates general nonverbal spontaneous lifelong cognition.
+
+### Bach — MicroPsi/Psi and Pei Wang — NARS
+- Joscha Bach, *Principles of Synthetic Intelligence: PSI* (2009): https://doi.org/10.1093/acprof:oso/9780195370676.001.0001
+- MIT Media Lab MicroPsi overview: https://www.media.mit.edu/projects/micropsi-an-architecture-for-motivated-cognition/overview/
+- Pei Wang, NARS version 4.1 overview: https://aaai.org/papers/01135-AAAI00-204-non-axiomatic-reasoning-system-version-4-1/
+- **Relevance:** internal drives, priority, context-sensitive processing, limited computation, uncertainty and autonomous behavior. **Limit:** rich prior art for functional goals; requires honest comparison, not a straw-man rule system.
+
+### Oudeyer & Kaplan — intrinsic motivation and developmental exploration
+- *What Is Intrinsic Motivation? A Typology of Computational Approaches* (2007): https://doi.org/10.3389/neuro.12.006.2007
+- Oudeyer, Kaplan & Hafner, *Intrinsic Motivation Systems for Autonomous Mental Development* (2007): https://www.pyoudeyer.com/ims.pdf
+- **Relevance:** curiosity/learning progress, reducible uncertainty, exploration without constant explicit external goals. **Risk:** seeking unpredictable noise; measuring more events does not prove better self-development.
+
+### Schacter & Addis — constructive memory / past and future
+- Schacter, Addis & Buckner, *Remembering the Past to Imagine the Future* (2007): https://doi.org/10.1038/nrn2213
+- Computational generative reconstruction and replay (2024): https://pmc.ncbi.nlm.nih.gov/articles/PMC10963272/
+- **Relevance:** possible shared machinery for imagining future and reconstructing past; **risk:** imaginative trajectories can distort apparent memories. Do not import human neuroscience as proof of an artificial implementation.
+
+### Gentner and distributed representation
+- Gentner, *Structure-mapping* (1983): https://doi.org/10.1016/S0364-0213(83)80009-3
+- Rigotti et al., *Mixed selectivity in complex cognitive tasks* (2013): https://www.nature.com/articles/nature12160
+- Locatello et al., *Challenging Common Assumptions in the Unsupervised Learning of Disentangled Representations* (2019): https://proceedings.mlr.press/v97/locatello19a
+- **Relevance:** role/relationship transfer without copying irrelevant attributes, distributed coding, and limits on discovering a privileged factorization with no inductive biases.
+
+### Associative retrieval, diverse possibility generation, temporal neural time
+- Ramsauer et al., *Hopfield Networks Is All You Need* (2020): https://arxiv.org/abs/2008.02217
+- Bengio et al., *GFlowNet Foundations* (2023): https://www.jmlr.org/papers/v24/22-0364.html
+- Sakana AI, *Continuous Thought Machines* (2025): https://arxiv.org/abs/2505.05522
+- **Relevance:** partial retrieval, probabilistic candidate exploration, time-dependent population dynamics. **Limit:** retrieving or generating many candidates is not necessarily lifelong autonomous, meaningful development.
+
+### Active inference, appraisal, epistemic action
+- Review *Active inference as a theory of sentient behavior* (2024): https://doi.org/10.1016/j.biopsycho.2023.108741
+- **Relevance:** alternative mathematical coupling of uncertain beliefs, preferred states and epistemic actions. **Limit:** often assumes generative factors and objectives, and must not be presented as uniquely resolving consciousness.
+
+**Research gaps to assign:** context-dependent nonlinguistic semantic probes; learned significance and priority updating; distinguishing observation from internal imagination; teacher/decoder contamination; persistent cross-episode endogenous influence; analogical role transfer; meaningful self-directed sensing. Cite original works, not merely broad conceptual resemblances.
