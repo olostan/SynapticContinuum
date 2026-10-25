@@ -1,95 +1,70 @@
-# SynapticContinuum — Living Foundations
+# SynapticContinuum — Working Foundations
 
-**Status:** research hypotheses, not an implemented architecture. **Last synthesis:** 2026-10-22.
+**Living orientation · 2026-10-24 · provisional hypotheses, not a settled architecture**
 
-> Thinking changes state. Experience may change connections. Feedback may change behavior. Evolution may change organization. Input and output are events in the same evolving neural dynamics—not the boundaries of an inference call.
+**Read [VISION.md](VISION.md) first.** It defines the scientific aspiration and operational meaning of our terms. This file defines constraints that should persist as our engineering hypotheses change. The older concept-level atlas is archived separately; [ATLAS.md](ATLAS.md) now maps competing research avenues.
 
-This is a research question, **not** a claim about achieved intelligence or consciousness. It is possible that simpler recurrent/state-space architectures or ordinary stream processing outperform it.
+## The research object is an ongoing process, not a response
 
-## Research intent — artificial mind, not faster inference
+A candidate system persists as an individual developing dynamical process. External events, internal activity, external actions, and occasional communication are interactions with that process, not compulsory request/response boundaries. It may perform nontrivial internal work, revisit experiences or rest when no event occurs. We test whether that work has later causal consequences rather than praising activity for its own sake.
 
-The primary objective is to investigate the *possibility* of a constantly operating artificial mind: an endogenous neural process that may sustain internal activity, self-monitor or revisit its own internal states, form associations, and potentially produce novel thought-like trajectories in the absence of new external prompts. Input and output are peripheral interactions, not the system's principal purpose, update clock, or primary reward source. External communication is useful for observing and probing the system, but conversational fluency is not the definition of success.
+The desired behavior is **open-ended, probabilistic, revisable exploration of meaningful possibilities**: reconstructing possible pasts, updating uncertain presents, imagining counterfactuals and futures, exploring analogies, interacting with other ongoing processes, and occasionally acting or communicating, without a requested conclusion. There is no promise that we can build this.
 
-This is an exploration, **not a claim that such a mind, genuine self-reflection, consciousness, or thinking beyond statistical learning has been achieved**. The phrase “not pattern matching like normal inference” should be treated as a challenge to investigate: learned neural models inherently use learned statistical structure; a researchable distinction is whether internally generated state trajectories yield new, causally consequential, persistent representations or hypotheses without being directly prompted, rather than simply replaying learned associations.
+## Representational openness
 
-Efficiency, FLOPs, matched compute and sleeping baselines remain crucial *controls* for causal attribution and practical feasibility, **not optimization goals or go/no-go requirements**. Even an inefficient prototype is scientifically interesting if its endogenous dynamics reveal a genuinely new measurable phenomenon.
+The substrate need not contain labeled entities, symbols or words. Distributed activity, phase/synchrony, temporal histories, embeddings, local connections, episodic patterns, dynamic binding, discrete graph structures or combinations are all open hypotheses. Object identity and role binding cannot simply be ignored: the system must eventually distinguish two similar individuals and the different roles in 'X supports Y' versus 'Y supports X'. That requirement does **not** prescribe one-node-per-object architecture.
 
-### Specific questions arising from that goal
+A word is an optional observation, action or later probabilistic interpretation of an internal trajectory. A system may learn useful causal consequences before learning the label 'cat'. Adding a category label later can revise confidence about an earlier ambiguous experience, but not make a guess into an observed fact. Use independent diagnostic decoders and test whether they—not the substrate—perform all semantic reasoning.
 
-- What maintains endogenous activity when no new sensory event or reward is supplied?
-- Can the system create and revisit internal candidate representations without a prompt, while separating self-generated content from observations?
-- What operational tests distinguish self-reflection from recurrent noise, attractor cycles, replay and an externally programmed self-prompt loop?
-- Can unexpected internal trajectories causally alter later learning, anticipation or action on withheld probes?
-- What keeps long-lived dynamics neither trivial nor destructive, without forcing them toward task completion?
+## Persistent time and epistemic distinctions
 
-## Pretrained weights as a seed, not an inference engine
+Time is a central variable, not necessarily an explicit time-token input. An observation made at t0 remains a valid claim about t0; uncertainty about the world at t1 evolves as unseen changes become possible. Maintain or recover distinction among observed evidence, remembered observation, uncertain current belief, hypothetical past explanation, future prediction, counterfactual imagination and external action. Exact implementation is an open hypothesis.
 
-**Design intent (2026-10-23):** existing pretrained models are candidates for initializing rich representations, associations, and world knowledge. They are **not** intended to remain the governing autoregressive text-generation mechanism. A pretrained model's learned structure may provide initial weights or a source of representation transfer; whether that structure survives a fundamentally different recurrence and learning regime is unknown and must be tested.
+Past experience may be retrieved through partial temporal activation matching and combined into *new* candidate trajectories. Replaying a stored sequence is different from discovering a transferable causal relationship. A system should transfer 'can fall from height' from vase to cat-like creature without necessarily transferring 'fragile and breaks'.
 
-The proposed *operating system* is a persistent, temporally structured neural dynamical process: activations influence later activations through histories, delays, state-dependent couplings and possibly local plasticity. There may be autonomous activity with no external input and no commitment to producing output. Communication is an optional consequence of internal state, not an objective enforced at each step.
+## Significance and endogenous priority
 
-**Learning and selection are open research questions rather than supervised response correctness.** A candidate substrate might adapt through endogenous prediction, consistency, self-modeling, environmental feedback, local homeostasis, or longer-term selection, with competing mechanisms tested separately. Do not silently replace the research goal with RLHF, next-token accuracy, conversational helpfulness, fast responses, or agreement with a frozen language model. Slow, irregular, incomplete or less structured outward behavior is compatible with the research intent; it is not itself evidence of mental activity.
+A candidate internal direction may carry multiple coexisting regulatory dimensions: uncertainty, risk, novelty, relevance, anticipated benefit/harm, reducible surprise, learning progress, urgency, familiarity, habituation and computational cost. These are **proposed control signals**, not proof of emotions or a commitment to a single handcrafted feeling vector. Plausibility of an imagined possibility and priority for further exploration are separate quantities.
 
-**Necessary distinction:** pretrained weights cannot be assumed to encode portable, accessible knowledge independent of their original architecture, normalization, tokenization and training objective. Simply running an LLM's weights recurrently may produce collapse or meaningless dynamics. Research should compare (a) native pretrained weights with altered recurrence; (b) pretrained features transferred through learned interfaces into a separately trained dynamical substrate; and (c) dynamical systems trained from scratch. Avoid presenting a technical method as settled prematurely.
+Changing internal possibilities can alter significance; significance can alter activity, resource scheduling, plasticity, interest in other possibilities, and optional outward action. Curiosity may favor expected learning progress over irreducible random noise. Fear-like control may increase *internal* study of a danger while inhibiting an unsafe *external* action. Motivation may itself adapt through experience. Rest and silence are valid outcomes.
 
-**Evaluation should be epistemic, not conversational:** look for causal continuity of endogenous state, durable internally initiated representations, reproducible effects of self-revisitation, adaptation after environmental change, and robust distinctions between internal conjecture and observed reality. Use controls for replay, random recurrence, trivial attractors and externally authored prompts. No measurement can automatically certify a subjective mind.
+## Learning and correction
 
-## Founding propositions
+Distinguish ongoing state evolution, durable learning/plasticity, episodic retention/replay, selective inhibition or forgetting, adaptation of the exploration policy, and topology or capacity change. These may have independent timescales and mechanisms.
 
-1. **Continuous core:** a mutable neural state persists while external observations arrive at irregular times and while nothing arrives. Digital implementations have discrete update steps; 'continuous' here means that updates aren't necessarily driven by vocabulary tokens.
-2. **Common event semantics:** sensory input, internally propagated signals, feedback, and outgoing motor/communication commands affect the same dynamical substrate. Modality-specific encoders and actuators still exist; source labels distinguish observation from imagination and action.
-3. **Time-resolved connections:** the influence of neuron/region j on i depends on a history of j's activity, not only its instantaneous value. Delay kernels, leaky memory traces and connection-local state are candidates, not mandatory implementations.
-4. **Output remains internal:** outgoing activity is part of the dynamics; a communication event can also be externally rendered. Internal intent is not proof of successful external transmission; observed delivery is a separate event.
-5. **Learning is multi-timescale:** activity changes rapidly, transient synaptic state changes more slowly, durable weights/adapters change more slowly still, and connectivity/evolution may change at a longer cadence. Those are architectural hypotheses, not fixed biological times.
-6. **Feedback is mostly protective, not prescriptive:** a conventional frozen LLM may *flag* semantic regressions; independently checkable outcomes have higher evidential status. We do not optimize for imitation of the reference LLM.
-7. **Productive computation is an empirical question:** nonzero and complex activity is not equivalent to useful reasoning. Equal-compute and sleeping-state baselines are mandatory.
-8. **Parallel investigation:** no single architecture wins by declaration; agents can challenge any idea and publish negative results.
+Negative-only selection, temporary inhibition, gradual weakening, positive stabilization, verified outcome feedback and three-factor eligibility learning are competitors. Blindly eliminating unlikely or surprising trajectories may suppress creativity; blind amplification can produce runaway activity. Unknown, contradicted, improbable, counterfactual and unobserved are not synonyms. Prevent self-confirming fantasy: repeated simulation does not create external evidence.
 
-## An abstract model
+An external LLM can be a fallible *interpreter/semantic critic* of a bounded causal history, never a hidden author of the student's inner reasoning. A deterministic compact-world oracle supplies ground truth where possible. Validate delayed feedback attribution independently. The student must continue functioning without the critic.
 
-Represent live state as \`S(t) = (h(t), z(t), p(t), W_s, G(t))\`:
-- \`h\`: active units/regions;
-- \`z\`: short- and long-timescale traces of past activity;
-- \`p\`: optional fast plastic state;
-- \`W_s\`: relatively stable learned structure, perhaps including low-rank adapters;
-- \`G\`: connectivity / routing; may be fixed initially.
+## What 'continually evolving' does and does not require
 
-Between events, \`dh/dt = F(h,z,p,W_s,G)\`; traces obey decay-and-drive dynamics. An arriving event \`e=(time,source,payload)\` induces an injection \`h^+ = h^- + I(e,h^-)\`. An outgoing communication event is generated from activity, rendered by an actuator, and recorded as **internal action information**. Independent outcome observation may arrive later.
+Always-on computation is not synonymous with always-on firing. It may be useful to let time elapse analytically, consolidate offline, replay selected episodes, allocate work dynamically, or become quiescent. Compare physical/environment time, internal update count and extra compute. Checkpointing and an append-only experimental event ledger improve reproducibility; they do not prove memory or cognition. Recoverable process state must be distinguished from an external narrative context reinserted at each step.
 
-This does **not** require continuous gradient descent. Learnable parameters, temporarily plastic connection states and active neural state must be represented and measured separately.
+## Our scientific invariants
 
-## Working research questions
+1. Goal and mechanism stay separate; do not lock into temporal kernels, graphs, explicit concepts, symbolic rules, LLM retrofits or neuron-inspired designs before evidence.
+2. No mandatory language tokens inside the operating thought process. Words and communication are optional ports.
+3. No task prompt is necessary to *allow* internal evolution; unscripted processes may sometimes form meaningful, testable hypotheses, or remain quiet.
+4. World truth, sensory observation, possible state, internal imagination, external validator interpretation and human-readable language must not be conflated.
+5. Test **causal effects** of endogenous activity on later belief, action, learning or retention; a pretty trace, apparent association or fluent decoder story is not enough.
+6. Preserve uncertainty and diverse alternatives; false, unknown and counterfactual have different meanings.
+7. Compare mechanisms against principled baselines and honest resource budgets, including simple probabilistic/symbolic models where they solve the problem.
+8. Prior art is a source of mechanisms and critical objections, not a novelty certificate. Negative and null results are first-class.
+9. Favor compact discriminating worlds before increasing object count, model size or buying compute.
+10. No claims about artificial subjective experience; 'illusion of consciousness' remains a philosophical framing, not experimentally established.
+11. Human developmental analogies are inspiration, not medical or neuroscientific claims about a person.
+12. Research docs may evolve; older experiment results and unmerged proposals remain intact and properly scoped.
 
-- Can a trainable temporal kernel over previous activations outperform a simpler recurrent state at matched parameters, FLOPs, and wall time?
-- Does idle-time evolution create useful state changes, or could the system simply preserve its state and sleep?
-- Can an output event be produced by thresholded/gated communication activity **without** autoregressive inner token sampling?
-- Can delayed feedback target the responsible activity through eligibility traces, without needing full-state snapshots?
-- Can a fixed LLM guardrail detect semantic regression without penalizing valuable disagreement?
-- Can slow LoRA-like consolidation and evolutionary selection prevent forgetting *without* freezing learning capacity?
-- What is the smallest falsifiable experiment, including null cases and negative examples?
+## Minimal illustrative mathematical lens (not a design commitment)
 
-## Design papers (independent, not sequential)
+Let latent internal state x(t), learned history/memory parameters m(t), changing modulation or significance g(t), and external observation o(t). A broad candidate transition family is:
 
-- [Temporal connection memory](ideas/temporal-connection-memory.md)
-- [Communication as activation](ideas/communication-as-activation.md)
-- [Adaptive plasticity and guarded evolution](ideas/adaptive-plasticity-and-guardrails.md)
-- [Pretrained retrofit](ideas/pretrained-retrofit.md)
-- [Neural cellular automata](ideas/latent-cellular-automata.md)
-- [Dynamic routing](ideas/dynamic-routing.md)
+- x(t+dt) = F[x(t), m(t), g(t), o(t), randomness; theta]
+- m(t+dt) = U[m(t), x history, experience, evidence; theta]
+- g(t+dt) = G[g(t), x history, expectation, learning progress; theta]
 
-## Experiments and baseline
+Internal alternative trajectories can be sampled or distributed, with both calibrated plausibility and distinct exploration-priority weighting. There is no assumption that x contains localized semantic nodes or that g represents literal human feelings. A conventional symbolic belief model may implement analogous functions and is a valuable comparator.
 
-- [E004 Timed greeting and silence](experiments/E004-timed-greeting.md)
-- [E005 Temporal connection ablation](experiments/E005-temporal-memory-ablation.md)
-- [E006 Live delayed feedback](experiments/E006-live-feedback.md)
-- Existing [E001–E003](experiments/README.md) remain viable competing lines.
+## Research map and historical scope
 
-**Research restraint:** nothing about receiving HI and emitting HELLO demonstrates general linguistic competence. The goal is a measurable, correctly controlled communication *mechanism*.
-
-## Change without bureaucracy
-
-Any agent adds a unique note, idea, code sample, or experiment file. Synthesis changes FOUNDATIONS/ATLAS only when evidence or a clarified conceptual distinction merits it. Record counterclaims alongside claims. Don't demand PRs or issue templates while the lab is exploratory.
-
-## Related foundations
-
-See [SOURCES.md](SOURCES.md) for annotated literature on recurrent depth, CTM, learned temporal dynamics, eligibility traces, online plasticity, liquid networks, neural ODEs and memory. Conceptual similarity does not establish experimental novelty.
+The [ATLAS](ATLAS.md) lists the open research questions, candidate mechanisms, controls and an evidence status ledger. The 2026-10-22 [historical atlas](archive/ATLAS-2026-10-22.md), existing [idea papers](ideas/), [research findings](research/findings/) and [experiment specifications](experiments/) remain available, without retroactively upgrading their claims. See [EXPERIMENTATION.md](EXPERIMENTATION.md) for preregistration and [AGENTS.md](AGENTS.md) for agent discipline.

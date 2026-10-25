@@ -1,3 +1,5 @@
+> **Conceptual orientation update (2026-10-24):** The long-term question has broadened beyond neural time and promptless activity. See [VISION.md](VISION.md) for distributed, nonlinguistic meaning; multiple imagined past/present/future continuations; experience-dependent significance ('feelings' as functional regulators); active perception; analogical transfer; and evolving priorities for finite internal exploration. This document retains its earlier prior-art survey and claims as a **historical critical review**, not an exhaustive review of the new vision. The [new atlas](ATLAS.md) compares broader cognitive architecture alternatives, including Copycat, MicroPsi, NARS, associative memory and active inference. Do not silently substitute throughput or correctness for this goal.
+
 # Research Landscape, Prior Art, and Differentiation
 
 **Reviewed:** 2026-10-22. **Status:** living, critical literature map; not a systematic review, peer review, or novelty certification.
