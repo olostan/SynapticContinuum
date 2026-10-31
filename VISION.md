@@ -1,8 +1,8 @@
 # SynapticContinuum — Research Vision: An Open-Ended Inner Process
 
-**Living vision proposal · 2026-10-24 · exploratory, not a claim of achievement**
+**Living vision · revised 2026-10-30 · exploratory, not a claim of achievement**
 
-This is the project's **north star**, not a design for a particular model. Read alongside [FOUNDATIONS.md](FOUNDATIONS.md), the open [research map](ATLAS.md), and [prior-art sources](SOURCES.md). Older experiment specifications are historical, mechanism-specific investigations and must not define this vision by default.
+This is the project's **north star**, not a design for a particular model. Read alongside [THEORY.md](THEORY.md) (the revisable candidate synthesis of predictive dynamics, heterogeneous time, residual influence and modulation), [FOUNDATIONS.md](FOUNDATIONS.md), the open [research map](ATLAS.md), and [prior-art sources](SOURCES.md). Older experiment specifications are historical, mechanism-specific investigations and must not define this vision by default.
 
 ## Our question
 
@@ -11,6 +11,18 @@ This is the project's **north star**, not a design for a particular model. Read 
 > Can its **priorities for what to explore** themselves develop through experience, so finite computation is allocated among a vast potential space of internal possibilities according to changing significance, uncertainty, anticipation, and learning value?
 
 We do not insist that such a system must be conscious, think like a human, exhibit human emotion, use biological neurons, be correct at every step, or outperform LLMs on language tasks. We investigate *causally consequential processes*. A person may describe consciousness as an illusion or useful self-model; this philosophical possibility motivates curiosity but is not an experimental conclusion or a proxy metric.
+
+## A revised working intuition: the evolving field, not a thought-chain
+
+Our October 2026 discussions, informed especially by Blaise Agüera y Arcas's *What Is Intelligence?*, CTM and older cognitive architecture research, suggest a candidate **explanatory lens**, not an accepted architecture. Prediction may organize much intelligent computation, but **not every computation is a prediction, nor is every predictor intelligent**. An ordinary LLM already performs rich high-dimensional internal computation; its verbalized chain-of-thought is a serialized *expression* of additional computation, not proof that human or machine thinking is one chain.
+
+An individual might sustain an evolving **field of overlapping, interacting possibilities**. Different activities may grow, combine, fade and reactivate at heterogeneous timescales. Multiple weak histories can converge to affect an outcome. A narrative explaining that outcome afterward may be one selected path through a much richer causal subgraph, and could be wrong. Real sequential reasoning can coexist with such dynamics. **Logical concurrency, asynchronous updating and hardware parallelism are not synonyms.**
+
+Distinguish active dynamics, relatively short-lived residual traces, and durable learned organization. A sensory cue might revive a decades-old memory by retrieving stored structure: **nothing had to keep firing for decades**. The resulting memory might shift the system's modulatory state, which then alters what else becomes accessible. Mood-congruent recall and odor-cued autobiographical memory are motivating psychological analogies with known failure modes, not evidence for our exact implementation.
+
+A **modulatory condition** may change how activity spreads, competes, is inhibited, persists, learns or receives resources—not simply contribute another explicitly represented "FEAR" thought. Such influence may arise through fast sensory pathways, internal/homeostatic signals, previous modulation, memory, or higher-level predictions, with feedback among them. Unexpected danger can redirect attention before a verbal explanation; sustained mood can bias later retrieval; an imagined catastrophe may shift modulation after deliberation. None of these demands literal feelings, a dedicated emotion module or a controlling scheduler.
+
+The accompanying [candidate theory](THEORY.md) records one idealized organization, competing architectural realizations, causal tests and points of failure. The **research aspiration is broader than this theory**: if sparse event-driven, ordinary recurrent, explicit probabilistic or other systems explain the phenomena better, the theory must be revised.
 
 ## An imagined mature system (aspiration, not capability)
 
@@ -33,6 +45,12 @@ This scenario illustrates a **potentially branching, revisitable, lifelong flow*
 5. **History can be relational without symbolic labels.** Partial matching of event/activation histories and transferred *causal roles* may allow 'vase fell from table and broke' to inform 'small organism on table' about the possibility of falling, *without copying vase-specific fragility*. This analogy transfer must be learned and tested, not guaranteed by word-embedding similarity.
 6. **Language may arrive late.** Calling previously encountered moving creatures 'cats' later may update interpretations of those experiences but cannot retroactively turn an ambiguous creature into a confirmed cat. Keep original observation separate from later category inference.
 
+## A second illustration: dinner, an unfinished commit, and changing significance
+
+A system could simultaneously retain weak, partially overlapping influences about preparing dinner, an unfinished software commit, available time and laptop battery charge. One association may later support a useful connection: a task can be completed while potatoes boil. This need not have existed as a prewritten verbal thought-chain. If new information implies the commit could destroy a production database, the whole distribution of relevance may change abruptly: safety checks become salient and dinner-related activity recedes.
+
+This story illustrates **convergence, temporal heterogeneity and context-sensitive modulation**, not a mandate to predefine DINNER, COMMIT, FEAR or DATABASE nodes. It also admits mundane alternatives: an explicit scheduler, a Bayesian state estimator or conventional recurrent policy may implement exactly this behavior. Scientific progress requires discriminating them, not producing a convincing story.
+
 ## Past, present, future and counterfactual time
 
 An observation at t0 that a creature is inside a box remains historical evidence. Five minutes later, the current situation is uncertain: it may still be inside or have left. Continued belief dynamics, action models and unseen-event rates affect those probabilities. New evidence can change both current belief and earlier interpretations without rewriting what was actually observed.
@@ -47,11 +65,17 @@ Many simultaneous candidate processes may be characterized by changing, interact
 - relevance to enduring interests or needs, urgency, anticipated harm, potential control and future opportunities;
 - familiarity, repetition, cost of exploration, satiation/habituation, social or interaction significance.
 
+The candidate theory adds a distinction: these influences may be **modulatory dynamics**, altering gain, thresholds, timescales, plasticity, memory access and the distribution of future possibilities. They need not be separate thought streams, explicitly labeled emotions or a hand-programmed global controller. Sensory cues and internal conditions may alter modulation rapidly without a high-level verbalizable prediction; cognitive predictions, longer-lived context and stored history may also modulate it. Modulation and prediction can influence each other reciprocally. A learned "alarm" should be capable of calibration and recovery rather than dominating everything forever.
+
 Call these *appraisal, motivation or significance variables*, not proof of actual emotions. They may be distributed neural quantities rather than a hand-labeled vector attached to each 'thought'. Crucially they are **stateful and learnable**: thought modifies significance; significance changes activation, selection, plasticity, and the allocation of finite computation; experience changes both. The likelihood a hypothetical future is true differs from the value of investigating it. A low-probability catastrophic outcome may be worth exploring, while a highly likely boring outcome may not.
 
 Never reward sheer activity, endless novelty, repetitive rumination, or text emission. The system should be able to focus, wander, revisit, sleep, resume, and redirect itself. Multidimensional control need not collapse into one scalar reward. Biological fear/hunger/neuromodulation provide inspirations, not mechanisms we should claim to reproduce.
 
 ## Autonomous exploration and embodied information gathering
+
+A possible internal process need not know in advance which "chain" will lead to an outcome; weaker activity might later converge with unrelated associations. Nor must a candidate thought be consciously available, linguistically named or even remain actively firing. The role of a retrospective explanation is to make a hypothesis about causal influence; only interventions on earlier state can test that hypothesis.
+
+
 
 An internal exploration may involve recalling, extending a partial temporal memory, considering an alternative, revising an interpretation, or temporarily suppressing an unproductive loop. External actions may include inspecting, touching, moving, waiting or occasionally communicating. Self-selected actions can supply information rather than merely optimize external reward. Compare active perception with passive observation: does acting help form durable useful regularities or just increase training data?
 
@@ -91,7 +115,10 @@ Observations could include:
 5. Internally generated trajectories exerting reproducible effects on subsequent behavior, learning, retention or novel transfer.
 6. Continued development over long individual experience, with old learning revisable but not arbitrarily destroyed; sensor/label remapping does not reset understanding.
 7. Meaningful self-directed information gathering, alongside the ability to do nothing.
-8. Failure modes honestly measured: fantasy confused with evidence, neural attractor loops, runaway activity, over-suppression, language-decoder hallucination, test leakage and incremental capacity blowup.
+8. Cross-context delayed convergence of individually weak evidence, selective reactivation of dormant associations from partial sensory cues, and measurable **learned modulation** beyond scripted priorities or static threshold rules.
+9. Outcome-conditioned causal analysis that can expose several necessary contributors rather than presenting one decorative serialized thought-chain, with interventions that distinguish correlation from cause.
+10. Evidence for useful heterogeneous temporal dynamics under compute-matched comparisons against fixed-time recurrent, state-space, episodic-memory, event-scheduler and explicit belief-state baselines.
+11. Failure modes honestly measured: fantasy confused with evidence, neural attractor loops, runaway activity, over-suppression, language-decoder hallucination, test leakage and incremental capacity blowup.
 
 **Evidential discipline:** hold world stream and resources fixed when intervening on internal state, memory, appraisal, imagination or critic. Compare against honest symbolic/probabilistic baselines, strong GRU/SSM/world models, Copycat/NARS-like priority systems where relevant, replay and equal-compute alternatives. A decoder that can tell a coherent story is not proof of a causal mental process. Five seeds and toy benchmarks cannot establish general consciousness or open-world scalability. Null results are progress if they rule out a mechanism.
 
@@ -111,4 +138,4 @@ Human development, including rich nonverbal experience and sensory exploration, 
 
 Keep exploratory thoughts, prior art, executable experiments and validated observations separately marked. Each proposed experiment should state **what competing mechanisms it distinguishes and why its result matters for the long-term aspiration**. Do not spend our limited compute optimizing a simulator's elegance or benchmark throughput detached from the purpose. Earlier research remains valuable historical evidence even when its local target is not our final goal. Proposals, including experimental design branches, do not silently become accepted architecture.
 
-Follow [FOUNDATIONS.md](FOUNDATIONS.md) for compact constraints, [ATLAS.md](ATLAS.md) for the competitive research map, [SOURCES.md](SOURCES.md) for literature and [EXPERIMENTATION.md](EXPERIMENTATION.md) for evidence discipline.
+Follow [THEORY.md](THEORY.md) for the revisable predictive-dynamics synthesis, [FOUNDATIONS.md](FOUNDATIONS.md) for compact constraints, [ATLAS.md](ATLAS.md) for the competitive research map, [SOURCES.md](SOURCES.md) for literature and [EXPERIMENTATION.md](EXPERIMENTATION.md) for evidence discipline.
