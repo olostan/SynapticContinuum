@@ -174,3 +174,46 @@ These are **existing mechanism and theory precedents**, not papers claiming or p
 - **Relevance:** alternative mathematical coupling of uncertain beliefs, preferred states and epistemic actions. **Limit:** often assumes generative factors and objectives, and must not be presented as uniquely resolving consciousness.
 
 **Research gaps to assign:** context-dependent nonlinguistic semantic probes; learned significance and priority updating; distinguishing observation from internal imagination; teacher/decoder contamination; persistent cross-episode endogenous influence; analogical role transfer; meaningful self-directed sensing. Cite original works, not merely broad conceptual resemblances.
+
+## 2026-10-30 — Evolving predictive dynamics, multiple timescales, modulation and causal attribution
+
+**Purpose:** sources for the revisable [THEORY.md](THEORY.md), not a novelty claim. Listed claims distinguish established demonstrations, authors' theoretical interpretations and our untested synthesis. This section supplements rather than overwrites the literature previously surveyed for CTM, Copycat, active inference, memory and developmental motivation.
+
+### Blaise Agüera y Arcas — *What Is Intelligence? Lessons from AI About Evolution, Computing, and Minds* (MIT Press / Antikythera, 2025)
+
+- [Complete openly readable author-hosted book](https://whatisintelligence.antikythera.org/) — use exact chapter headings below as navigational anchors, since the website groups multiple sections per chapter page.
+- [Survival: Being in Time, The Umwelt Within, Latent Variables, Modeling](https://whatisintelligence.antikythera.org/chapter-02/): prediction of future environmental interaction from temporal experience, observer-dependent useful variables and emergence of semantic categories.
+- [Learning: Neuromodulators, Beyond Reward](https://whatisintelligence.antikythera.org/chapter-04/): authors' account of longer-lived modulatory states, learning and drives; motivates but does not validate our gain/plasticity formulation.
+- [Other Minds: Children of Time, Matryoshka Dolls, etc.](https://whatisintelligence.antikythera.org/chapter-05/): models of other predictors and possible recursive self-modeling; distinguishes conceptual interpretation from demonstrated social-cognition algorithms.
+- [Transformers: Prediction Is All You Need, No Introspection](https://whatisintelligence.antikythera.org/chapter-08/): challenges "just next-word prediction" rhetoric and explores limitations of preserving individual computational history.
+- [Generality: As If](https://whatisintelligence.antikythera.org/chapter-09/): streaming agents and apparent continuity complicate simplistic assertions about turn-based AI.
+- **Our boundary:** many forms of predictive behavior qualify as intelligent on the author's account; we do not assert that all computation predicts or that existing AI lacks intelligence. Nor do we adopt disputed conclusions about machine consciousness as proven.
+
+### Neural time, heterogeneous pace and latent reasoning
+
+- [Darlow et al., Continuous Thought Machines (2025)](https://arxiv.org/abs/2505.05522), with [Sakana's detailed explanation](https://pub.sakana.ai/ctm/): per-neuron preactivation histories, learned temporal processing and synchrony-based representation across internal recurrent ticks independent of input sequence; concrete architectural precedent. **Limit:** task-conditioned finite internal computation is not a demonstrated indefinitely developing mind, and CTM's internal ticks should not be mistaken for independent wall-clock asynchronous processes.
+- [Neural timescales from a computational perspective (*Nature Neuroscience*, 2026)](https://www.nature.com/articles/s41593-026-02343-8): review of heterogeneous timescales across brain activity, modeling mechanisms and task networks. **Limit:** variation is observed, but the particular mechanism/functional necessity remains open.
+- [Hao et al., Training Large Language Models to Reason in a Continuous Latent Space / Coconut (2024)](https://arxiv.org/abs/2412.06769): a learned feedback route without decoding each intermediate state to a word, with some reported advantages on reasoning tasks. **Limit:** fixed latent-step schemes do not imply persistent self-directed cognition.
+- [Qiu et al., Does Latent Chain-of-Thought Actually Reason? (2026)](https://arxiv.org/abs/2610.21182): contemporary causal interventions show some apparently meaningful latent reasoning traces can have weak or inconsistent downstream roles. **Important counterevidence:** decodable structure and task accuracy alone cannot verify that latent computation caused a decision.
+- [Li et al., Dynamics Within Latent Chain-of-Thought (2026)](https://arxiv.org/abs/2602.08783): analyzes steps with interventions on latent states. **Relevance:** causal dependence and representational interpretation are separate questions, and apparent reasoning steps can have non-local roles.
+- [Hofstadter/Mitchell, The Copycat Project (1995)](https://melaniemitchell.me/PapersContent/HofstadterMitchellCopycat1995.pdf) and [Hofstadter's original 1984 MIT report](https://dspace.mit.edu/entities/publication/f5c71f85-e38a-43f6-8897-8dfbb33dbd85): competing stochastic codelets, dynamically changing top-down salience, conceptual slipnet and context-sensitive analogy. **Important prior art:** changing biases and parallel associative search are already well articulated, albeit in a designed microdomain with explicit conceptual scaffolding.
+
+### Mood, long-dormant associations and affective memory
+
+- [Faul, Ford and Kensinger, Emotion and autobiographical memory (2024 review)](https://pmc.ncbi.nlm.nih.gov/articles/PMC11725323/): reciprocal influence of affect, retrieval and reconstruction; memories can be reorganized or reinterpreted in retrieval.
+- [Mood-Congruent Memory Revisited (2023 review)](https://pmc.ncbi.nlm.nih.gov/articles/PMC10076454/): mood can influence retrieval biases, with paradigm effects, mood-repair alternatives and false-memory hazards. **Limit:** not proof of a separate emotion gate or any specific artificial network equation.
+- [Bobei et al., Is the Proust phenomenon fact or fiction? (2026 meta-analysis)](https://link.springer.com/article/10.3758/s13423-026-03025-z): odor-cued autobiographical memories were on average older, more emotional/evocative or pleasant in studied comparisons, but not uniformly more vivid, specific or rare; important study/modality limitations. **Consequence for theory:** a childhood memory returning from a breeze/odor does not imply continuously active years-long neural traces.
+- [Schacter, Addis and Buckner, Remembering the Past to Imagine the Future (2007)](https://doi.org/10.1038/nrn2213): constructive episodic processes and the overlap between remembered and imagined experience. **Limit:** shared mechanisms do not imply internal fantasy is true evidence.
+
+### Scientific boundaries / open challenges
+
+1. **Prediction is not the same as general computation:** a state transition must make a falsifiable anticipation, reconstruction or control contribution to claim predictive function.
+2. **No privileged thought-chain assumed:** a verbal trajectory may be one retrospective explanation among many. Causal subgraphs require interventions, not post-hoc narrative quality.
+3. **No mood/feeling register is established:** fast sensory, internal/homeostatic, higher-order cognitive and persistent modulatory routes are candidates. Compare separate, integrated and no-modulation systems.
+4. **Parallelism has multiple meanings:** logical overlapping activity, independent neural timescales, asynchronous scheduling, explicit branching and concurrent hardware are distinct.
+5. **Dormant is not firing:** cue-dependent retrieval may arise from changed parameters, associative weights, episodic buffers or externally addressed memory. Test them fairly.
+6. **No sex-binary hypothesis:** popular claims about fixed gender-specific pathways from sensation to feeling versus deliberation are neither necessary nor established architectural premises.
+7. **Social/self-modeling is not new:** existing active-inference, theory-of-mind, model-based RL, MicroPsi/NARS and Copycat families deserve strong comparisons before any novelty claim.
+8. **Test the simplest account:** CTM, copycat-style codelets, standard GRUs/SSMs, probabilistic graphical models, external retrieval and fixed scheduling may each reproduce part of the proposed behavior.
+
+**Status:** literature pointers verified at author-hosted or primary-publication level where possible; this is not a full method audit or independent replication. Future research scouts should identify contradictory evidence and update specific claims, not elevate the whole theory at once.

@@ -1,10 +1,12 @@
 # SynapticContinuum — Research Agent Guide
 
-**Revision 2026-10-24.** This is an open scientific exploration, not a roadmap to implement a settled architecture. The **first required read** is [VISION.md](VISION.md), then [FOUNDATIONS.md](FOUNDATIONS.md), [ATLAS.md](ATLAS.md), this guide, [SOURCES.md](SOURCES.md), [research prior art](research/findings/) and the relevant existing [reports](experiments/). Older [atlas](archive/ATLAS-2026-10-22.md) and [idea papers](ideas/) preserve historical alternatives.
+**Revision 2026-10-30.** This is an open scientific exploration, not a roadmap to implement a settled architecture. The **first required read** is [VISION.md](VISION.md), then [THEORY.md](THEORY.md), [FOUNDATIONS.md](FOUNDATIONS.md), [ATLAS.md](ATLAS.md), this guide, [SOURCES.md](SOURCES.md), [research prior art](research/findings/) and the relevant existing [reports](experiments/). Older [atlas](archive/ATLAS-2026-10-22.md) and [idea papers](ideas/) preserve historical alternatives.
 
 ## North star in a paragraph
 
 Ask whether a persistent, nonlinguistic, experience-grounded computational process can internally generate **many interacting possibilities**, about past/present/future, explore and revise them without a prompt, acquire flexible probabilistic meaning from distributed experience, and learn which possibilities deserve limited resources via multidimensional significance/appraisal signals. Words, objects-as-nodes, temporal kernels, graphs, rewards, emotions, LLM advisors and world simulators are **candidate mechanisms or measurement tools**, never mandatory goals. No claim of subjective experience.
+
+The 2026-10-30 theoretical synthesis treats the system as a **potential evolving field** of overlapping predictive influences, heterogeneous timescales, residual and durable memory, and adaptive modulation. This is a **candidate** for investigation, not a settled architecture. Do not turn the examples of dinner, commits, fear, cats, or an autumn breeze into fixed semantic nodes or scripted chains.
 
 ## Expectations for every agent
 
@@ -18,7 +20,14 @@ Ask whether a persistent, nonlinguistic, experience-grounded computational proce
 8. Reject decorative activity charts, reward hacking, decoder-fabricated meaning, unverified novelty, consciousness extrapolation and insufficient negative controls. A system may legitimately be quiet.
 9. Use tiny worlds and strong comparators; explain how findings could or could not extend to larger, noisier lifelong experience.
 10. When reviewing prior experiments, read *actual* SPEC/REPORT and findings; do not infer general cognition from a title, throughput record or one positive metric.
+11. Distinguish active activity, temporary residual influence and durable learned organization; dormant recollection does not mean decades of neural firing.
+12. Distinguish logical concurrency, independent update pace, scheduling and hardware parallelism. Serial latent reasoning and standard recurrent systems are valid competitors.
+13. Treat a verbalized "chain" as a possible **post-hoc explanation**, not necessarily the causal forward algorithm. Measure necessity/sufficiency with ablations, transplants and matched controls; outcome causes may be a subgraph.
+14. Treat gain, inhibition, persistence, retrieval bias, learning and compute allocation as potential **modulation**; test sensory, internal, cognitive and learned pathways separately and in combination. "Feelings" are analogies, not measured subjective states.
+15. Do not elevate "all computation is prediction" into a universal empirical law, or claim existing language models only do one-dimensional computation.
 11. For personal human/neurodevelopmental analogies: respect variability and privacy; do not assume individual mental structure from communication differences. They motivate questions, not evidence.
+
+**When proposing a new experiment:** articulate its effect on the theory's specific hypothesis; stronger conventional baselines; whether the effect is caused by residual memory, durable memory, changing timescale, modulation, an explicit rule/scheduler or decoder leakage; and what a null result would revise. Favor small reproducible contrasts, not whole-mind demonstrations.
 
 ## Agent output: minimum useful research note
 
@@ -36,6 +45,9 @@ For executable experiments, follow [EXPERIMENTATION.md](EXPERIMENTATION.md). Do 
 - **Learning/feedback skeptic:** experience-driven plasticity, negative elimination versus positive stabilization, delayed eligibility, critic leakage and collapse.
 - **Experimental architect:** specify a small causal world and independent truth oracle, the right classical/learned baselines, causal interventions and bounded local-run plan.
 - **Synthesis investigator:** reconcile independent claims without suppressing negative results or declaring a winner prematurely.
+- **Multi-timescale dynamics skeptic:** compare residual convergence, dormant cue-based revival, varied rates and synchronization to standard temporal/state-space memory and explicit schedulers.
+- **Modulation investigator:** test rapid sensory and internal pathways, prediction-mediated and experience-learned gain/priority/inhibition, feedback, false alarms, recovery and collapse.
+- **Causal attribution investigator:** interrogate post-hoc thought chains with outcome-conditioned causal graphs, intermediate interventions, deletion/replacement and sham controls.
 
 ## Current repo navigation and state
 
@@ -43,7 +55,7 @@ Original October 2026 parallel-research campaign instructions remain under resea
 
 ## Useful reviewer challenge
 
-> Read VISION, FOUNDATIONS and ATLAS, then critique the proposal as if its preferred implementation were wrong. Can a simpler recurrent, associative, symbolic or probabilistic model produce the same observations with the same data and compute? Can a language decoder, teacher or simulator be performing the reasoning on the student's behalf? What specific causal intervention, probability calibration, retrospective revision, learning-progress test or long-lifetime comparison would change our belief? What if the result is null?
+> Read VISION, THEORY, FOUNDATIONS and ATLAS, then critique the proposal as if its preferred implementation were wrong. Can a simpler recurrent, associative, symbolic or probabilistic model produce the same observations with the same data and compute? Can a language decoder, teacher or simulator be performing the reasoning on the student's behalf? What specific causal intervention, probability calibration, retrospective revision, learning-progress test or long-lifetime comparison would change our belief? What if the result is null?
 
 ## Scientific priority over packaging
 

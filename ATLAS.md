@@ -1,11 +1,13 @@
 # SynapticContinuum — Research Atlas: Questions Before Mechanisms
 
 **Reframed 2026-10-24 · living critical map · not an architecture specification.**
-The earlier 2026-10-22 neural-recurrence-focused version is preserved at [archive/ATLAS-2026-10-22.md](archive/ATLAS-2026-10-22.md). Start from [VISION.md](VISION.md) and [FOUNDATIONS.md](FOUNDATIONS.md). No result currently establishes the full vision.
+The earlier 2026-10-22 neural-recurrence-focused version is preserved at [archive/ATLAS-2026-10-22.md](archive/ATLAS-2026-10-22.md). Start from [VISION.md](VISION.md), [THEORY.md](THEORY.md) (the candidate predictive-dynamics organizational lens), and [FOUNDATIONS.md](FOUNDATIONS.md). No result currently establishes the full vision.
 
 ## A. What phenomenon are we trying to demonstrate?
 
 A **persistent, open-ended inner process** that can generate and revisit multiple nonlinguistic possibilities, analogically recompose past experience, estimate alternative past/current/future states, and discover relevance before being externally asked a question. The process allocates finite computation through state-dependent and perhaps learnable significance signals, may investigate the world by acting, and changes its subsequent learning and exploration through experience.
+
+The revised candidate synthesis is an **evolving field of interacting, differently paced influences**, with no required pre-enumerated "thought chain": activity may converge and leave latent traces; context-sensitive modulation may change subsequent dynamics from sensory, internal or deliberative routes. Active, residual and durable memories must not be conflated. "Chain-of-thought" may be a retrospective, outcome-conditioned explanatory projection rather than the forward algorithm, and causal history may be branching. This is a **testable family of interpretations**, not an architecture requirement.
 
 A single correct prediction, a promptless sentence, complex oscillation, a graph walk, or a trained decoder labeling hidden features is **not sufficient**. We want to know whether one *internally initiated* development causes another and leaves a lasting, externally testable trace in how the learner learns or acts. It is valid for the system sometimes to do nothing.
 
@@ -31,6 +33,18 @@ A single correct prediction, a promptless sentence, complex oscillation, a graph
 
 **Q10: What would make the phenomena genuinely nontrivial?** Which measurements, falsifying interventions and competitive baselines distinguish a new mechanism from established recurrent neural inference, Copycat/NARS-like stochastic search, explicit world-model simulation, probabilistic belief propagation or static episodic retrieval?
 
+**Q11: Distributed convergence versus sequential explanation.** Can jointly weak, differently sourced histories create an outcome that a fixed serial chain fails to account for under fair controls? After an outcome, can several necessary causes be identified by intervention rather than just a persuasive textual attribution? Serial and global-workspace alternatives remain valid.
+
+**Q12: Temporal heterogeneity and dormant revival.** Do multiple or adaptive timescales outperform single-rate recurrence and explicit time/episodic-memory alternatives? Can incomplete sensory cues reactivate long-dormant learned associations without requiring permanent neural firing? What are the costs and false retrievals?
+
+**Q13: Multiple paths to affective-like modulation.** Are there distinct useful latency/accuracy tradeoffs between sensory-triggered, internal/homeostatic, deliberative, history-dependent and hybrid modulatory routes? Which mechanisms change gain, inhibition, retention, retrieval, plasticity or computation, and which merely rerank completed thoughts?
+
+**Q14: Learned regulation of modulation.** Can a learner reduce false alarms and rumination, habituate, recover, and adapt urgency-like responses to changed circumstances without hand-coded concept labels? When do selective inhibition and excitation silence useful possibility generation?
+
+**Q15: Prediction and function.** Which variables demonstrably predict environmental or internal consequences? Where does calling all transitions "predictions" become tautological? Do preexisting recurrent, Bayesian, state-space, scheduling or memory systems yield equivalent behavior? Is extra idle-time computation ever needed?
+
+**Q16: Coupled predictive individuals.** Can learned predictions of other predictors' observations, uncertainty and responses produce advantages beyond hard-coded game-theoretic policies or a single central world model? Can useful self-modeling be measured without attributing subjective awareness?
+
 ## C. Mechanism families: candidates, not priorities
 
 | Family | Potential role | Strongest caution / baseline |
@@ -45,6 +59,11 @@ A single correct prediction, a promptless sentence, complex oscillation, a graph
 | Active inference, intrinsic motivation, homeostasis, affect/appraisal, empowerment | Allocate finite computation/actions based on significance and information | Hand-authored utilities, reward hacking, risk paralysis, noise attraction |
 | Online plasticity, local elimination/inhibition, three-factor learning, consolidation | Learn which causal histories to preserve or suppress | Bad credit assignment; catastrophic forgetting and activity collapse |
 | Dynamic attractors, neural CA, asynchronous/event-driven execution, LoRA retrofit | Possible computational substrates or scaling strategies | Stability/throughput is not autonomously meaningful development |
+| Global neuronal workspace / parallel spreading activation and priority competition | Models of locally interacting content and intermittent broad influence | Interpretable apparent "ignition" is not necessarily novel inference or consciousness |
+| Heterogeneous clocks, adaptive time constants, multiscale retention, differentiable traces | Effects surviving varied delays and rate-dependent convergence | Equal-compute GRU/SSM, learned elapsed time and explicit memory could dominate |
+| Sensory/interoceptive, predictive and learned neuromodulatory control | Context-sensitive reweighting of what can become active, not just a separate thought | Fixed gain control, scheduler, alarms or reward shaping could explain results |
+| Mood-congruent retrieval / partial sensory cue-based associative completion | Dormant memory revival and retrieval bias | Ordinary index-based retrieval, reconstruction artifacts and false memory |
+| Social prediction / self-modeling / nested recurrent predictors | Mutual anticipation and adaptive self-regulation | Existing theory-of-mind, Bayesian opponent modeling and explicit probabilistic belief baselines |
 
 A hybrid may combine complementary mechanisms, but complexity is a cost requiring causal justification. A small explicit symbolic system may reproduce many behaviors and must remain a respected baseline, not a straw man.
 
@@ -58,6 +77,8 @@ At time t we may think abstractly of:
 - P(t): learning/plasticity, possibly including organization and exploration policy.
 
 A new observation changes X/H/B/V; partial matches can generate candidate continuations; V allocates a bounded processing budget among those candidates, including lower-probability high-information or high-consequence possibilities; candidates can influence other candidates; future observations update beliefs without turning simulated events into witnessed truth; experience may alter P and V. There is no requirement that X, H, B, V or P be separate modules, nor that the student represent 'thoughts' as discrete entities. This lens should be discarded if data favor another decomposition.
+
+The X/H/B/V/P sketch above is a **functional decomposition only**. For the more explicit candidate lens that distinguishes active x, residual r, modulation m and durable p, plus overlapping/optional modules, see [THEORY.md](THEORY.md). There need not be an "emotion process," dedicated symbolic thought node or global time counter.
 
 ## E. Falsifiable phenomena, not benchmark theater
 
@@ -79,11 +100,34 @@ A new observation changes X/H/B/V; partial matches can generate candidate contin
 
 Each of these is an experimental *question*, not an authorized new EXP campaign. First build baselines and leakage tests, then only extend if findings distinguish mechanisms.
 
+**E9 Convergent weak histories / outcome attribution:** In a compact world with independently uninformative cues that become informative in combination, test delayed integration with held-out compositions. Intervene on each contributing trace, paired traces, and sham states; compare single-path trace explanations, causal subgraph probes, finite-state/rule models, GRU/SSM and explicit memory. Favor interventions over post-hoc narrative quality.
+
+**E10 Heterogeneous pace:** Compare synchronized updates, independent rates, adaptive timescales and frozen/equal-budget recurrent alternatives; vary event spacing and silence while matching observations, elapsed time access, effective training capacity and compute. Look for actual downstream useful generalization rather than self-sustaining oscillation.
+
+**E11 Multi-route modulation:** Compare fixed control, direct sensory/internal cues, prediction-mediated modulation, learned hybrid control and ablations of each route. Measure context discrimination, action/attention latency, false alarms, recovery, beneficial inhibition versus suppression of valid alternatives, and retention under later changes.
+
+**E12 Long-dormant cue reactivation:** Train associations, interpose large amounts of unrelated experience and quiescence, then present partial multimodal cues. Separate temporary active traces from durable memory, compare indexed retrieval/episodic memory and recurrent baselines, and measure retrieval confabulation alongside legitimate recovery. Mood/context can be manipulated independently of cue overlap.
+
+**E13 Meta-modulation:** Change whether urgency-like cues predict consequential events. Does learned gain/threshold/attention regulation calibrate to altered base rates, return from high-priority states and avoid both paralysis and endless novelty seeking? Compare adaptive controller, fixed thresholds and no-controller.
+
+**E14 Self/other prediction:** Partially observe two interacting learners and periodically alter their knowledge or policies. Measure calibrated higher-order belief and intervention effects against explicit Bayesian and world-model controls. Do not infer personhood or intrinsic social desires from agent-like behavior.
+
+### Candidate order, not approved execution
+
+1. **First:** E9 + a focused E12 variant to distinguish latent conjunction and delayed reactivation from ordinary memory (including strong classical baselines).
+2. **Second:** E10 where rate variation is actually needed; the existing EXP-0001 warning about timestamp shortcuts must shape controls.
+3. **Third:** E11 and E13 on top of the simplest substrate that passes earlier causal tests; first prove that modulation matters, then test multiple sensory/internal/prediction pathways and learned self-calibration.
+4. **Later:** E14, extended lifelong development and naturally arising analogies once a baseline distinguishes them.
+
+These are **questions**, not an EXP number, code approval, a claim about reproducibility or an instruction to run them. A single positive result does not validate the full theory; a null result may disfavor a mechanism and leave the broader goal intact. Each candidate needs its own preregistered SPEC, independent truth oracle, allocation budget, controls, leakage checks and stopping rule under [EXPERIMENTATION.md](EXPERIMENTATION.md).
+
 ## F. Scientific observation contract
 
 For a positive claim require, proportionate to claim: (1) independent world/observation truth and heldout compositions; (2) multiple independently seeded developing individuals; (3) available alternative hypotheses and uncertainty quality; (4) teacher/decoder blinded to test truth; (5) causal intervention at intermediate state with sham and compute-matched alternatives; (6) ability to distinguish replay from new inference; (7) learning/retention beyond one answer; (8) reported resource cost, total failures and ambiguous outcomes.
 
 Do not conflate simulator reality with what the learner observes; event-sourced provenance is an optional necessary laboratory discipline for debugging but not the student's thinking mechanism. An internal representation cannot be declared 'fear', 'cat', or 'consciousness' simply because a decoder found a matching phrase. Calibrated read-only probes and downstream causal effects are essential.
+
+**Additional causal requirements for this theory:** distinguish active-state persistence from residual traces and durable learned memory; track physical time versus internal updates; measure effects of state ablation/transplant rather than only readout correlations; test direct versus mediated modulation with independent control of sensory channels, internal state and predictor evidence; preserve negative outcomes and false associations; compare to simple deterministic finite-state systems and compute-matched strong learned baselines.
 
 ## G. Actual evidence so far and its limits (no inventions)
 
@@ -96,11 +140,15 @@ Do not conflate simulator reality with what the learner observes; event-sourced 
 
 See actual reports for exact methods, seeds, caveats and whether claims were independently reproduced.
 
+The EXP-0001 report found explicit time features could dominate temporal history and that extra silent computation degraded performance in tested regimes. EXP-0002 showed limited delayed association (~57.8% balanced accuracy for an 8-timescale trace bank vs ~51.5% memoryless), not emergent meaning. EXP-0005 documented fixture/oracle infrastructure, not completed comparative simulator validation. **No old experiment establishes multi-process cognition, adaptive feeling-like modulation, self-regulating attention, autobiographical retrieval or consciousness.**
+
 ## H. Research strategy under limited resources
 
 Do not build a comprehensive world, indefinite autonomous simulation or multigigabyte neural rig to prove that an algorithm can wander. The fastest research path uses tiny controlled sensory worlds, a handful of discriminating hypotheses, serious classical baselines and careful ablations. Simulators provide objective truth for evaluation but not student-accessible symbolic answers.
 
 Prototype one *mechanism comparison* per approved run. Review what it would falsify **before** coding; use simple CPU reference implementations; only reuse EXP-0003/4 kernels when a measured bottleneck actually matters. Allow the results to favor explicit probabilistic models, distributed dynamics, emergent slots or hybrids. Leave enough budget for surprise and exploratory observation but never convert surprise into an unearned cognition claim.
+
+Prioritize **causal discrimination over elaborate demonstrations**. The first new formal proposal should study converging weak histories and delayed cue reactivation with minimal semantic leakage; successive modulation experiments should only follow if simpler systems fail on meaningful behavior under matched budgets. Avoid letting synthetic labels like DINNER or FEAR leak into the student's ontology. Store hypothetical predictions separately from observed world events.
 
 ## I. Closest intellectual relatives and novelty boundary
 
@@ -109,6 +157,9 @@ Prototype one *mechanism comparison* per approved run. Review what it would fals
 - Schacter/Addis **constructive episodic simulation** and generative memory models: overlap of memory, imagining and reinterpretation.
 - Rigotti et al. **mixed selectivity**, Smolensky **variable binding**: distributed semantic and role-bearing representations.
 - Modern Hopfield networks, **CTM**, predictive encoders/world models, active inference, GFlowNets, and probabilistic graph reasoning: mathematical and engineered components already available.
+- Blaise Agüera y Arcas, **_What Is Intelligence?_**: sophisticated philosophical/empirical synthesis around prediction, latent variables, persistent states, neuromodulation and social modeling; we adopt questions and comparisons, not his claims as experimental proof.
+- Neural timescale reviews, mood-congruent memory and Proust-like odor-cued autobiographical memory: precedents for heterogeneous pace and context-sensitive retrieval, not a proven artificial architecture.
+- Predictive processing, global workspace, spreading activation and recurrent/latent reasoning: strong related mechanisms, not something we are inventing.
 
 Existing work makes blanket novelty claims inappropriate. The project would be interesting if it established a new **causal organization of persistent, experience-shaped, significance-steered internal exploration**, not merely if it uses familiar terms differently. The [bibliography](SOURCES.md) names primary sources; the [historical atlas](archive/ATLAS-2026-10-22.md) retains previously surveyed architecture families and open objections.
 

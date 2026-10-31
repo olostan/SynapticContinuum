@@ -1,6 +1,6 @@
 # Experimentation protocol — SynapticContinuum
 
-**Version 1.0 · 2026-10-23**. This protocol governs *new executable experiment directories* under `experiments/EXP-####-slug/`. Existing E001–E006 proposal documents remain valid and unchanged. Experiments are research, not production releases. The primary scientific goal is causal, persistent endogenous neural-state development, **not** conversational correctness, speed, or consciousness claims.
+**Version 1.1 · 2026-10-30**. This protocol governs *new executable experiment directories* under `experiments/EXP-####-slug/`. Existing E001–E006 proposal documents remain valid and unchanged. Experiments are research, not production releases. The primary scientific goal is causal, persistent endogenous neural-state development, **not** conversational correctness, speed, or consciousness claims.
 
 ## Contract: design, execution, evidence, review
 
@@ -66,4 +66,17 @@ If a long run terminates early, record partial metrics, reason and whether check
 
 ## Vision alignment for newly proposed experiments (2026-10-24)
 
-Before designing a new executable EXP, read [VISION.md](VISION.md), [FOUNDATIONS.md](FOUNDATIONS.md) and [ATLAS.md](ATLAS.md). A task benchmark, explicit-symbol world, neural-activity plot or simulation-scale result is only an **instrument**. State which uncertainty about *persistent, self-initiated, nonlinguistic meaning, branching hypotheses, revisable temporal belief, significance-steered attention, active information seeking or lifelong adaptation* the proposed test can constrain. Include honest simpler baseline(s), a way to detect semantic inference by the measurement decoder itself, and a stopping criterion. The candidate mechanism need not encompass the full vision, but every proposed claim must say what it does **not** test. Do not retroactively reinterpret earlier EXP results or turn the unmerged EXP-0006 design into an approved architecture.
+Before designing a new executable EXP, read [VISION.md](VISION.md), [THEORY.md](THEORY.md), [FOUNDATIONS.md](FOUNDATIONS.md) and [ATLAS.md](ATLAS.md). A task benchmark, explicit-symbol world, neural-activity plot or simulation-scale result is only an **instrument**. State which uncertainty about *persistent, self-initiated, nonlinguistic meaning, branching hypotheses, revisable temporal belief, significance-steered attention, active information seeking or lifelong adaptation* the proposed test can constrain. Include honest simpler baseline(s), a way to detect semantic inference by the measurement decoder itself, and a stopping criterion. The candidate mechanism need not encompass the full vision, but every proposed claim must say what it does **not** test. Do not retroactively reinterpret earlier EXP results or turn the unmerged EXP-0006 design into an approved architecture.
+
+## Candidate-theory experimental safeguards (2026-10-30)
+
+The new [THEORY.md](THEORY.md) is **not** an experiment specification. If evaluating parallel/convergent prediction, heterogeneous tempo, retrospective attribution, modulation or dormant-memory reactivation, preregister:
+- **What the variable means:** distinguish actual predictive function from generic state transition, serial textual outputs from high-dimensional internal computation, and concurrent semantic activity from asynchronous/hardware scheduling.
+- **The memory source:** active state, temporary residual trace, durable learned parameter, episodic store or external retrieval. Include no-idle-compute, memory-only and time-feature shortcut controls.
+- **The modulator route:** sensory, internal/homeostatic, predicted consequences, history-dependent, fixed or learned; test individual route removal, shuffled gain, delayed feedback and return to baseline. Measure false alarms, over-suppression, reactivation and rumination, not only task accuracy.
+- **The causal account:** distinguish an explanatory chain inferred by an interpreter/LLM from actual influential latent states. Intervene on single and joint contributing histories, replace with matched/sham state, and repeat with the exact same observations, elapsed time and compute.
+- **The external oracle:** observed events, true environment state, learner beliefs, imagined/counterfactual continuations, and model text must have distinct provenance. Prevent semantic labels and hidden world truth leaking through stimulus generation or evaluation code.
+- **Competitive baselines:** include (as appropriate) finite-state controllers, indexed/episodic memory, time-aware GRU/SSM, generative world models, Bayesian/probabilistic models, fixed schedulers, existing codelet/priority systems, and equal-resource retrained ablations.
+- **Reportable outcomes:** causal usefulness and retained generalization, calibration of alternative hypotheses, cost/latency/resource use, failure rates and credible null outcomes. Never infer artificial consciousness or proven human-style cognition.
+
+Prioritize small tests of **delayed joint influence and long-dormant cue reactivation** before multi-component architectures. Add heterogeneous time and multimodal modulation only as separately falsifiable factors. Experimental identifiers, designs, seeds and runtime are still subject to normal approval/review; earlier E/EXP reports are immutable historical evidence and must not be upgraded retroactively.
