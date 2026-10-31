@@ -2,7 +2,7 @@
 
 **Living theoretical synthesis | 2026-10-30 | HYPOTHESIS, not validated architecture or claim of consciousness**
 
-Start with [VISION.md](VISION.md) for the aspiration, [FOUNDATIONS.md](FOUNDATIONS.md) for constraints, and [ATLAS.md](ATLAS.md) for competing hypotheses and tests. This document translates the 2026-10-24 nonlinguistic/open-ended vision and the subsequent October discussions into one **idealized, revisable conceptual architecture**. It is not a specification to build all modules, and a system satisfying the vision might use completely different mechanisms.
+Start with [VISION.md](VISION.md) for the aspiration, [FOUNDATIONS.md](FOUNDATIONS.md) for constraints, and [ATLAS.md](ATLAS.md) for competing hypotheses and tests. This document translates the 2026-10-24 nonlinguistic/open-ended vision and the subsequent October discussions into one **idealized, revisable conceptual architecture**. It is not a specification to build all modules, and a system satisfying the vision might use completely different mechanisms. The [discussion-to-hypotheses record](notes/2026-10-30-predictive-dynamics-synthesis.md) preserves the conversational origin and unresolved caveats.
 
 ## 1. North star, and what this theory does not claim
 

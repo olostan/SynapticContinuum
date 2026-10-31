@@ -1,6 +1,6 @@
 # SynapticContinuum — Working Foundations
 
-**Living orientation · 2026-10-24 · provisional hypotheses, not a settled architecture**
+**Living orientation · revised 2026-10-30 · provisional hypotheses, not a settled architecture**
 
 **Read [VISION.md](VISION.md) first, then [THEORY.md](THEORY.md) for the current candidate synthesis.** It defines the scientific aspiration and operational meaning of our terms. This file defines constraints that should persist as our engineering hypotheses change. The older concept-level atlas is archived separately; [ATLAS.md](ATLAS.md) now maps competing research avenues.
 

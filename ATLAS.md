@@ -1,6 +1,6 @@
 # SynapticContinuum — Research Atlas: Questions Before Mechanisms
 
-**Reframed 2026-10-24 · living critical map · not an architecture specification.**
+**Reframed 2026-10-24 · extended 2026-10-30 · living critical map · not an architecture specification.**
 The earlier 2026-10-22 neural-recurrence-focused version is preserved at [archive/ATLAS-2026-10-22.md](archive/ATLAS-2026-10-22.md). Start from [VISION.md](VISION.md), [THEORY.md](THEORY.md) (the candidate predictive-dynamics organizational lens), and [FOUNDATIONS.md](FOUNDATIONS.md). No result currently establishes the full vision.
 
 ## A. What phenomenon are we trying to demonstrate?

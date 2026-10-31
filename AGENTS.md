@@ -1,6 +1,6 @@
 # SynapticContinuum — Research Agent Guide
 
-**Revision 2026-10-30.** This is an open scientific exploration, not a roadmap to implement a settled architecture. The **first required read** is [VISION.md](VISION.md), then [THEORY.md](THEORY.md), [FOUNDATIONS.md](FOUNDATIONS.md), [ATLAS.md](ATLAS.md), this guide, [SOURCES.md](SOURCES.md), [research prior art](research/findings/) and the relevant existing [reports](experiments/). Older [atlas](archive/ATLAS-2026-10-22.md) and [idea papers](ideas/) preserve historical alternatives.
+**Revision 2026-10-30.** This is an open scientific exploration, not a roadmap to implement a settled architecture. The **first required read** is [VISION.md](VISION.md), then [THEORY.md](THEORY.md), [FOUNDATIONS.md](FOUNDATIONS.md), [ATLAS.md](ATLAS.md), this guide, [SOURCES.md](SOURCES.md), [research prior art](research/findings/) and the relevant existing [reports](experiments/). The [2026-10-30 dialogue synthesis](notes/2026-10-30-predictive-dynamics-synthesis.md) preserves provenance and unresolved objections. Older [atlas](archive/ATLAS-2026-10-22.md) and [idea papers](ideas/) preserve historical alternatives.
 
 ## North star in a paragraph
 

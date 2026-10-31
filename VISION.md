@@ -1,6 +1,6 @@
 # SynapticContinuum — Research Vision: An Open-Ended Inner Process
 
-**Living vision proposal · 2026-10-24 · exploratory, not a claim of achievement**
+**Living vision · revised 2026-10-30 · exploratory, not a claim of achievement**
 
 This is the project's **north star**, not a design for a particular model. Read alongside [THEORY.md](THEORY.md) (the revisable candidate synthesis of predictive dynamics, heterogeneous time, residual influence and modulation), [FOUNDATIONS.md](FOUNDATIONS.md), the open [research map](ATLAS.md), and [prior-art sources](SOURCES.md). Older experiment specifications are historical, mechanism-specific investigations and must not define this vision by default.
 

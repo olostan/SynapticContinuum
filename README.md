@@ -28,6 +28,8 @@ This is an **idealized explanatory synthesis**, not an implementation mandate or
 6. **[SOURCES.md](SOURCES.md)** / [RESEARCH_LANDSCAPE.md](RESEARCH_LANDSCAPE.md) — annotated literature, contrasting claims and historical critical review.
 7. **[EXPERIMENTATION.md](EXPERIMENTATION.md)** and [experiments](experiments/) — preregistration, actual results and historical proposals.
 
+The [2026-10-30 discussion synthesis](notes/2026-10-30-predictive-dynamics-synthesis.md) preserves the motivations, corrections and still-open questions behind this revision.
+
 Our initial conceptual research is preserved in [the historical atlas](archive/ATLAS-2026-10-22.md), [ideas](ideas/), [notes](notes/), [findings](research/findings/), [prototypes](prototypes/) and [experimental reports](experiments/). **The fact that an experiment was performed is not evidence that its model is the preferred future architecture.**
 
 ## Important distinctions
