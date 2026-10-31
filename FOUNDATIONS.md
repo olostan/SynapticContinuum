@@ -22,6 +22,16 @@ The substrate need not contain labeled entities, symbols or words. Distributed a
 
 A word is an optional observation, action or later probabilistic interpretation of an internal trajectory. A system may learn useful causal consequences before learning the label 'cat'. Adding a category label later can revise confidence about an earlier ambiguous experience, but not make a guess into an observed fact. Use independent diagnostic decoders and test whether they—not the substrate—perform all semantic reasoning.
 
+## Semantic inheritance without epistemic surrender
+
+A system need not learn every relationship from a blank slate. Optional **pretrained semantic inheritance** may supply candidate relations via frozen LLM advice, learned embeddings/hidden states, adapters, pretrained blocks or distillation. None is automatically the learner's ontology or an observed fact. An inaccurate suggestion can be a productive hypothesis if it encourages exploration and the learner can later reject it. Preserve opportunities for alternatives the pretrained source never proposes.
+
+**Knowing is not feeling:** being able to describe sadness, fear, attachment, danger or curiosity is not evidence of an enduring modulatory state, and a state that alters the system's own dynamics need not carry a human-language label. Test these separately using manipulations that affect downstream gain, inhibition, retrieval, plasticity and action.
+
+Maintain the distinction between inherited proposals, personally observed evidence, learned uncertain beliefs, imagined possibilities, source confidence, changes to modulation, and externally assessed world truth. These distinctions may be implemented implicitly but must be experimentally auditable. A source can be fallible even if it gives a high-confidence explanation; repeated teacher suggestions must not be laundered into observations.
+
+Four candidate access routes (advisor, representation borrowing, learned bridge, reused pretrained machinery) and optional distillation are laid out in [THEORY.md](THEORY.md). Pure experience, teacher-only, random-prior and simple recurrent/probabilistic systems remain controls. A continuous hybrid LLM+substrate is legitimate but must not be described as independently generated cognition.
+
 ## Persistent time and epistemic distinctions
 
 Time is a central variable, not necessarily an explicit time-token input. An observation made at t0 remains a valid claim about t0; uncertainty about the world at t1 evolves as unseen changes become possible. Maintain or recover distinction among observed evidence, remembered observation, uncertain current belief, hypothetical past explanation, future prediction, counterfactual imagination and external action. Exact implementation is an open hypothesis.
@@ -72,6 +82,11 @@ Always-on computation is not synonymous with always-on firing. It may be useful 
 16. Separate short-lived residual traces from durable learned structure and episodic storage; cue-based long-latency recall need not imply nonstop activation.
 17. Distinguish a claimed causal history from an inferred/decoded chain using state interventions and interaction ablations; outcomes may have multiple necessary contributors.
 18. Do not turn evocative examples (cat/table, dinner/commit, autumn breeze) into preassigned object nodes or simulator labels visible to the learner.
+
+19. Pretrained semantics can be useful as **unverified possibility generators**. A wrong proposal is not necessarily a failure, but observations and meaningful interventions—not teacher assertion—must drive grounding and correction.
+20. Distinguish knowing about feelings from functional modulation of ongoing dynamics; the latter is not proof of subjective experience either.
+21. Keep the four levels of pretrained integration and separately distilled models as competing, detachable mechanisms. Do not let encoders, advisors or decoders silently author student beliefs or access held-out world truth.
+22. Record both retained benefits and failure under counterevidence, adversarial priors and source disconnection. Preserve novelty outside the pretrained source's vocabulary.
 
 ## Minimal illustrative mathematical lens (not a design commitment)
 

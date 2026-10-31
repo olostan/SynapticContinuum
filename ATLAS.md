@@ -45,7 +45,13 @@ A single correct prediction, a promptless sentence, complex oscillation, a graph
 
 **Q16: Coupled predictive individuals.** Can learned predictions of other predictors' observations, uncertainty and responses produce advantages beyond hard-coded game-theoretic policies or a single central world model? Can useful self-modeling be measured without attributing subjective awareness?
 
-## C. Mechanism families: candidates, not priorities
+**Q17: Inherited possibility versus experienced meaning.** Can frozen pretrained models provide useful *candidate* relations, counterfactuals or latent features without becoming the authority on world truth? Can personally observed contradictions revise or displace inherited hypotheses and create new relationships beyond the pretrained vocabulary? Does a flawed but diverse suggestion set sometimes help exploration more than a narrowly accurate set?
+
+**Q18: Knowing is not feeling.** Can a student understand, decode or predict affective language without implementing corresponding regulation of its own activity? Conversely, can the student learn modulation of gain, memory access, thresholds, learning and resource allocation without semantic labels or subjective claims? What interventions distinguish these outcomes?
+
+**Q19: Semantic interface and knowledge transfer.** How do occasional LLM advice, pretrained embeddings/hidden states, bidirectional learned adapters, reused pretrained blocks and separately distilled students compare under matched information, compute and grounding? Which survive teacher removal or model swap, and which are legitimately hybrid?
+
+## C. Mechanism families: candidates, not priorities## C. Mechanism families: candidates, not priorities
 
 | Family | Potential role | Strongest caution / baseline |
 | --- | --- | --- |
@@ -67,7 +73,11 @@ A single correct prediction, a promptless sentence, complex oscillation, a graph
 
 A hybrid may combine complementary mechanisms, but complexity is a cost requiring causal justification. A small explicit symbolic system may reproduce many behaviors and must remain a respected baseline, not a straw man.
 
-## D. Candidate synthesis — a design *lens* only
+| Frozen LLM advisor / diverse semantic proposals | Seeds alternative interpretations and hypotheses for local exploration | Teacher may perform all inference; assertions become unverified world "facts"; source-blind and shuffled proposals needed |
+| Pretrained embeddings, hidden-state interfaces, SAE features | Reuses distributed conceptual structure for partial matches without requiring words as internal units | Similarity is not reliable causal structure; context dependence, model-specific geometry and leakage |
+| Learned semantic bridge, teacher distillation, frozen/partial pretrained blocks | Transfers relational priors or neural computation into a local persistent learner | Student can merely imitate outputs, collapse under model swap, or fail to update under direct counterevidence |
+
+## D. Candidate synthesis — a design *lens* only## D. Candidate synthesis — a design *lens* only
 
 At time t we may think abstractly of:
 - X(t): distributed and context-dependent internal activity, multiple time scales;
@@ -112,12 +122,19 @@ Each of these is an experimental *question*, not an authorized new EXP campaign.
 
 **E14 Self/other prediction:** Partially observe two interacting learners and periodically alter their knowledge or policies. Measure calibrated higher-order belief and intervention effects against explicit Bayesian and world-model controls. Do not infer personhood or intrinsic social desires from agent-like behavior.
 
+**E15 Open-world candidate transfer:** In a small partially observed environment, supply multiple frozen-LLM suggestions about what might happen or what objects could do. Some are correct, some wrong-but-exploratory, some confidently false; withheld combinations and changed world rules provide counterevidence. Compare scratch learner, random/shuffled suggestions, ordinary retrieval, teacher-only, and strong recurrent/belief-model baselines. Measure hypothesis diversity, information seeking, evidence-based revision, novel causal transfer and false belief persistence. Model text is *not* world truth.
+
+**E16 Knowing versus modulation:** Control access to the same semantic descriptions (e.g. consequences of an unstable object) while independently manipulating learned or imposed modulation of propagation, inhibition, temporal retention, recall, plasticity and action. Test whether interpreting an emotion/urgency label predicts actual future dynamics and whether learned regulation emerges without labels; include direct sensory routes, fake danger, habituation, recovery and false-alarm controls.
+
+**E17 Four-level pretrained interface + optional distillation:** Factor out L1 advisor, L2 frozen embedding/hidden-state features, L3 learned bridge and L4 reused frozen/adapted blocks, with an independently distilled small student variant. Match information availability and resource costs, evaluate under teacher disconnection/model swap and deliberately conflicting experience, and track whether the student learns its own new relations. Start with L1/L2, not all combinations at once. No result from this design implies feelings or autonomy.
+
 ### Candidate order, not approved execution
 
 1. **First:** E9 + a focused E12 variant to distinguish latent conjunction and delayed reactivation from ordinary memory (including strong classical baselines).
 2. **Second:** E10 where rate variation is actually needed; the existing EXP-0001 warning about timestamp shortcuts must shape controls.
 3. **Third:** E11 and E13 on top of the simplest substrate that passes earlier causal tests; first prove that modulation matters, then test multiple sensory/internal/prediction pathways and learned self-calibration.
-4. **Later:** E14, extended lifelong development and naturally arising analogies once a baseline distinguishes them.
+4. **Parallel exploratory branch:** E15 tests tentative inherited conceptual priors, including wrong suggestions revised by experience, while preserving experience-only comparisons; use E17 only if there is a meaningful signal.
+5. **Later:** E14 social/self prediction and E16 knowing-versus-modulation once a simple substrate supports appropriate interventions; extended lifelong development is a separate claim.
 
 These are **questions**, not an EXP number, code approval, a claim about reproducibility or an instruction to run them. A single positive result does not validate the full theory; a null result may disfavor a mechanism and leave the broader goal intact. Each candidate needs its own preregistered SPEC, independent truth oracle, allocation budget, controls, leakage checks and stopping rule under [EXPERIMENTATION.md](EXPERIMENTATION.md).
 

@@ -18,6 +18,8 @@ The present **working theory**, explained in [THEORY.md](THEORY.md), considers a
 
 This is an **idealized explanatory synthesis**, not an implementation mandate or a claim to invent its component mechanisms. Prediction is not synonymous with all computation. Existing strong LLMs already perform high-dimensional reasoning; their explicitly serialized chain-of-thought is not the only conceivable approach. Persistent does **not** mean every neuron firing forever. CTM, Blaise Agüera y Arcas's *What Is Intelligence?*, Copycat, MicroPsi, memory and predictive-processing research provide substantial foundations and counterarguments. Scientific alternatives include GRUs/SSMs, Bayesian belief models, episodic retrieval, recurrent world models, codelets and hybrids.
 
+**Additional candidate: semantic inheritance.** Pretrained LLMs and multimodal encoders may provide tentative relationship hypotheses or distributed representations to our learner through four alternative integration levels and optional distillation. **Knowing about feelings is not being functionally modulated by them.** Suggested relationships—even inaccurate ones—are possibilities to investigate, not facts to assume. Empirical experience should be able to correct or outweigh inherited assumptions; the learner may still operate independently of the source. See [THEORY.md](THEORY.md), [ATLAS.md](ATLAS.md), and [SOURCES.md](SOURCES.md).
+
 ## Read this repository in order
 
 1. **[VISION.md](VISION.md)** — the aspirational phenomenon and epistemic limits.

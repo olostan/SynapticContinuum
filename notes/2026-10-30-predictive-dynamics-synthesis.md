@@ -29,6 +29,16 @@ All clauses are empirically challengeable. Do not make the hypothesis true by as
 - [Hofstadter/Mitchell's Copycat](https://melaniemitchell.me/PapersContent/HofstadterMitchellCopycat1995.pdf): stochastic codelet ecology, changing conceptual salience, analogy, flexible representations.
 - Active inference, MicroPsi/Psi, NARS, recurrent memory, probabilistic models, latent reasoning, mood-congruent memory, and sensory-cued recall have serious established precedents; see [SOURCES.md](../SOURCES.md).
 
+## Extension — semantic inheritance without epistemic surrender (later 2026-10-30 discussion)
+
+We observed that existing LLMs already know many relational patterns: sadness, interpersonal expectations, fear, objects, movement, physical risks and plausible consequences. The student's challenge may therefore be **learning from the world's evidence and becoming functionally modulated**, rather than independently rediscovering every conceptual prior. We summarized the distinction as **"Knowing is not feeling."** Knowing what sadness does to a person's thinking is not equivalent to a state that causally changes a system's own attention, memory, learning or activity.
+
+The user proposed an important correction: *predictions need not initially be correct to be useful*. Like a developing learner whose expectations are revised by unexpected experience, a pretrained model can supply imperfect candidates: "perhaps the creature jumps," "perhaps the box moves," "perhaps this signals danger." These are invitations to explore, not world facts. A diverse incorrect suggestion can have information value; high-confidence falsehoods and evidence-resistant fixation have costs. Developmental infant analogies are motivations, not evidence for a blank slate or a specific brain mechanism.
+
+We identified four **alternative** integration levels: (1) occasional frozen-LLM semantic advisor, (2) borrowing embeddings or contextual hidden states, (3) learned bridge between semantic and persistent dynamics, (4) reusing frozen/adaptable pretrained neural machinery. Separately, a smaller student could **distill** a fraction of the inherited structure and then run independently. None is mandated, and a legitimate continuously hybrid system must be described as hybrid.
+
+Critical experiments must compare experience-only, matched random, prior-shuffled, teacher-only, source-disconnected and explicit memory/recurrent systems; distinguish teacher suggestions from observations; and measure whether the student can revise its own beliefs and modulation under contradictory experiences. See [THEORY.md](../THEORY.md) §5a, [ATLAS.md](../ATLAS.md) Q17–19/E15–17 and [SOURCES.md](../SOURCES.md) for prior art.
+
 ## Specific unresolved distinctions
 
 - Are multiple non-verbal predictive trajectories more useful than a conventional recurrent state or a serialized latent reasoning process, or merely another encoding of it?

@@ -68,6 +68,12 @@ If a long run terminates early, record partial metrics, reason and whether check
 
 Before designing a new executable EXP, read [VISION.md](VISION.md), [THEORY.md](THEORY.md), [FOUNDATIONS.md](FOUNDATIONS.md) and [ATLAS.md](ATLAS.md). A task benchmark, explicit-symbol world, neural-activity plot or simulation-scale result is only an **instrument**. State which uncertainty about *persistent, self-initiated, nonlinguistic meaning, branching hypotheses, revisable temporal belief, significance-steered attention, active information seeking or lifelong adaptation* the proposed test can constrain. Include honest simpler baseline(s), a way to detect semantic inference by the measurement decoder itself, and a stopping criterion. The candidate mechanism need not encompass the full vision, but every proposed claim must say what it does **not** test. Do not retroactively reinterpret earlier EXP results or turn the unmerged EXP-0006 design into an approved architecture.
 
+## Inherited-semantic-prior safeguards (2026-10-30)
+
+When proposing the semantic inheritance branch in [THEORY.md](THEORY.md), separate **candidate generation** from independent observation, evaluator truth, uncertain learned belief and learned functional modulation. Frozen-LLM text, embedding features and adapter outputs are not oracle labels. Predeclare manipulated prior quality (correct; wrong but usefully exploratory; confidently false; unrelated), teacher query budget and sampling budget, prior/teacher access to held-out ground truth, grounding evidence, and the exact point at which student states can revise a suggestion.
+
+Compare scratch learning, teacher-only consultation, shuffled/random/capacity-matched representations, baseline retrieval, ordinary recurrent or explicit belief models, and (when relevant) teacher removal/model swap and distillation-only evaluation. Measure acquired novel relations, counterevidence update, belief calibration, bias toward offered hypotheses, false associations and computational cost. Test *semantic description of feelings* separately from *causal modulation of actual student dynamics*. Neither decodability nor adaptation alone proves feeling, consciousness, or a new general learning substrate.
+
 ## Candidate-theory experimental safeguards (2026-10-30)
 
 The new [THEORY.md](THEORY.md) is **not** an experiment specification. If evaluating parallel/convergent prediction, heterogeneous tempo, retrospective attribution, modulation or dormant-memory reactivation, preregister:

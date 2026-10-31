@@ -53,6 +53,58 @@ Words can be input/output modalities and later interpretations of latent states 
 
 A newly generated, never spoken possibility should matter **later**, beyond replay and statistical memorization, through experimentally measurable effects on learning, action, retention or subsequent possibilities.
 
+## 5a. Semantic inheritance: knowing is not feeling (new candidate hypothesis, 2026-10-30)
+
+**Key distinction: having a representation *about* sadness, fear, danger, gravity or motion is not the same as having those representations causally modify one's own dynamics.** A pretrained language or multimodal model can associate sadness with loss, social support, pessimistic interpretation, or attention shifts; this is sophisticated conceptual knowledge. It does **not** by itself establish an enduring affective state, homeostatic variable, embodied fear, or subjective feeling in the model. Conversely, a system might learn threat-sensitive gain/inhibition and altered priorities without being able to say "I am afraid." This distinction is operational: manipulate a candidate state and measure whether later propagation, retrieval, timescale, plasticity, attention or action actually changes.
+
+### Why inheritance might be useful without being authoritative
+
+Open-weight pretrained models already contain substantial distributed knowledge about object relationships, causes, motion, intentions, and what people *say* about emotions. These are **possible conceptual priors**, not guaranteed facts, exact executable physics, directly transferable concept nodes, or proof that the model internally experiences its descriptions. Hidden states, embeddings, elicited alternatives, sparse-autoencoder features and decoder text have different information content and failure modes.
+
+A learner need not begin without prior structure. Biologically developing organisms possess innate constraints and learn from experience; an analogy is **inherited structure versus personally acquired experience**, not a claim that pretrained LLM weights resemble biological evolution.
+
+Crucially, **a hypothesis need not be true to be worth considering**. A frozen model might suggest a small creature could climb, jump, fly, slip, hide, or fall, or suggest several mutually incompatible causes of an observation. Those candidates can seed *possible* internal futures or analogies, and the learner's actual observations/interventions should eventually strengthen, weaken, reject or revise them. Unexpected events may be educational; an inaccurate suggestion is not automatically a failure. Yet an *unverified possibility* is not an *observed fact*, and a misleading or harmful suggestion is not a justification for unsafe real-world action.
+
+Distinguish four functions, even when implemented implicitly:
+1. **Proposal generation:** candidate possibilities/relations suggested by pretrained knowledge or endogenous dynamics, with provenance.
+2. **Belief updating:** uncertain expectations conditioned on the learner's own evidence, possibly with priors whose strength is learned. Never promote repeated speculation into evidence merely through repetition.
+3. **Significance/modulation:** which possibilities merit more attention, learning, inhibition or cautious intervention; this is not identical to belief probability and cannot be inferred from semantic labels alone.
+4. **Action and observation:** consequences and measurements that can discriminate predictions and provide grounded correction. A real sensor or trusted simulation oracle—not teacher prose—grounds the learner in a particular world.
+
+If probabilities can be calibrated, Bayesian updating is one useful analogy: q(h | evidence) is influenced by a prior q(h) **and by evidence likelihood**, but the learner need not implement symbolic Bayesian inference. Many suggestions are merely *candidate sets*, not calibrated priors. Preserve probability mass or exploratory capacity for alternatives not suggested by the pretrained model.
+
+### Four integration levels, plus an orthogonal distillation route
+
+These are **competing experiments**, not an ordered capability ladder or roadmap requiring all four.
+
+| Level | Pretrained source role | What persists in the learner | Main confound / failure |
+| --- | --- | --- | --- |
+| **L1 — occasional semantic advisor** | Frozen LLM is queried for several tentative relationships, counterfactuals or possible explanations at chosen moments | Experience, state, memory, modulation and subsequent predictions may evolve locally | The LLM may secretly be doing the substantive reasoning or leaking task truth; use teacher-absent and shuffled-suggestion controls |
+| **L2 — representation borrowing** | Frozen text/multimodal encoder supplies embeddings, contextual hidden states or carefully validated learned features | Independently trained mappings, local memory and evolving latent dynamics | Geometric similarity is not causal meaning; features can be contextual, polysemantic, model-specific or misaligned with the learner's sensory world |
+| **L3 — learned bidirectional bridge** | An adapter maps selected pretrained patterns into the substrate and optionally its state back to the frozen source | Local model develops its own associations, belief revision, temporal history and regulation | Adapter/teacher can dominate or encode labels/truth; isolate, swap and disconnect both bridge directions |
+| **L4 — reuse neural machinery** | Frozen or partly adapted transformer blocks, learned routing, recurrence or latent feedback contribute directly to the candidate dynamics | Possibly a hybrid evolving internal state within or around pretrained layers | Instability, token-distribution mismatch, catastrophic forgetting, implicit teacher control, and greatly increased attribution difficulty |
+
+**Distillation is a fifth, orthogonal experimental route**, not a mandatory higher level: train a compact student/adapter using a frozen model's candidate relationships or signals, then remove the teacher at evaluation. It can be paired with L1–L3 and, in principle, L4. Test whether useful relationships survive, generalize under new observations, and can be contradicted by experience rather than merely replayed.
+
+Source compatibility matters: sentence embeddings do not necessarily expose causal relations, and internal hidden states depend on model architecture, tokenization, layer and context. Feature directions recovered by sparse autoencoders are hypotheses about model organization; interpretability does not imply a universal semantic alphabet. Open weights enable controlled probing but do not guarantee alignment with the downstream substrate.
+
+### One optional interface in the idealized system
+
+A **semantic inheritance port** may be connected occasionally, continuously, trained into a small student, or absent. It can feed *candidate* latent associations into the predictive field or into a proposal reservoir, but should not silently overwrite observations, assign fixed CAT/FEAR nodes or directly impose a permanent priority policy. The system's own learning and modulatory dynamics must be able to contradict and eventually ignore inherited suggestions.
+
+There are legitimate hybrids where an LLM stays in the loop. Report these as **hybrid capabilities**, not independent endogenous cognition. Disconnection is a scientific probe, **not** a moral or architectural mandate that all abilities must survive. Likewise a pure experience-only learner is an essential baseline, not automatically the desirable final architecture.
+
+### Critical tests before claiming useful inheritance
+
+- **Matched alternatives:** no pretrained source; random/rotated/shuffled embeddings or candidate suggestions; generic learned representations; strong plain recurrent/state-space or explicit belief models; teacher-only and retrieval-only baselines; comparable parameter, information, training and inference budgets.
+- **Grounding and counterevidence:** give the learner worlds where ordinary textbook associations are wrong. Does it update after observed counterexamples or continue copying the teacher? Compare true, incorrect-but-productive, misleading, adversarial and irrelevant suggestions, with matched novelty and confidence when possible.
+- **Proposals versus proof:** label generated candidates, teacher assertions, model confidence, observed events, internal imagination, learned beliefs and external evaluator judgments distinctly. Do not let teachers or measurement decoders see held-out world truth or score the student using their own invented explanations.
+- **Knowing versus modulation:** hold semantic information approximately fixed while independently intervening on its influence over gain, retrieval, inhibition, plasticity and actions. Does merely decoding "danger" differ from learned danger-sensitive reallocation that persists, calibrates and recovers?
+- **Personal development:** demonstrate revision and new compositional relations learned from the learner's own interactions, perhaps under teacher disconnection, model swapping, or conflict with inherited knowledge. Look for causal traces and durable effects even if no answer is spoken.
+- **Costs and failure modes:** measure teacher invocation cost, runtime energy/compute, misinformation propagation, anchoring, overconfident false memories, culturally biased priors, suppression of novel hypotheses, and regulator overreaction. In consequential environments, speculative priors must not bypass external action constraints.
+
+This path complements rather than replaces the foundational nonlinguistic experiment: **the learner need not start as a blank slate, but it must be capable of learning what to trust and what to care about from its own experience**.
+
 ## 6. An idealized organizational picture: roles, not boxes
 
 One *candidate* architecture may have the following **functional roles**, potentially co-located in a single recurrent network or implemented very differently:
@@ -63,6 +115,7 @@ One *candidate* architecture may have the following **functional roles**, potent
 - **Endogenous modulatory dynamics:** rapid and slow state-changing influences from senses, internal needs, prediction and stored history; learned gain, priority, plasticity and recovery; feedback with the predicted possibilities.
 - **Epistemic/provenance discrimination:** observations versus inferred present, reconstructed past, imagined future/counterfactual and attempted versus observed actions. May be realized implicitly, not a central symbolic ledger.
 - **Adaptive development:** plasticity of predictions, learned representations, learned priorities and optionally connectivity/capacity; lifelong retention, revision and novelty handling.
+- **Optional inherited semantic priors / learned interface:** candidate relational possibilities from frozen LLMs, multimodal encoders, representation adapters or distilled students, kept epistemically distinct from observed experience and revisable through interaction. No required words, fixed concept nodes or teacher-authored hidden thought.
 - **Selective communication, exploratory action and self/other modeling:** communicate only when useful, act to gain information, possibly predict one's own policies and another predictor's knowledge; none required at each timestep.
 
 The roles must not be mistaken for mandatory independent modules, nor a privileged scheduler, teacher, global clock, privileged symbol table or omniscient orchestrator.
@@ -99,6 +152,9 @@ This is a theory of *potential phenomena*, not an architecture certification:
 
 For every positive result ask: could a simpler finite-state controller, explicit event scheduler, Bayesian filter, retrieval index, recurrent neural model, world-model planner or LLM-based decoder do this with equivalent information and resources? Do not infer consciousness or a human cognitive mechanism from any toy result.
 
+9. **Inherited possibility versus grounded belief:** pretrained proposals seed useful alternatives—including some wrong ones—while independently observed evidence changes later beliefs. Test teacher falsehoods, disagreement, disconnection, and held-out relational transfer.
+10. **Knowledge versus functional modulation:** semantic knowledge of an emotion or hazard is decodable without automatically changing the model's own dynamics; separate tests identify whether learned states causally redirect attention, memory, learning or action and whether they recalibrate.
+
 See [ATLAS.md](ATLAS.md) for a staged research program, negative controls and falsification ledger. No design in this theory authorizes an implementation campaign without preregistration under [EXPERIMENTATION.md](EXPERIMENTATION.md).
 
 ## 9. Intellectual origins and boundaries
@@ -110,6 +166,8 @@ This synthesis draws on established ideas rather than claiming to invent predict
 - **Hofstadter/Mitchell Copycat and Metacat; MicroPsi/Psi; NARS:** fluid analogy, stochastic competing microprocesses, motives, reflective models and resource-bound inference already have serious precedents.
 - **Predictive coding/active inference, recurrent/SSM world models and distributed representations:** strong alternatives; language prediction can form rich semantics and should not be caricatured as superficial autocomplete.
 - **Neuroscience and memory research:** heterogeneous timescales, neuromodulation, mood-congruent recall and odor-evoked autobiographical memories motivate hypotheses but do not demonstrate an artificial mechanism.
+- **LLM representation analysis and grounding:** sparse-autoencoder feature discovery, frozen-LLM embodied reinforcement learning (LLaRP), language-generated hypotheses plus environment verification (HYVIN), and surveys of grounding provide close precedents; none establishes our idealized system or that inherited features correspond to subjective feelings. See [SOURCES.md](SOURCES.md).
+- **Developmental predictive learning:** infant violation-of-expectation studies motivate learning from surprise and correction without equating infants with artificial learners or assuming that inaccurate predictions alone ensure learning.
 - **Previous SynapticContinuum experiments:** temporal features masked trace effects (EXP-0001); traces offered limited delayed discrimination while stable activity was not semantic autonomy (EXP-0002); substrate benchmarks (EXP-0003–0005) do not validate cognition. Null results and contradictory findings must remain visible.
 
 Related sources, limitations and primary citations are maintained in [SOURCES.md](SOURCES.md) and [RESEARCH_LANDSCAPE.md](RESEARCH_LANDSCAPE.md).
